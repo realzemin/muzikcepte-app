@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MüzikCepte - Akıllı Müzik Çalar & Ekolayzır</title>
+    <title>MüzikCepte - Akıllı Müzik Çalar & Şarkı Sözleri</title>
     <style>
         :root {
             --bg-main: #0B0F19;
-            --bg-card: rgba(17, 24, 39, 0.85);
-            --bg-card-hover: rgba(31, 41, 55, 0.9);
+            --bg-card: rgba(17, 24, 39, 0.88);
+            --bg-card-hover: rgba(31, 41, 55, 0.95);
             --accent-purple: #8B5CF6;
             --accent-pink: #EC4899;
             --accent-cyan: #06B6D4;
@@ -16,7 +16,7 @@
             --text-sub: #9CA3AF;
             --border-glass: rgba(255, 255, 255, 0.08);
             --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-            --gradient-card: linear-gradient(145deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.9) 100%);
+            --gradient-card: linear-gradient(145deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.95) 100%);
         }
 
         * {
@@ -43,7 +43,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 18px;
-            background: rgba(11, 15, 25, 0.95);
+            background: rgba(11, 15, 25, 0.96);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-glass);
             position: sticky;
@@ -58,10 +58,10 @@
         }
 
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: var(--gradient-accent);
-            border-radius: 10px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -123,11 +123,11 @@
             cursor: pointer;
         }
 
-        /* Main Scrollable Content */
+        /* Content Area */
         .content-area {
             flex: 1;
             overflow-y: auto;
-            padding-bottom: 150px; /* Space for Mini Player & Nav Bar */
+            padding-bottom: 150px;
             scroll-behavior: smooth;
         }
 
@@ -238,7 +238,6 @@
             box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
         }
 
-        /* Section Titles */
         .section-header {
             display: flex;
             align-items: center;
@@ -257,9 +256,10 @@
             color: var(--accent-purple);
             font-weight: 600;
             text-decoration: none;
+            cursor: pointer;
         }
 
-        /* Track List Item */
+        /* Track Card */
         .track-card {
             background: var(--bg-card);
             border: 1px solid var(--border-glass);
@@ -280,7 +280,7 @@
 
         .track-card.playing {
             border-color: var(--accent-purple);
-            background: rgba(139, 92, 246, 0.12);
+            background: rgba(139, 92, 246, 0.15);
         }
 
         .track-left {
@@ -297,7 +297,6 @@
             border-radius: 10px;
             object-fit: cover;
             background: #1E293B;
-            position: relative;
             flex-shrink: 0;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
@@ -354,6 +353,64 @@
             box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5);
         }
 
+        /* Search Screen */
+        .search-box-wrap {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .search-input-box {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 14px 16px 14px 44px;
+            color: #FFF;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
+        }
+
+        .search-icon-pos {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+            font-size: 18px;
+        }
+
+        .search-action-btn {
+            background: var(--gradient-accent);
+            border: none;
+            color: #FFF;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 0 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .search-loader {
+            text-align: center;
+            padding: 30px;
+            color: var(--accent-purple);
+            font-weight: 700;
+            font-size: 14px;
+            display: none;
+        }
+
         /* Equalizer View */
         .eq-container {
             background: var(--bg-card);
@@ -379,7 +436,6 @@
             color: var(--accent-purple);
         }
 
-        /* Equalizer Sliders (5 Bands) */
         .eq-bands {
             display: flex;
             justify-content: space-between;
@@ -398,9 +454,7 @@
         }
 
         .eq-slider {
-            -webkit-appearance: none;
-            writing-mode: bt-lr; /* IE */
-            -webkit-appearance: slider-vertical; /* Webkit */
+            -webkit-appearance: slider-vertical;
             width: 8px;
             height: 120px;
             background: rgba(255, 255, 255, 0.1);
@@ -410,7 +464,6 @@
 
         .eq-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
             width: 22px;
             height: 22px;
             border-radius: 50%;
@@ -425,7 +478,6 @@
             font-weight: 600;
         }
 
-        /* Bass Booster & 3D Surround Knobs */
         .knobs-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -472,37 +524,6 @@
             cursor: pointer;
         }
 
-        /* Search Screen */
-        .search-box {
-            position: relative;
-            margin-bottom: 18px;
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 14px 16px 14px 44px;
-            color: #FFF;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .search-input:focus {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-sub);
-            font-size: 18px;
-        }
-
         /* Library Screen */
         .lib-grid {
             display: grid;
@@ -543,7 +564,7 @@
             right: 12px;
             background: rgba(17, 24, 39, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.35);
             border-radius: 16px;
             padding: 10px 14px;
             display: flex;
@@ -563,8 +584,8 @@
         }
 
         .mini-vinyl {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--accent-purple);
@@ -677,7 +698,7 @@
             z-index: 100;
             display: none;
             flex-direction: column;
-            padding: 24px 20px;
+            padding: 20px 20px;
             overflow-y: auto;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -695,44 +716,135 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
-        .modal-art-box {
+        /* View Mode Tabs inside Player: 💿 Kapak | 📺 Klip | 🎤 Şarkı Sözleri */
+        .player-view-tabs {
             display: flex;
             justify-content: center;
-            margin-bottom: 25px;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .p-tab {
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.2s;
+        }
+
+        .p-tab.active {
+            background: var(--gradient-accent);
+            color: #FFF;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            min-height: 280px;
+            justify-content: center;
+        }
+
+        .view-section.active {
+            display: flex;
         }
 
         .modal-art {
-            width: 280px;
-            height: 280px;
+            width: 260px;
+            height: 260px;
             border-radius: 24px;
             object-fit: cover;
             box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
             border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
+        /* Embedded YouTube Frame */
+        .yt-frame-box {
+            width: 100%;
+            height: 240px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-glass);
+            background: #000;
+        }
+
+        .yt-frame-box iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Apple Music Style Live Lyrics View */
+        .lyrics-box {
+            width: 100%;
+            height: 280px;
+            overflow-y: auto;
+            text-align: center;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 18px;
+            border: 1px solid var(--border-glass);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .lyrics-line {
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            transition: all 0.3s ease;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .lyrics-line.highlight {
+            color: #FFF;
+            font-size: 22px;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+            transform: scale(1.05);
+        }
+
         .modal-title-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-top: 15px;
+            margin-bottom: 18px;
         }
 
         .modal-song-title {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 800;
             margin-bottom: 4px;
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .modal-song-artist {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-sub);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .progress-box {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .scrubber {
@@ -767,7 +879,7 @@
             display: flex;
             align-items: center;
             justify-content: space-around;
-            margin-bottom: 25px;
+            margin-bottom: 22px;
         }
 
         .ctrl-btn {
@@ -794,7 +906,7 @@
             display: flex;
             justify-content: space-around;
             border-top: 1px solid var(--border-glass);
-            padding-top: 18px;
+            padding-top: 16px;
         }
 
         .extra-action-item {
@@ -837,11 +949,7 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        .vip-badge-lg {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-
+        .vip-badge-lg { font-size: 40px; margin-bottom: 10px; }
         .vip-title-lg {
             font-size: 22px;
             font-weight: 800;
@@ -874,43 +982,6 @@
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
             cursor: pointer;
         }
-
-        /* AdMob Banner placeholder */
-        .admob-banner {
-            background: #111827;
-            border-top: 1px solid var(--border-glass);
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            color: #6B7280;
-            letter-spacing: 0.5px;
-        }
-
-        /* Sound waves animation */
-        .sound-wave {
-            display: flex;
-            align-items: flex-end;
-            gap: 3px;
-            height: 18px;
-        }
-
-        .sound-wave-bar {
-            width: 3px;
-            background: var(--accent-purple);
-            border-radius: 2px;
-            animation: waveAnim 0.8s ease-in-out infinite alternate;
-        }
-
-        .sound-wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
-        .sound-wave-bar:nth-child(3) { animation-delay: 0.4s; height: 18px; }
-        .sound-wave-bar:nth-child(4) { animation-delay: 0.1s; height: 10px; }
-
-        @keyframes waveAnim {
-            0% { height: 4px; }
-            100% { height: 18px; }
-        }
     </style>
 </head>
 <body>
@@ -921,7 +992,7 @@
             <div class="logo-icon">🎵</div>
             <div>
                 <span class="logo-title">MüzikCepte</span>
-                <span class="logo-badge">PRO EQ</span>
+                <span class="logo-badge">CANLI YOUTUBE & SÖZLER</span>
             </div>
         </div>
         <div class="top-actions">
@@ -939,7 +1010,7 @@
             <div class="spotlight-card">
                 <span class="spotlight-badge">🔥 2026 EN ÇOK DİNLENENLER</span>
                 <h2 class="spotlight-title">Trend Türkçe Pop & Hit Parçalar</h2>
-                <p class="spotlight-desc">Haftanın en popüler şarkıları kesintisiz, kayan pencere ve yüksek ses kalitesiyle yayında.</p>
+                <p class="spotlight-desc">Milyonlarca şarkı canlı arama, kayan pencere ve gerçek zamanlı şarkı sözleriyle parmaklarınızın ucunda.</p>
                 <button class="spotlight-play-btn" onclick="playTrack(0)">
                     <span>▶ Hemen Dinle</span>
                 </button>
@@ -947,40 +1018,46 @@
 
             <!-- Categories Scroll -->
             <div class="pills-scroll">
-                <div class="pill-item active" onclick="filterGenre('all', this)">🔥 Tümü</div>
-                <div class="pill-item" onclick="filterGenre('pop', this)">🇹🇷 Türkçe Pop</div>
-                <div class="pill-item" onclick="filterGenre('rap', this)">🎧 Rap & Trap</div>
-                <div class="pill-item" onclick="filterGenre('lofi', this)">☕ Lofi Beats</div>
-                <div class="pill-item" onclick="filterGenre('rock', this)">🎸 Rock</div>
-                <div class="pill-item" onclick="filterGenre('gece', this)">🌙 Gece Dinletisi</div>
+                <div class="pill-item active" onclick="quickSearch('Trend Türkçe Müzik 2026', this)">🔥 Trendler</div>
+                <div class="pill-item" onclick="quickSearch('Semicenk', this)">🎤 Semicenk</div>
+                <div class="pill-item" onclick="quickSearch('Mert Demir', this)">🎸 Mert Demir</div>
+                <div class="pill-item" onclick="quickSearch('BLOK3', this)">🎧 BLOK3</div>
+                <div class="pill-item" onclick="quickSearch('Mabel Matiz', this)">✨ Mabel Matiz</div>
+                <div class="pill-item" onclick="quickSearch('Lofi Hip Hop Chill Beats', this)">☕ Lofi Beats</div>
+                <div class="pill-item" onclick="quickSearch('Sezen Aksu', this)">👑 Sezen Aksu</div>
             </div>
 
-            <!-- Track List Header -->
             <div class="section-header">
-                <span class="section-title">Popüler Şarkılar</span>
-                <a href="javascript:void(0)" class="section-link" onclick="switchTab('tab-search')">Tümünü Gör 🔍</a>
+                <span class="section-title">Popüler & Öne Çıkanlar</span>
+                <a href="javascript:void(0)" class="section-link" onclick="switchTab('tab-search')">Milyonlarca Şarkı Ara 🔍</a>
             </div>
 
-            <!-- Track List Container -->
             <div id="track-list-container">
                 <!-- Tracks dynamically injected -->
             </div>
         </section>
 
-        <!-- 2. TAB: ARAMA -->
+        <!-- 2. TAB: CANLI ARAMA -->
         <section id="tab-search" class="tab-panel">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Şarkı, sanatçı veya albüm ara..." oninput="handleSearch()">
+            <div class="search-box-wrap">
+                <div class="search-input-box">
+                    <span class="search-icon-pos">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Herhangi bir şarkı veya sanatçı yazın..." onkeydown="if(event.key==='Enter') executeLiveSearch()">
+                </div>
+                <button class="search-action-btn" onclick="executeLiveSearch()">Bul</button>
+            </div>
+
+            <div class="search-loader" id="searchLoader">
+                ⚡ Milyonlarca şarkı taranıyor, getiriliyor...
             </div>
 
             <div class="section-header">
-                <span class="section-title">Arama Sonuçları</span>
-                <span class="section-link" id="result-count">12 Parça</span>
+                <span class="section-title" id="searchHeader">Arama Sonuçları</span>
+                <span class="section-link" id="result-count">Canlı YouTube Motoru</span>
             </div>
 
             <div id="search-results-container">
-                <!-- Search results injected -->
+                <!-- Live search results injected -->
             </div>
         </section>
 
@@ -991,35 +1068,33 @@
                     <span class="section-title">🎚️ 5-Bant Ekolayzır</span>
                     <div class="eq-switch">
                         <span>AÇIK</span>
-                        <input type="checkbox" checked onchange="toggleEq(this.checked)">
+                        <input type="checkbox" checked>
                     </div>
                 </div>
 
-                <!-- 5 Bands -->
                 <div class="eq-bands">
                     <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="4" class="eq-slider" oninput="updateEq(0, this.value)">
+                        <input type="range" min="-12" max="12" value="6" class="eq-slider">
                         <span class="eq-band-label">60Hz</span>
                     </div>
                     <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="2" class="eq-slider" oninput="updateEq(1, this.value)">
+                        <input type="range" min="-12" max="12" value="4" class="eq-slider">
                         <span class="eq-band-label">230Hz</span>
                     </div>
                     <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEq(2, this.value)">
+                        <input type="range" min="-12" max="12" value="1" class="eq-slider">
                         <span class="eq-band-label">910Hz</span>
                     </div>
                     <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="3" class="eq-slider" oninput="updateEq(3, this.value)">
+                        <input type="range" min="-12" max="12" value="4" class="eq-slider">
                         <span class="eq-band-label">3.6kHz</span>
                     </div>
                     <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="5" class="eq-slider" oninput="updateEq(4, this.value)">
+                        <input type="range" min="-12" max="12" value="7" class="eq-slider">
                         <span class="eq-band-label">14kHz</span>
                     </div>
                 </div>
 
-                <!-- Presets -->
                 <div class="pills-scroll" style="margin-bottom: 0;">
                     <div class="pill-item active" onclick="applyPreset('bass', this)">🔊 Bass Boost</div>
                     <div class="pill-item" onclick="applyPreset('pop', this)">🎤 Pop</div>
@@ -1029,17 +1104,16 @@
                 </div>
             </div>
 
-            <!-- Bass & 3D Knobs -->
             <div class="knobs-grid">
                 <div class="knob-card">
                     <div class="knob-title">💣 BASS BOOSTER</div>
-                    <div class="knob-val" id="bassVal">+75%</div>
-                    <input type="range" min="0" max="100" value="75" class="knob-range" oninput="updateBass(this.value)">
+                    <div class="knob-val" id="bassVal">+85%</div>
+                    <input type="range" min="0" max="100" value="85" class="knob-range" oninput="document.getElementById('bassVal').innerText = '+' + this.value + '%'">
                 </div>
                 <div class="knob-card">
                     <div class="knob-title">🎧 3D SURROUND</div>
-                    <div class="knob-val" id="surroundVal">+60%</div>
-                    <input type="range" min="0" max="100" value="60" class="knob-range" oninput="updateSurround(this.value)">
+                    <div class="knob-val" id="surroundVal">+70%</div>
+                    <input type="range" min="0" max="100" value="70" class="knob-range" oninput="document.getElementById('surroundVal').innerText = '+' + this.value + '%'">
                 </div>
             </div>
         </section>
@@ -1047,15 +1121,15 @@
         <!-- 4. TAB: KÜTÜPHANEM -->
         <section id="tab-library" class="tab-panel">
             <div class="lib-grid">
-                <div class="lib-card" onclick="alert('Favori listeniz hazır!')">
+                <div class="lib-card" onclick="alert('Beğendiğiniz tüm şarkılar listenizde saklanıyor!')">
                     <div class="lib-icon">❤️</div>
                     <div class="lib-title">Beğenilenler</div>
                     <div class="lib-count" id="fav-count">4 Parça</div>
                 </div>
                 <div class="lib-card" onclick="alert('Çevrimdışı hazır müzikleriniz listelendi.')">
                     <div class="lib-icon">📶</div>
-                    <div class="lib-title">Çevrimdışı İndirilenler</div>
-                    <div class="lib-count">12 Parça</div>
+                    <div class="lib-title">Çevrimdışı Mod</div>
+                    <div class="lib-count">Aktif</div>
                 </div>
                 <div class="lib-card" onclick="alert('Yeni çalma listesi oluşturuldu!')">
                     <div class="lib-icon">➕</div>
@@ -1082,8 +1156,8 @@
         <div class="mini-left">
             <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150" id="miniThumb" class="mini-vinyl" alt="Art">
             <div class="mini-info">
-                <div class="mini-title" id="miniTitle">Antidepresan</div>
-                <div class="mini-artist" id="miniArtist">Mabel Matiz & Mert Demir</div>
+                <div class="mini-title" id="miniTitle">Ateşe Düştüm</div>
+                <div class="mini-artist" id="miniArtist">Mert Demir</div>
             </div>
         </div>
         <div class="mini-controls" onclick="event.stopPropagation()">
@@ -1101,7 +1175,7 @@
         </button>
         <button class="nav-item" onclick="switchTab('tab-search', this)">
             <span class="nav-icon">🔍</span>
-            <span>Ara</span>
+            <span>Müzik Ara</span>
         </button>
         <button class="nav-item" onclick="switchTab('tab-eq', this)">
             <span class="nav-icon">🎚️</span>
@@ -1121,14 +1195,38 @@
             <button class="icon-btn" onclick="triggerNativePip()" title="Kayan Pencere">📱</button>
         </div>
 
-        <div class="modal-art-box">
+        <!-- 3 View Mode Tabs: 💿 Kapak | 📺 Klip | 🎤 Şarkı Sözleri -->
+        <div class="player-view-tabs">
+            <button class="p-tab active" onclick="switchPlayerView('view-art', this)">💿 Kapak</button>
+            <button class="p-tab" onclick="switchPlayerView('view-clip', this)">📺 Klip</button>
+            <button class="p-tab" onclick="switchPlayerView('view-lyrics', this)">🎤 Şarkı Sözleri</button>
+        </div>
+
+        <!-- View 1: Art -->
+        <div id="view-art" class="view-section active">
             <img src="" id="fullArt" class="modal-art" alt="Album Cover">
+        </div>
+
+        <!-- View 2: Video Clip (YouTube Embed) -->
+        <div id="view-clip" class="view-section">
+            <div class="yt-frame-box">
+                <iframe id="ytVideoFrame" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- View 3: Live Lyrics (Apple Music Style) -->
+        <div id="view-lyrics" class="view-section">
+            <div class="lyrics-box" id="lyricsBox">
+                <div style="margin: auto; color: var(--text-sub); font-size: 14px;">
+                    ⚡ Şarkı sözleri yükleniyor...
+                </div>
+            </div>
         </div>
 
         <div class="modal-title-row">
             <div>
-                <h1 class="modal-song-title" id="fullTitle">Şarkı Adı</h1>
-                <p class="modal-song-artist" id="fullArtist">Sanatçı</p>
+                <h1 class="modal-song-title" id="fullTitle">Ateşe Düştüm</h1>
+                <p class="modal-song-artist" id="fullArtist">Mert Demir</p>
             </div>
             <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
         </div>
@@ -1138,7 +1236,7 @@
             <input type="range" class="scrubber" id="scrubber" value="0" min="0" max="100" oninput="seekTrack(this.value)">
             <div class="time-row">
                 <span id="currentTime">0:00</span>
-                <span id="totalTime">3:42</span>
+                <span id="totalTime">3:51</span>
             </div>
         </div>
 
@@ -1151,19 +1249,19 @@
             <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Tekrar">🔁</button>
         </div>
 
-        <!-- Extra Actions (PIP, Sleep Timer, EQ, Share) -->
+        <!-- Extra Actions -->
         <div class="modal-extra-actions">
             <div class="extra-action-item" onclick="triggerNativePip()">
                 <span style="font-size: 18px;">📱</span>
                 <span>Kayan Ekran</span>
             </div>
+            <div class="extra-action-item" onclick="switchPlayerView('view-lyrics', document.querySelectorAll('.p-tab')[2])">
+                <span style="font-size: 18px;">🎤</span>
+                <span>Sözler</span>
+            </div>
             <div class="extra-action-item" onclick="setSleepTimer()">
                 <span style="font-size: 18px;">🌙</span>
                 <span>Uyku Sayacı</span>
-            </div>
-            <div class="extra-action-item" onclick="closeFullPlayer(); switchTab('tab-eq');">
-                <span style="font-size: 18px;">🎚️</span>
-                <span>Ekolayzır</span>
             </div>
             <div class="extra-action-item" onclick="shareCurrentSong()">
                 <span style="font-size: 18px;">↗️</span>
@@ -1187,83 +1285,64 @@
         </div>
     </div>
 
-    <!-- Audio Element -->
     <audio id="audioPlayer" preload="auto"></audio>
 
     <script>
-        // Real royalty-free and popular audio dataset
-        const TRACKS = [
+        // High quality initial track database
+        let CURRENT_PLAYLIST = [
             {
-                id: 1,
-                title: "Antidepresan (Akustik)",
-                artist: "Mert Demir & Mabel Matiz",
-                genre: "pop",
-                duration: "03:42",
-                art: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300",
-                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
-            },
-            {
-                id: 2,
+                id: "RQmXet6kZ-Y",
                 title: "Ateşe Düştüm",
                 artist: "Mert Demir",
-                genre: "pop",
-                duration: "04:10",
-                art: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300",
+                duration: "3:51",
+                art: "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg",
+                ytId: "RQmXet6kZ-Y",
                 url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
             },
             {
-                id: 3,
-                title: "Ali Cabbar (Remix)",
-                artist: "Emir Can İğrek",
-                genre: "pop",
-                duration: "03:15",
-                art: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
+                id: "cahWIOCm5YM",
+                title: "Üzülmedim Ki",
+                artist: "Semicenk",
+                duration: "3:20",
+                art: "https://i.ytimg.com/vi/cahWIOCm5YM/hqdefault.jpg",
+                ytId: "cahWIOCm5YM",
+                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            },
+            {
+                id: "CRxxy29b06M",
+                title: "Sende Kalmış",
+                artist: "Semicenk",
+                duration: "3:10",
+                art: "https://i.ytimg.com/vi/CRxxy29b06M/hqdefault.jpg",
+                ytId: "CRxxy29b06M",
                 url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=uplifting-day-112028.mp3"
             },
             {
-                id: 4,
-                title: "Geceler & Fırtına",
-                artist: "Ezhel & Uzi",
-                genre: "rap",
-                duration: "03:30",
-                art: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300",
-                url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f774cb.mp3?filename=hip-hop-rock-124037.mp3"
-            },
-            {
-                id: 5,
-                title: "Bi Tek Ben Anlarım",
-                artist: "Köfn",
-                genre: "pop",
-                duration: "03:50",
-                art: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=300",
+                id: "1514525253",
+                title: "Antidepresan",
+                artist: "Mert Demir & Mabel Matiz",
+                duration: "3:42",
+                art: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300",
+                ytId: "8UtOX3KHKN4",
                 url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=summer-walk-111105.mp3"
             },
             {
-                id: 6,
-                title: "Gece Lofi & Yağmur",
-                artist: "Chill Beats Istanbul",
-                genre: "lofi",
-                duration: "02:55",
-                art: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300",
-                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+                id: "1508700115",
+                title: "Geceler & Fırtına",
+                artist: "Ezhel & Uzi",
+                duration: "3:30",
+                art: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300",
+                ytId: "riwF4OyxKys",
+                url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f774cb.mp3?filename=hip-hop-rock-124037.mp3"
             },
             {
-                id: 7,
-                title: "Dön Bak Dünyaya",
-                artist: "Pinhani",
-                genre: "rock",
-                duration: "04:02",
-                art: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=300",
-                url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
-            },
-            {
-                id: 8,
-                title: "Aramam",
-                artist: "İbrahim Tatlıses & Deep House",
-                genre: "gece",
-                duration: "03:38",
-                art: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
-                url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=uplifting-day-112028.mp3"
+                id: "1487180144",
+                title: "Bi Tek Ben Anlarım",
+                artist: "Köfn",
+                duration: "3:50",
+                art: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=300",
+                ytId: "QPXU_mvj2dg",
+                url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=summer-walk-111105.mp3"
             }
         ];
 
@@ -1271,15 +1350,13 @@
         let isPlaying = false;
         let isShuffle = false;
         let isRepeat = false;
-        let likes = new Set([1, 3]);
+        let likes = new Set();
 
         const audio = document.getElementById('audioPlayer');
 
-        // Init App
         window.addEventListener('DOMContentLoaded', () => {
-            renderTracks(TRACKS);
-            renderSearchResults(TRACKS);
-            renderRecentTracks(TRACKS.slice(0, 4));
+            renderTracks(CURRENT_PLAYLIST);
+            renderRecentTracks(CURRENT_PLAYLIST.slice(0, 4));
             loadTrack(0, false);
             initAudioEvents();
         });
@@ -1305,10 +1382,12 @@
 
         function renderSearchResults(list) {
             const container = document.getElementById('search-results-container');
-            container.innerHTML = list.map((t) => {
-                const idx = TRACKS.findIndex(x => x.id === t.id);
-                return `
-                <div class="track-card ${idx === currentIndex ? 'playing' : ''}" onclick="playTrack(${idx})">
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#9CA3AF;">Şarkı bulunamadı. Lütfen başka bir kelime deneyin.</div>';
+                return;
+            }
+            container.innerHTML = list.map((t, i) => `
+                <div class="track-card" onclick="playOnlineTrack(${i})">
                     <div class="track-left">
                         <img src="${t.art}" class="track-thumb" alt="art">
                         <div class="track-info">
@@ -1317,20 +1396,70 @@
                         </div>
                     </div>
                     <div class="track-right">
-                        <span class="track-duration">${t.duration}</span>
+                        <span class="track-duration">${t.duration || 'YouTube'}</span>
                         <div class="play-btn-circle">▶</div>
                     </div>
                 </div>
-            `}).join('');
-            document.getElementById('result-count').innerText = `${list.length} Parça`;
+            `).join('');
+            document.getElementById('result-count').innerText = `${list.length} Parça Bulundu`;
+        }
+
+        let SEARCH_RESULTS = [];
+
+        function executeLiveSearch() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
+
+            document.getElementById('searchLoader').style.display = 'block';
+            document.getElementById('search-results-container').innerHTML = '';
+
+            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
+                window.AndroidBridge.searchOnlineMusic(q);
+            } else {
+                // Fallback web fetch
+                fetchSearchResultsFallback(q);
+            }
+        }
+
+        function quickSearch(artist, el) {
+            document.querySelectorAll('.pills-scroll .pill-item').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            switchTab('tab-search');
+            document.getElementById('searchInput').value = artist;
+            executeLiveSearch();
+        }
+
+        // Bridge Callbacks from Android Java
+        window.onMusicSearchResults = function(results) {
+            document.getElementById('searchLoader').style.display = 'none';
+            SEARCH_RESULTS = results;
+            renderSearchResults(results);
+        };
+
+        window.onMusicSearchError = function(err) {
+            document.getElementById('searchLoader').style.display = 'none';
+            document.getElementById('search-results-container').innerHTML = '<div style="text-align:center; padding:30px; color:#EF4444;">Arama sırasında bağlantı hatası oluştu. Tekrar deneyiniz.</div>';
+        };
+
+        function fetchSearchResultsFallback(q) {
+            // Simulated fallback results if offline
+            setTimeout(() => {
+                document.getElementById('searchLoader').style.display = 'none';
+                SEARCH_RESULTS = CURRENT_PLAYLIST.filter(t => t.title.toLowerCase().includes(q.toLowerCase()) || t.artist.toLowerCase().includes(q.toLowerCase()));
+                renderSearchResults(SEARCH_RESULTS);
+            }, 600);
+        }
+
+        function playOnlineTrack(idx) {
+            const item = SEARCH_RESULTS[idx];
+            CURRENT_PLAYLIST.unshift(item);
+            loadTrack(0, true);
         }
 
         function renderRecentTracks(list) {
             const container = document.getElementById('recent-tracks-container');
-            container.innerHTML = list.map((t) => {
-                const idx = TRACKS.findIndex(x => x.id === t.id);
-                return `
-                <div class="track-card" onclick="playTrack(${idx})">
+            container.innerHTML = list.map((t, i) => `
+                <div class="track-card" onclick="playTrack(${i})">
                     <div class="track-left">
                         <img src="${t.art}" class="track-thumb" alt="art">
                         <div class="track-info">
@@ -1342,47 +1471,55 @@
                         <div class="play-btn-circle">▶</div>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
         function loadTrack(index, autoPlay = true) {
             currentIndex = index;
-            const t = TRACKS[index];
-            audio.src = t.url;
+            const t = CURRENT_PLAYLIST[index];
             
-            // Update Mini Player
+            // If YouTube ID exists, set embedded player
+            if (t.ytId) {
+                document.getElementById('ytVideoFrame').src = `https://www.youtube-nocookie.com/embed/${t.ytId}?autoplay=1&enablejsapi=1&playsinline=1`;
+            }
+
+            if (t.url) {
+                audio.src = t.url;
+            }
+
+            // Update UI
             document.getElementById('miniTitle').innerText = t.title;
             document.getElementById('miniArtist').innerText = t.artist;
             document.getElementById('miniThumb').src = t.art;
             
-            // Update Full Player
             document.getElementById('fullTitle').innerText = t.title;
             document.getElementById('fullArtist').innerText = t.artist;
             document.getElementById('fullArt').src = t.art;
-            document.getElementById('totalTime').innerText = t.duration;
+            document.getElementById('totalTime').innerText = t.duration || "03:30";
             document.getElementById('likeBtn').innerText = likes.has(t.id) ? '❤️' : '🤍';
 
-            renderTracks(TRACKS);
+            renderTracks(CURRENT_PLAYLIST);
+
+            // Fetch Lyrics automatically!
+            loadLyricsForCurrentSong(t.artist, t.title);
 
             if (autoPlay) {
-                audio.play().then(() => {
-                    isPlaying = true;
-                    updatePlayButtons();
-                }).catch(() => {});
+                isPlaying = true;
+                if (t.url) {
+                    audio.play().catch(() => {});
+                }
+                updatePlayButtons();
             }
         }
 
         function togglePlay() {
-            if (audio.paused) {
-                audio.play().then(() => {
-                    isPlaying = true;
-                    updatePlayButtons();
-                });
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                audio.play().catch(() => {});
             } else {
                 audio.pause();
-                isPlaying = false;
-                updatePlayButtons();
             }
+            updatePlayButtons();
         }
 
         function updatePlayButtons() {
@@ -1392,7 +1529,7 @@
             const vinyl = document.getElementById('miniThumb');
             if (isPlaying) vinyl.classList.add('playing');
             else vinyl.classList.remove('playing');
-            renderTracks(TRACKS);
+            renderTracks(CURRENT_PLAYLIST);
         }
 
         function playTrack(index) {
@@ -1401,15 +1538,15 @@
 
         function nextTrack() {
             if (isShuffle) {
-                currentIndex = Math.floor(Math.random() * TRACKS.length);
+                currentIndex = Math.floor(Math.random() * CURRENT_PLAYLIST.length);
             } else {
-                currentIndex = (currentIndex + 1) % TRACKS.length;
+                currentIndex = (currentIndex + 1) % CURRENT_PLAYLIST.length;
             }
             loadTrack(currentIndex, true);
         }
 
         function prevTrack() {
-            currentIndex = (currentIndex - 1 + TRACKS.length) % TRACKS.length;
+            currentIndex = (currentIndex - 1 + CURRENT_PLAYLIST.length) % CURRENT_PLAYLIST.length;
             loadTrack(currentIndex, true);
         }
 
@@ -1444,7 +1581,62 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        // Navigation Tabs
+        // View Tabs in Full Screen Player
+        function switchPlayerView(viewId, el) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            document.querySelectorAll('.p-tab').forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        // Live Lyrics Engine (Apple Music Style)
+        function loadLyricsForCurrentSong(artist, title) {
+            const lyricsBox = document.getElementById('lyricsBox');
+            lyricsBox.innerHTML = '<div style="margin:auto; color:var(--text-sub); font-size:14px;">⚡ Şarkı sözleri aranıyor...</div>';
+
+            if (window.AndroidBridge && window.AndroidBridge.fetchLyrics) {
+                window.AndroidBridge.fetchLyrics(artist, title);
+            } else {
+                // Fallback web fetch from lrclib
+                const cleanArt = encodeURIComponent(artist);
+                const cleanTit = encodeURIComponent(title.replace(/\(.*?\)/g, '').trim());
+                fetch(`https://lrclib.net/api/get?artist_name=${cleanArt}&track_name=${cleanTit}`)
+                    .then(res => res.json())
+                    .then(data => window.onLyricsLoaded(data))
+                    .catch(() => window.onLyricsNotFound());
+            }
+        }
+
+        window.onLyricsLoaded = function(data) {
+            const box = document.getElementById('lyricsBox');
+            const lyrics = data.plainLyrics || data.syncedLyrics;
+            if (lyrics) {
+                const lines = lyrics.split('\n').filter(l => l.trim().length > 0);
+                box.innerHTML = lines.map((line, idx) => `
+                    <div class="lyrics-line ${idx === 2 ? 'highlight' : ''}" onclick="this.classList.toggle('highlight')">
+                        ${line.replace(/\[\d+:\d+\.\d+\]/g, '')}
+                    </div>
+                `).join('');
+            } else {
+                window.onLyricsNotFound();
+            }
+        };
+
+        window.onLyricsNotFound = function() {
+            const box = document.getElementById('lyricsBox');
+            const song = CURRENT_PLAYLIST[currentIndex];
+            box.innerHTML = `
+                <div style="margin:auto; text-align:center;">
+                    <p style="color:var(--text-sub); font-size:14px; margin-bottom:12px;">Bu parça için senkronize söz bulunamadı.</p>
+                    <button class="pill-item active" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(song.artist + ' ' + song.title + ' şarkı sözleri')}', '_blank')">
+                        🌐 Google'da Sözleri Aç
+                    </button>
+                </div>
+            `;
+        };
+
+        // Tab Switching
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -1456,28 +1648,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function filterGenre(genre, el) {
-            document.querySelectorAll('.pills-scroll .pill-item').forEach(p => p.classList.remove('active'));
-            el.classList.add('active');
-            if (genre === 'all') {
-                renderTracks(TRACKS);
-            } else {
-                const filtered = TRACKS.filter(t => t.genre === genre);
-                renderTracks(filtered);
-            }
-        }
-
-        function handleSearch() {
-            const q = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!q) {
-                renderSearchResults(TRACKS);
-            } else {
-                const res = TRACKS.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
-                renderSearchResults(res);
-            }
-        }
-
-        // Full Screen Player Modal
+        // Full Screen Player
         function openFullPlayer() {
             document.getElementById('fullPlayer').classList.add('active');
         }
@@ -1486,22 +1657,16 @@
             document.getElementById('fullPlayer').classList.remove('active');
         }
 
-        // VIP Modal
-        function openVipModal() {
-            document.getElementById('vipModal').style.display = 'flex';
-        }
-
-        function closeVipModal(e) {
-            document.getElementById('vipModal').style.display = 'none';
-        }
-
+        // VIP
+        function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
+        function closeVipModal(e) { document.getElementById('vipModal').style.display = 'none'; }
         function buyVip() {
             alert('🎉 Tebrikler! MüzikCepte VIP PRO başarıyla aktif edildi. Reklamlar kaldırıldı ve 320kbps HD ses açıldı!');
             closeVipModal();
         }
 
         function toggleLike() {
-            const t = TRACKS[currentIndex];
+            const t = CURRENT_PLAYLIST[currentIndex];
             if (likes.has(t.id)) likes.delete(t.id);
             else likes.add(t.id);
             document.getElementById('likeBtn').innerText = likes.has(t.id) ? '❤️' : '🤍';
@@ -1527,7 +1692,7 @@
         }
 
         function shareCurrentSong() {
-            const t = TRACKS[currentIndex];
+            const t = CURRENT_PLAYLIST[currentIndex];
             if (window.AndroidBridge && window.AndroidBridge.shareMusic) {
                 window.AndroidBridge.shareMusic(t.title + " - " + t.artist, "https://muzikcepte.app");
             } else {
@@ -1548,22 +1713,9 @@
             }
         }
 
-        // Equalizer Sliders & Presets
-        function updateEq(band, val) {
-            // Web Audio API hooks
-        }
-
-        function updateBass(val) {
-            document.getElementById('bassVal').innerText = `+${val}%`;
-        }
-
-        function updateSurround(val) {
-            document.getElementById('surroundVal').innerText = `+${val}%`;
-        }
-
         function applyPreset(type, el) {
             document.querySelectorAll('#tab-eq .pill-item').forEach(p => p.classList.remove('active'));
-            el.classList.add('active');
+            if (el) el.classList.add('active');
             const sliders = document.querySelectorAll('.eq-slider');
             const presets = {
                 'bass': [8, 5, 1, 3, 6],
@@ -1574,10 +1726,6 @@
             };
             const vals = presets[type] || presets['flat'];
             sliders.forEach((s, i) => s.value = vals[i]);
-        }
-
-        function toggleEq(active) {
-            // Toggle equalizer active state
         }
     </script>
 </body>
