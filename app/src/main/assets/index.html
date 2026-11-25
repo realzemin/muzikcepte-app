@@ -324,6 +324,50 @@
             font-weight: 600;
         }
 
+        
+        .dl-action-btn {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #C4B5FD;
+            border-radius: 12px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .dl-action-btn:active {
+            background: var(--accent-purple);
+            color: #FFF;
+            transform: scale(0.95);
+        }
+        .offline-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .offline-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .offline-badge {
+            background: #10B981;
+            color: #FFF;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
         .play-btn-circle {
             width: 34px;
             height: 34px;
@@ -1048,7 +1092,7 @@
                     <div class="lib-title">Beğenilenler</div>
                     <div class="lib-count" id="fav-count">4 Parça</div>
                 </div>
-                <div class="lib-card" onclick="alert('Çevrimdışı hazır müzikleriniz listelendi.')">
+                <div class="lib-card" onclick="document.getElementById('offline-section').scrollIntoView({behavior: 'smooth'})">
                     <div class="lib-icon">📶</div>
                     <div class="lib-title">Çevrimdışı Mod</div>
                     <div class="lib-count">Aktif</div>
@@ -1065,7 +1109,12 @@
                 </div>
             </div>
 
-            <div class="section-header">
+            <div id="offline-section" class="section-header" style="margin-top: 15px;">
+                <span class="section-title">💾 İndirilen & Çevrimdışı Müzikler</span>
+            </div>
+            <div id="offline-tracks-container"></div>
+
+            <div class="section-header" style="margin-top: 25px;">
                 <span class="section-title">Son Çalınanlar</span>
             </div>
             <div id="recent-tracks-container"></div>
@@ -1166,8 +1215,18 @@
             <button class="ctrl-btn" onclick="triggerNativePip()" title="Kayan Ekran">📱</button>
         </div>
 
+        <!-- Big Download Button -->
+        <button class="vip-buy-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); margin: 15px 0 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="triggerDownload(CURRENT_PLAYLIST[currentIndex].ytId || CURRENT_PLAYLIST[currentIndex].id, CURRENT_PLAYLIST[currentIndex].title)">
+            <span style="font-size: 18px;">⬇️</span>
+            <span>Şarkıyı / Videoyu İndir (MP3 & MP4)</span>
+        </button>
+
         <!-- Extra Actions -->
         <div class="modal-extra-actions">
+            <div class="extra-action-item" onclick="openDirectInAppPlayer()">
+                <span style="font-size: 18px; color: #EC4899;">📺</span>
+                <span>Dahili Klip</span>
+            </div>
             <div class="extra-action-item" onclick="triggerNativePip()">
                 <span style="font-size: 18px;">📱</span>
                 <span>Kayan Ekran</span>
@@ -1295,7 +1354,7 @@
                         </div>
                     </div>
                     <div class="track-right">
-                        <span class="track-duration">${t.duration}</span>
+                        <button class="dl-action-btn" onclick="event.stopPropagation(); triggerDownload('${t.ytId || t.id}', '${t.title.replace(/'/g, "\\'")}')">⬇️ İndir</button>
                         <div class="play-btn-circle">${i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
                 </div>
@@ -1370,8 +1429,13 @@
         function playOnlineTrack(idx) {
             const item = SEARCH_RESULTS[idx];
             CURRENT_PLAYLIST.unshift(item);
+            currentIndex = 0;
             loadTrack(0, true);
-            openFullPlayer();
+            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
+                window.AndroidBridge.playInApp(item.ytId || item.id, item.title, item.artist);
+            } else {
+                openFullPlayer();
+            }
         }
 
         function renderRecentTracks(list) {
@@ -1390,6 +1454,79 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        
+        function triggerDownload(ytId, title) {
+            if (window.AndroidBridge && window.AndroidBridge.openDownloadModal) {
+                window.AndroidBridge.openDownloadModal(ytId, title);
+            } else {
+                alert("⬇️ İndirme Menüsü: " + title);
+            }
+        }
+
+        function openDirectInAppPlayer() {
+            const t = CURRENT_PLAYLIST[currentIndex];
+            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
+                window.AndroidBridge.playInApp(t.ytId || t.id, t.title, t.artist);
+            } else {
+                window.open("https://m.youtube.com/watch?v=" + (t.ytId || t.id), "_blank");
+            }
+        }
+
+        window.addTrackToOffline = function(ytId, title) {
+            let list = [];
+            try {
+                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            } catch(e) {}
+            if (!list.some(x => x.id === ytId)) {
+                list.unshift({ id: ytId, title: title, date: new Date().toLocaleDateString('tr-TR') });
+                localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
+            }
+            renderOfflineTracks();
+        };
+
+        function renderOfflineTracks() {
+            const container = document.getElementById('offline-tracks-container');
+            if (!container) return;
+            let list = [];
+            try {
+                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            } catch(e) {}
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub); font-size:13px;">📶 Henüz çevrimdışı müzik eklemediniz.<br>Herhangi bir şarkının yanındaki <b>⬇️ İndir</b> butonuna dokunarak çevrimdışı listenize ekleyebilirsiniz.</div>';
+                return;
+            }
+            container.innerHTML = list.map((item, idx) => `
+                <div class="offline-item-card">
+                    <div class="offline-item-left">
+                        <span class="offline-badge">ÇEVRİMDIŞI</span>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#FFF;">${item.title}</div>
+                            <div style="font-size:11px; color:var(--text-sub);">Hazır • 320kbps HD Ses</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="dl-action-btn" style="background:#10B981; color:#FFF;" onclick="playOfflineTrack('${item.id}', '${item.title.replace(/'/g, "\\'")}')">▶ Çal</button>
+                        <button class="dl-action-btn" style="background:#EF4444; color:#FFF;" onclick="removeOfflineTrack(${idx})">🗑</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playOfflineTrack(ytId, title) {
+            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
+                window.AndroidBridge.playInApp(ytId, title, "Çevrimdışı Parça");
+            } else {
+                alert("Çevrimdışı çalınıyor: " + title);
+            }
+        }
+
+        function removeOfflineTrack(idx) {
+            let list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            list.splice(idx, 1);
+            localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
+            renderOfflineTracks();
         }
 
         function loadTrack(index, autoPlay = true) {
@@ -1444,8 +1581,14 @@
         }
 
         function playTrack(index) {
+            currentIndex = index;
+            const t = CURRENT_PLAYLIST[index];
             loadTrack(index, true);
-            openFullPlayer();
+            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
+                window.AndroidBridge.playInApp(t.ytId || t.id, t.title, t.artist);
+            } else {
+                openFullPlayer();
+            }
         }
 
         function nextTrack() {

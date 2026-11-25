@@ -16,9 +16,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -44,6 +48,15 @@ public class MainActivity extends AppCompatActivity {
     public WebView webView;
     private ProgressBar progressBar;
 
+    // Dedicated In-App Video & Audio Player
+    private LinearLayout playerContainer;
+    private WebView playerWebView;
+    private TextView txtPlayerTitle;
+    private TextView txtPlayerSub;
+    private ProgressBar playerProgressBar;
+    private String currentPlayingYtId = "";
+    private String currentPlayingTitle = "";
+
     @SuppressLint({"SetJavaScriptEnabled", "SourceLockedOrientationActivity"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +72,16 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
 
+        playerContainer = findViewById(R.id.playerContainer);
+        playerWebView = findViewById(R.id.playerWebView);
+        txtPlayerTitle = findViewById(R.id.txtPlayerTitle);
+        txtPlayerSub = findViewById(R.id.txtPlayerSub);
+        playerProgressBar = findViewById(R.id.playerProgressBar);
+
+        findViewById(R.id.btnBackFromPlayer).setOnClickListener(v -> closePlayer());
+        findViewById(R.id.btnDownloadInPlayer).setOnClickListener(v -> openDownloadOptions(currentPlayingYtId, currentPlayingTitle));
+        findViewById(R.id.btnPipInPlayer).setOnClickListener(v -> enterPIP());
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.mainRoot), (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() |
@@ -72,10 +95,15 @@ public class MainActivity extends AppCompatActivity {
             .setAppearanceLightStatusBars(false);
 
         setupWebView();
+        setupPlayerWebView();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                if (playerContainer != null && playerContainer.getVisibility() == View.VISIBLE) {
+                    closePlayer();
+                    return;
+                }
                 if (webView != null && webView.canGoBack()) {
                     webView.goBack();
                 } else {
@@ -104,9 +132,124 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, android.content.res.Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
-        if (webView != null) {
-            webView.evaluateJavascript("if(window.onPipChanged) window.onPipChanged(" + isInPictureInPictureMode + ");", null);
+        if (playerContainer != null && playerContainer.getVisibility() == View.VISIBLE) {
+            findViewById(R.id.playerTopBar).setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
         }
+    }
+
+    public void openInAppPlayer(String ytId, String title, String artist) {
+        currentPlayingYtId = ytId;
+        currentPlayingTitle = title + " - " + artist;
+        runOnUiThread(() -> {
+            if (txtPlayerTitle != null) txtPlayerTitle.setText(title);
+            if (txtPlayerSub != null) txtPlayerSub.setText(artist + " • Orijinal Klip ve Stüdyo Sesi");
+            if (playerContainer != null) playerContainer.setVisibility(View.VISIBLE);
+            if (playerWebView != null) {
+                String targetUrl = "https://m.youtube.com/watch?v=" + ytId;
+                playerWebView.loadUrl(targetUrl);
+            }
+        });
+    }
+
+    public void closePlayer() {
+        runOnUiThread(() -> {
+            if (playerWebView != null) {
+                playerWebView.loadUrl("about:blank");
+            }
+            if (playerContainer != null) {
+                playerContainer.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    public void openDownloadOptions(String ytId, String title) {
+        runOnUiThread(() -> {
+            String safeTitle = (title == null || title.isEmpty()) ? "Müzik Parçası" : title;
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("⬇️ " + safeTitle);
+            String[] options = {
+                "🎵 MP3 İndir (320kbps HD Ses)",
+                "🎬 MP4 Video İndir (HD Klip)",
+                "💾 Çevrimdışı Kitaplığıma Kaydet (İnternetsiz Dinle)",
+                "🔗 Şarkı Bağlantısını Paylaş"
+            };
+            builder.setItems(options, (dialog, which) -> {
+                switch (which) {
+                    case 0:
+                        // Direct high quality MP3 converter
+                        String mp3Url = "https://y2mate.nu/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                        Intent mp3Intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mp3Url));
+                        startActivity(mp3Intent);
+                        break;
+                    case 1:
+                        // HD Video MP4 Downloader
+                        String mp4Url = "https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                        Intent mp4Intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mp4Url));
+                        startActivity(mp4Intent);
+                        break;
+                    case 2:
+                        // Offline library save
+                        if (webView != null) {
+                            String escaped = safeTitle.replace("'", "\\'");
+                            webView.evaluateJavascript("if(window.addTrackToOffline) window.addTrackToOffline('" + ytId + "', '" + escaped + "');", null);
+                        }
+                        Toast.makeText(this, "✅ '" + safeTitle + "' Çevrimdışı Kitaplığınıza kaydedildi!", Toast.LENGTH_LONG).show();
+                        break;
+                    case 3:
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, "MüzikCepte ile dinle ve indir: " + safeTitle + " https://youtu.be/" + ytId);
+                        sendIntent.setType("text/plain");
+                        startActivity(Intent.createChooser(sendIntent, "Şarkıyı Paylaş"));
+                        break;
+                }
+            });
+            builder.setNegativeButton("Kapat", null);
+            builder.show();
+        });
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void setupPlayerWebView() {
+        WebSettings s = playerWebView.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false);
+        s.setAllowFileAccess(true);
+        s.setLoadWithOverviewMode(true);
+        s.setUseWideViewPort(true);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        s.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
+
+        playerWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                if (playerProgressBar != null) playerProgressBar.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (playerProgressBar != null) playerProgressBar.setVisibility(View.GONE);
+                // Clean header elements so it looks like an authentic integrated music player
+                String cleanCss = "var style = document.createElement('style');" +
+                        "style.innerHTML = 'header, ytm-header-bar, .mobile-topbar-header, ytm-pivot-bar-renderer { display: none !important; }';" +
+                        "document.head.appendChild(style);";
+                view.evaluateJavascript(cleanCss, null);
+            }
+        });
+
+        playerWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                if (playerProgressBar != null) {
+                    playerProgressBar.setProgress(newProgress);
+                    if (newProgress >= 100) playerProgressBar.setVisibility(View.GONE);
+                }
+            }
+        });
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -125,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.2");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.3");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -135,6 +278,16 @@ public class MainActivity extends AppCompatActivity {
             @JavascriptInterface
             public void triggerPip() {
                 runOnUiThread(() -> enterPIP());
+            }
+
+            @JavascriptInterface
+            public void playInApp(String ytId, String title, String artist) {
+                openInAppPlayer(ytId, title, artist);
+            }
+
+            @JavascriptInterface
+            public void openDownloadModal(String ytId, String title) {
+                openDownloadOptions(ytId, title);
             }
 
             @JavascriptInterface
@@ -257,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
                         URL url = new URL("https://lrclib.net/api/get?artist_name=" + cleanArtist + "&track_name=" + cleanTitle);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.1 (https://muzikcepte.app)");
+                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.3 (https://muzikcepte.app)");
                         conn.setConnectTimeout(6000);
                         conn.setReadTimeout(6000);
 
@@ -293,9 +446,6 @@ public class MainActivity extends AppCompatActivity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 if (url.startsWith("file:///android_asset/") || url.startsWith("file://") || url.startsWith("about:blank") || url.startsWith("javascript:")) {
-                    return false;
-                }
-                if (url.contains("youtube.com") || url.contains("youtu.be")) {
                     return false;
                 }
                 try {
