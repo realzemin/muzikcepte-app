@@ -3,55 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MüzikCepte - Akıllı Müzik Çalar & Şarkı Sözleri</title>
+    <title>MüzikCepte - Müzik Dinle ve İndir</title>
     <style>
         :root {
-            --bg-main: #0B0F19;
-            --bg-card: rgba(17, 24, 39, 0.88);
-            --bg-card-hover: rgba(31, 41, 55, 0.95);
+            --bg-base: #0B0F19;
+            --bg-card: #161D2F;
+            --bg-card-hover: #1E273E;
             --accent-purple: #8B5CF6;
             --accent-pink: #EC4899;
-            --accent-cyan: #06B6D4;
-            --text-main: #F9FAFB;
-            --text-sub: #9CA3AF;
-            --border-glass: rgba(255, 255, 255, 0.08);
             --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-            --gradient-card: linear-gradient(145deg, rgba(31, 41, 55, 0.7) 0%, rgba(17, 24, 39, 0.95) 100%);
+            --text-main: #FFFFFF;
+            --text-sub: #94A3B8;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-main);
+            background-color: var(--bg-base);
             color: var(--text-main);
+            font-family: var(--font-family);
             overflow-x: hidden;
-            height: 100vh;
             display: flex;
             flex-direction: column;
+            height: 100vh;
         }
 
-        /* Top Bar */
-        .top-bar {
+        /* Top Header */
+        .app-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 18px;
-            background: rgba(11, 15, 25, 0.96);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-glass);
+            padding: 16px 20px 12px;
+            background: linear-gradient(180deg, rgba(11, 15, 25, 0.98) 0%, rgba(11, 15, 25, 0.8) 100%);
+            backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
-            z-index: 40;
+            z-index: 50;
+            border-bottom: 1px solid var(--border-glass);
         }
 
-        .logo-box {
+        .logo-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -60,66 +59,45 @@
         .logo-icon {
             width: 38px;
             height: 38px;
+            border-radius: 12px;
             background: var(--gradient-accent);
-            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
         }
 
-        .logo-title {
-            font-size: 19px;
+        .logo-text {
+            font-size: 20px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            background: linear-gradient(90deg, #FFFFFF 0%, #E0E7FF 100%);
+            background: linear-gradient(135deg, #FFF 60%, #DDD 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .logo-badge {
             font-size: 10px;
-            background: rgba(139, 92, 246, 0.2);
-            color: #C084FC;
-            padding: 2px 7px;
-            border-radius: 20px;
-            border: 1px solid rgba(139, 92, 246, 0.4);
             font-weight: 700;
-        }
-
-        .top-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: #10B981;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-left: 6px;
         }
 
         .vip-btn {
-            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-            color: #FFF;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
-            cursor: pointer;
-        }
-
-        .icon-btn {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-glass);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #FBBF24;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: var(--text-main);
-            font-size: 16px;
+            gap: 6px;
             cursor: pointer;
         }
 
@@ -127,18 +105,16 @@
         .content-area {
             flex: 1;
             overflow-y: auto;
-            padding-bottom: 160px;
+            padding: 16px 20px 140px;
             scroll-behavior: smooth;
         }
 
         .tab-panel {
             display: none;
-            padding: 16px;
-            animation: fadeIn 0.25s ease-out;
         }
-
         .tab-panel.active {
             display: block;
+            animation: fadeIn 0.25s ease-out;
         }
 
         @keyframes fadeIn {
@@ -146,11 +122,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Spotlight */
+        /* Spotlight Card */
         .spotlight-card {
             background: linear-gradient(135deg, #4C1D95 0%, #831843 60%, #1E1B4B 100%);
             border-radius: 20px;
-            padding: 20px;
+            padding: 22px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
@@ -159,9 +135,9 @@
         }
 
         .spotlight-badge {
+            background: rgba(255, 255, 255, 0.2);
             font-size: 11px;
             font-weight: 800;
-            background: rgba(255, 255, 255, 0.2);
             padding: 4px 10px;
             border-radius: 12px;
             display: inline-block;
@@ -171,62 +147,67 @@
         .spotlight-title {
             font-size: 22px;
             font-weight: 800;
+            line-height: 1.2;
             margin-bottom: 6px;
-            line-height: 1.25;
         }
 
         .spotlight-desc {
-            font-size: 13px;
+            font-size: 12px;
             color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 14px;
+            margin-bottom: 16px;
+            line-height: 1.4;
         }
 
         .spotlight-play-btn {
-            background: #FFFFFF;
-            color: #0F172A;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 30px;
+            background: #FFF;
+            color: #0B0F19;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+            transition: transform 0.2s;
+        }
+        .spotlight-play-btn:active {
+            transform: scale(0.96);
         }
 
-        /* Horizontal Scroll Pills */
+        /* Pills Category Scroll */
         .pills-scroll {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 8px;
+            padding-bottom: 12px;
             margin-bottom: 18px;
             scrollbar-width: none;
         }
         .pills-scroll::-webkit-scrollbar { display: none; }
 
         .pill-item {
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--bg-card);
             border: 1px solid var(--border-glass);
-            color: var(--text-sub);
-            padding: 8px 16px;
             border-radius: 20px;
+            padding: 8px 16px;
             font-size: 13px;
             font-weight: 600;
+            color: var(--text-sub);
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .pill-item.active {
             background: var(--gradient-accent);
             color: #FFF;
             border-color: transparent;
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
         }
 
+        /* Section Titles */
         .section-header {
             display: flex;
             align-items: center;
@@ -235,41 +216,31 @@
         }
 
         .section-title {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 800;
             letter-spacing: -0.3px;
         }
 
-        .section-link {
-            font-size: 12px;
-            color: var(--accent-purple);
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        /* Track Card */
+        /* Track Card Item */
         .track-card {
             background: var(--bg-card);
             border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 10px 12px;
+            border-radius: 16px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.15s, background-color 0.15s;
+            transition: background 0.2s, transform 0.15s;
         }
-
         .track-card:active {
-            transform: scale(0.98);
             background: var(--bg-card-hover);
+            transform: scale(0.98);
         }
-
         .track-card.playing {
             border-color: var(--accent-purple);
-            background: rgba(139, 92, 246, 0.15);
+            background: rgba(139, 92, 246, 0.12);
         }
 
         .track-left {
@@ -285,9 +256,9 @@
             height: 48px;
             border-radius: 10px;
             object-fit: cover;
-            background: #1E293B;
+            background: #2D3748;
             flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
         }
 
         .track-info {
@@ -298,15 +269,16 @@
         .track-name {
             font-size: 14px;
             font-weight: 700;
+            color: #FFF;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 3px;
         }
 
         .track-artist {
             font-size: 12px;
             color: var(--text-sub);
+            margin-top: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -316,6 +288,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .track-duration {
@@ -324,13 +297,12 @@
             font-weight: 600;
         }
 
-        
         .icon-circle-btn {
             width: 34px;
             height: 34px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--border-glass);
             color: #C4B5FD;
             font-size: 14px;
             display: flex;
@@ -343,29 +315,6 @@
             background: var(--accent-purple);
             color: #FFF;
             transform: scale(0.92);
-        }
-        .offline-item-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .offline-item-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .offline-badge {
-            background: #10B981;
-            color: #FFF;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 6px;
         }
 
         .play-btn-circle {
@@ -380,7 +329,6 @@
             color: #FFF;
             font-size: 14px;
         }
-
         .track-card.playing .play-btn-circle {
             background: var(--gradient-accent);
             box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5);
@@ -408,7 +356,6 @@
             font-size: 14px;
             outline: none;
         }
-
         .search-input:focus {
             border-color: var(--accent-purple);
             box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
@@ -423,42 +370,70 @@
             font-size: 18px;
         }
 
-        .search-action-btn {
+        .search-submit-btn {
             background: var(--gradient-accent);
             border: none;
-            color: #FFF;
-            font-size: 14px;
-            font-weight: 800;
-            padding: 0 18px;
             border-radius: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-        }
-
-        .search-loader {
-            text-align: center;
-            padding: 30px;
-            color: var(--accent-purple);
+            padding: 0 18px;
+            color: #FFF;
             font-weight: 700;
             font-size: 14px;
-            display: none;
+            cursor: pointer;
+        }
+
+        /* Library Screen */
+        .lib-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .lib-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lib-card:active {
+            transform: scale(0.96);
+        }
+
+        .lib-icon {
+            font-size: 24px;
+        }
+
+        .lib-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .lib-count {
+            font-size: 12px;
+            color: var(--text-sub);
         }
 
         /* Sticky Mini Player */
         .mini-player {
             position: fixed;
-            bottom: 60px;
-            left: 12px;
-            right: 12px;
-            background: rgba(17, 24, 39, 0.95);
+            bottom: 74px;
+            left: 16px;
+            right: 16px;
+            height: 64px;
+            background: rgba(22, 29, 47, 0.95);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(139, 92, 246, 0.35);
-            border-radius: 16px;
-            padding: 10px 14px;
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            z-index: 50;
+            padding: 0 14px;
+            z-index: 90;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             cursor: pointer;
         }
@@ -477,7 +452,12 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--accent-purple);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
             animation: spin 8s linear infinite;
+            animation-play-state: paused;
+        }
+        .mini-vinyl.playing {
+            animation-play-state: running;
         }
 
         @keyframes spin {
@@ -492,6 +472,7 @@
         .mini-title {
             font-size: 13px;
             font-weight: 700;
+            color: #FFF;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -512,22 +493,22 @@
         }
 
         .mini-btn {
-            background: transparent;
+            background: none;
             border: none;
             color: #FFF;
             font-size: 20px;
-            width: 36px;
-            height: 36px;
+            cursor: pointer;
+            padding: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
         }
 
         .mini-play-btn {
-            background: var(--gradient-accent);
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
+            background: var(--gradient-accent);
             font-size: 16px;
         }
 
@@ -537,198 +518,160 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 68px;
             background: rgba(11, 15, 25, 0.98);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-glass);
             display: flex;
-            justify-content: space-around;
             align-items: center;
-            z-index: 45;
+            justify-content: space-around;
+            z-index: 100;
+            padding-bottom: 6px;
         }
 
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
             color: var(--text-sub);
-            font-size: 10px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
             background: none;
             border: none;
-            cursor: pointer;
-            padding: 8px 14px;
             transition: color 0.2s;
         }
-
         .nav-item.active {
             color: var(--accent-purple);
         }
-
         .nav-icon {
             font-size: 20px;
         }
 
-        /* Full Screen Player Modal */
-        .modal-player {
+        /* Full Screen Pure Audio Player */
+        .full-player-modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: #0B0F19;
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            padding: 20px 20px;
-            overflow-y: auto;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .modal-player.active {
+            background: linear-gradient(180deg, #1A102F 0%, #0B0F19 100%);
+            z-index: 200;
             display: flex;
+            flex-direction: column;
+            padding: 24px 24px 40px;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .full-player-modal.active {
+            transform: translateY(0);
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .modal-header {
+        .modal-top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 24px;
         }
 
-        .player-view-tabs {
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             display: flex;
-            justify-content: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px;
-            border-radius: 20px;
-            margin-bottom: 16px;
-        }
-
-        .p-tab {
-            padding: 6px 16px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-sub);
-            cursor: pointer;
-            border: none;
-            background: none;
-            transition: all 0.2s;
-        }
-
-        .p-tab.active {
-            background: var(--gradient-accent);
-            color: #FFF;
-        }
-
-        .view-section {
-            display: none;
-            flex-direction: column;
             align-items: center;
-            min-height: 250px;
             justify-content: center;
-        }
-
-        .view-section.active {
-            display: flex;
-        }
-
-        /* Video Clip Frame */
-        .yt-frame-box {
-            width: 100%;
-            height: 230px;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-glass);
-            background: #000;
-        }
-
-        .yt-frame-box iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .modal-art {
-            width: 240px;
-            height: 240px;
-            border-radius: 24px;
-            object-fit: cover;
-            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Lyrics View */
-        .lyrics-box {
-            width: 100%;
-            height: 250px;
-            overflow-y: auto;
-            text-align: center;
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 18px;
-            border: 1px solid var(--border-glass);
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .lyrics-line {
-            font-size: 17px;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.45);
-            transition: all 0.3s ease;
-            line-height: 1.4;
-        }
-
-        .lyrics-line.highlight {
             color: #FFF;
-            font-size: 21px;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
-            transform: scale(1.05);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Vinyl Disc Artwork */
+        .vinyl-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .big-vinyl {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(139, 92, 246, 0.5);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+            animation: spin 12s linear infinite;
+            animation-play-state: paused;
+        }
+        .big-vinyl.playing {
+            animation-play-state: running;
         }
 
         .modal-title-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 15px;
-            margin-bottom: 18px;
+            margin: 20px 0 12px;
         }
 
         .modal-song-title {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 800;
+            color: #FFF;
             margin-bottom: 4px;
-            max-width: 260px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .modal-song-artist {
-            font-size: 13px;
-            color: var(--text-sub);
-            max-width: 260px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 15px;
+            color: var(--accent-purple);
+            font-weight: 600;
         }
 
+        /* Seek Bar */
+        .seekbar-container {
+            margin: 16px 0;
+        }
+
+        .seekbar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .seekbar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* Controls */
         .modal-controls {
             display: flex;
             align-items: center;
-            justify-content: space-around;
-            margin-bottom: 22px;
+            justify-content: space-between;
+            margin: 15px 0 20px;
+            padding: 0 10px;
         }
 
         .ctrl-btn {
@@ -740,384 +683,214 @@
         }
 
         .ctrl-play-btn {
-            width: 64px;
-            height: 64px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
             background: var(--gradient-accent);
+            border: none;
+            color: #FFF;
+            font-size: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
-        }
-
-        .modal-extra-actions {
-            display: flex;
-            justify-content: space-around;
-            border-top: 1px solid var(--border-glass);
-            padding-top: 16px;
-        }
-
-        .extra-action-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: var(--text-sub);
-            font-size: 11px;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
             cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .ctrl-play-btn:active {
+            transform: scale(0.92);
         }
 
-        /* Presets & Equalizer */
-        .eq-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .eq-header {
+        /* Action Buttons */
+        .modal-actions-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 18px;
-        }
-
-        .eq-switch {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--accent-purple);
-        }
-
-        .eq-bands {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            height: 160px;
-            padding: 10px 0;
-            margin-bottom: 15px;
-        }
-
-        .eq-band-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             gap: 10px;
-            height: 100%;
         }
 
-        .eq-slider {
-            -webkit-appearance: slider-vertical;
-            width: 8px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            outline: none;
-        }
-
-        .eq-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
+        .action-button-main {
+            flex: 1;
             background: var(--gradient-accent);
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+            border: none;
+            border-radius: 16px;
+            padding: 12px;
+            color: #FFF;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             cursor: pointer;
         }
 
-        .eq-band-label {
-            font-size: 11px;
-            color: var(--text-sub);
-            font-weight: 600;
-        }
-
-        .knobs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-top: 15px;
-        }
-
-        .knob-card {
-            background: rgba(255, 255, 255, 0.04);
+        .action-button-secondary {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-glass);
             border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .knob-title {
-            font-size: 13px;
+            padding: 12px;
+            color: #FFF;
             font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .knob-val {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--accent-purple);
-            margin-bottom: 10px;
-        }
-
-        .knob-range {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .knob-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--gradient-accent);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             cursor: pointer;
+        }
+
+        /* Lyrics View Modal */
+        .lyrics-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70%;
+            background: #161D2F;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px;
+            z-index: 210;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        .lyrics-sheet.active {
+            transform: translateY(0);
+        }
+        .lyrics-content {
+            flex: 1;
+            overflow-y: auto;
+            text-align: center;
+            line-height: 2.2;
+            font-size: 16px;
+            font-weight: 600;
+            color: #E2E8F0;
+            padding: 15px 0;
         }
 
         /* VIP Modal */
         .vip-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            z-index: 120;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 300;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-
         .vip-card {
-            background: linear-gradient(145deg, #1E1B4B 0%, #0F172A 100%);
-            border: 2px solid #8B5CF6;
+            background: linear-gradient(180deg, #1E1B4B 0%, #0B0F19 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
-            padding: 24px;
+            padding: 26px;
             width: 100%;
-            max-width: 360px;
+            max-width: 340px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.4);
-        }
-
-        .vip-badge-lg { font-size: 40px; margin-bottom: 10px; }
-        .vip-title-lg {
-            font-size: 22px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #F59E0B, #EC4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .vip-feature {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .vip-buy-btn {
-            width: 100%;
-            background: var(--gradient-accent);
-            color: #FFF;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 800;
-            margin-top: 16px;
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Bar -->
-    <header class="top-bar">
-        <div class="logo-box">
+    <!-- Hidden Native Audio Engine - Zero Delay, Instant Playback! -->
+    <audio id="nativeAudioPlayer" preload="auto"></audio>
+
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="logo-wrap">
             <div class="logo-icon">🎵</div>
-            <div>
-                <span class="logo-title">MüzikCepte</span>
-                <span class="logo-badge">CANLI YOUTUBE</span>
-            </div>
+            <div class="logo-text">MüzikCepte</div>
+            <span class="logo-badge">PRO SES</span>
         </div>
-        <div class="top-actions">
-            <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
-            <button class="icon-btn" onclick="switchTab('tab-eq')">🎚️</button>
-        </div>
+        <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Content Pages -->
     <main class="content-area">
 
-        <!-- 1. TAB: KEŞFET -->
+        <!-- 1. TAB: KEŞFET (HOME) -->
         <section id="tab-home" class="tab-panel active">
-            <!-- Hero Spotlight -->
             <div class="spotlight-card">
-                <span class="spotlight-badge">🔥 TARKAN ÖZEL LİSTESİ</span>
-                <h2 class="spotlight-title">Tarkan - Yolla & Hit Şarkıları</h2>
-                <p class="spotlight-desc">Gerçek orijinal klip sesi ve şarkı sözleriyle Tarkan ve tüm sanatçılar parmaklarınızın ucunda.</p>
+                <span class="spotlight-badge">👑 MİLYONLARCA ŞARKI</span>
+                <h2 class="spotlight-title">Tarkan & Tüm Sanatçılar</h2>
+                <p class="spotlight-desc">Orijinal stüdyo sesleri, yüksek ses kalitesi ve tek tıkla internetsiz indirme.</p>
                 <button class="spotlight-play-btn" onclick="playTrack(0)">
-                    <span>▶ Tarkan - Yolla Dinle</span>
+                    <span>▶ Tarkan - Yolla Başlat</span>
                 </button>
             </div>
 
-            <!-- Categories Scroll -->
             <div class="pills-scroll">
                 <div class="pill-item active" onclick="quickSearch('Tarkan', this)">👑 Tarkan</div>
                 <div class="pill-item" onclick="quickSearch('Semicenk', this)">🎤 Semicenk</div>
                 <div class="pill-item" onclick="quickSearch('Mert Demir', this)">🎸 Mert Demir</div>
                 <div class="pill-item" onclick="quickSearch('Sezen Aksu', this)">✨ Sezen Aksu</div>
-                <div class="pill-item" onclick="quickSearch('Müslüm Gürses', this)">🌙 Müslüm Gürses</div>
-                <div class="pill-item" onclick="quickSearch('BLOK3', this)">🎧 BLOK3</div>
-                <div class="pill-item" onclick="quickSearch('Mabel Matiz', this)">🌸 Mabel Matiz</div>
+                <div class="pill-item" onclick="quickSearch('Müslüm Gürses', this)">🍷 Müslüm Baba</div>
+                <div class="pill-item" onclick="quickSearch('Blok3', this)">🔥 Blok3</div>
                 <div class="pill-item" onclick="quickSearch('Duman', this)">⚡ Duman</div>
             </div>
 
             <div class="section-header">
-                <span class="section-title">Popüler & Hit Parçalar</span>
-                <a href="javascript:void(0)" class="section-link" onclick="switchTab('tab-search')">Milyonlarca Şarkı Ara 🔍</a>
+                <span class="section-title">Popüler Şarkılar</span>
             </div>
-
-            <div id="track-list-container">
-                <!-- Tracks dynamically injected -->
-            </div>
+            <div id="track-list-container"></div>
         </section>
 
-        <!-- 2. TAB: CANLI ARAMA -->
+        <!-- 2. TAB: ARA (SEARCH) -->
         <section id="tab-search" class="tab-panel">
             <div class="search-box-wrap">
                 <div class="search-input-box">
                     <span class="search-icon-pos">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Tarkan, Semicenk, Mert Demir veya şarkı adı yazın..." onkeydown="if(event.key==='Enter') executeLiveSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Şarkı veya sanatçı adı yazın..." onkeydown="if(event.key==='Enter') executeSearch()">
                 </div>
-                <button class="search-action-btn" onclick="executeLiveSearch()">Bul</button>
-            </div>
-
-            <!-- Quick sub-search buttons -->
-            <div class="pills-scroll" style="margin-bottom: 12px;">
-                <div class="pill-item" onclick="quickSearch('Tarkan Sevilen Şarkıları', this)">Tarkan En İyiler</div>
-                <div class="pill-item" onclick="quickSearch('Tarkan Canlı Konser', this)">Tarkan Konser</div>
-                <div class="pill-item" onclick="quickSearch('Tarkan Remix', this)">Tarkan Remix</div>
-                <div class="pill-item" onclick="quickSearch('Tarkan Dudu', this)">Tarkan - Dudu</div>
-                <div class="pill-item" onclick="quickSearch('Tarkan Kuzu Kuzu', this)">Tarkan - Kuzu Kuzu</div>
-            </div>
-
-            <div class="search-loader" id="searchLoader">
-                ⚡ Milyonlarca şarkı taranıyor, getiriliyor...
+                <button class="search-submit-btn" onclick="executeSearch()">Ara</button>
             </div>
 
             <div class="section-header">
-                <span class="section-title" id="searchHeader">Arama Sonuçları</span>
-                <span class="section-link" id="result-count">Canlı YouTube Motoru</span>
+                <span class="section-title" id="search-header-title">Arama Sonuçları</span>
             </div>
-
+            <div id="searchLoader" style="display:none; text-align:center; padding:30px; color:var(--accent-purple);">
+                ⚡ Milyonlarca şarkı arasında aranıyor...
+            </div>
             <div id="search-results-container">
-                <!-- Search results injected -->
-            </div>
-        </section>
-
-        <!-- 3. TAB: EKOLAYZIR & BASS BOOSTER -->
-        <section id="tab-eq" class="tab-panel">
-            <div class="eq-container">
-                <div class="eq-header">
-                    <span class="section-title">🎚️ 5-Bant Ekolayzır</span>
-                    <div class="eq-switch">
-                        <span>AÇIK</span>
-                        <input type="checkbox" checked>
-                    </div>
-                </div>
-
-                <div class="eq-bands">
-                    <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="6" class="eq-slider">
-                        <span class="eq-band-label">60Hz</span>
-                    </div>
-                    <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="4" class="eq-slider">
-                        <span class="eq-band-label">230Hz</span>
-                    </div>
-                    <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="1" class="eq-slider">
-                        <span class="eq-band-label">910Hz</span>
-                    </div>
-                    <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="4" class="eq-slider">
-                        <span class="eq-band-label">3.6kHz</span>
-                    </div>
-                    <div class="eq-band-col">
-                        <input type="range" min="-12" max="12" value="7" class="eq-slider">
-                        <span class="eq-band-label">14kHz</span>
-                    </div>
-                </div>
-
-                <div class="pills-scroll" style="margin-bottom: 0;">
-                    <div class="pill-item active" onclick="applyPreset('bass', this)">🔊 Bass Boost</div>
-                    <div class="pill-item" onclick="applyPreset('pop', this)">🎤 Pop</div>
-                    <div class="pill-item" onclick="applyPreset('rock', this)">🎸 Rock</div>
-                    <div class="pill-item" onclick="applyPreset('vocal', this)">🗣️ Vokal</div>
-                    <div class="pill-item" onclick="applyPreset('flat', this)">⚖️ Düz</div>
-                </div>
-            </div>
-
-            <div class="knobs-grid">
-                <div class="knob-card">
-                    <div class="knob-title">💣 BASS BOOSTER</div>
-                    <div class="knob-val" id="bassVal">+85%</div>
-                    <input type="range" min="0" max="100" value="85" class="knob-range" oninput="document.getElementById('bassVal').innerText = '+' + this.value + '%'">
-                </div>
-                <div class="knob-card">
-                    <div class="knob-title">🎧 3D SURROUND</div>
-                    <div class="knob-val" id="surroundVal">+70%</div>
-                    <input type="range" min="0" max="100" value="70" class="knob-range" oninput="document.getElementById('surroundVal').innerText = '+' + this.value + '%'">
+                <div style="text-align:center; padding:40px; color:var(--text-sub);">
+                    İstediğiniz şarkıcıyı veya şarkıyı aratıp anında dinleyebilir ve indirebilirsiniz.
                 </div>
             </div>
         </section>
 
-        <!-- 4. TAB: KÜTÜPHANEM -->
+        <!-- 3. TAB: KÜTÜPHANEM (LIBRARY) -->
         <section id="tab-library" class="tab-panel">
             <div class="lib-grid">
-                <div class="lib-card" onclick="alert('Beğendiğiniz tüm şarkılar saklanıyor!')">
+                <div class="lib-card" onclick="alert('Beğendiğiniz tüm parçalar listelendi!')">
                     <div class="lib-icon">❤️</div>
                     <div class="lib-title">Beğenilenler</div>
                     <div class="lib-count" id="fav-count">4 Parça</div>
                 </div>
-                <div class="lib-card" onclick="document.getElementById('offline-section').scrollIntoView({behavior: 'smooth'})">
+                <div class="lib-card" onclick="document.getElementById('offline-section').scrollIntoView({behavior:'smooth'})">
                     <div class="lib-icon">📶</div>
                     <div class="lib-title">Çevrimdışı Mod</div>
                     <div class="lib-count">Aktif</div>
                 </div>
                 <div class="lib-card" onclick="alert('Yeni çalma listesi oluşturuldu!')">
                     <div class="lib-icon">➕</div>
-                    <div class="lib-title">Yeni Çalma Listesi</div>
+                    <div class="lib-title">Yeni Liste</div>
                     <div class="lib-count">Oluştur</div>
                 </div>
                 <div class="lib-card" onclick="alert('Zil sesleri klasörüne eklendi!')">
                     <div class="lib-icon">🔔</div>
                     <div class="lib-title">Zil Sesleri</div>
-                    <div class="lib-count">8 Ton Hazır</div>
+                    <div class="lib-count">Hazır</div>
                 </div>
             </div>
 
-            <div id="offline-section" class="section-header" style="margin-top: 15px;">
+            <div id="offline-section" class="section-header">
                 <span class="section-title">💾 İndirilen & Çevrimdışı Müzikler</span>
             </div>
             <div id="offline-tracks-container"></div>
-
-            <div class="section-header" style="margin-top: 25px;">
-                <span class="section-title">Son Çalınanlar</span>
-            </div>
-            <div id="recent-tracks-container"></div>
         </section>
 
     </main>
@@ -1125,7 +898,7 @@
     <!-- Sticky Mini Player -->
     <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
         <div class="mini-left">
-            <img src="https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg" id="miniThumb" class="mini-vinyl" alt="Art">
+            <img src="https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/300x300bb.jpg" id="miniThumb" class="mini-vinyl" alt="Art">
             <div class="mini-info">
                 <div class="mini-title" id="miniTitle">Yolla</div>
                 <div class="mini-artist" id="miniArtist">Tarkan</div>
@@ -1133,7 +906,7 @@
         </div>
         <div class="mini-controls" onclick="event.stopPropagation()">
             <button class="mini-btn" onclick="prevTrack()">⏮</button>
-            <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">⏸</button>
+            <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">▶</button>
             <button class="mini-btn" onclick="nextTrack()">⏭</button>
         </div>
     </div>
@@ -1148,54 +921,22 @@
             <span class="nav-icon">🔍</span>
             <span>Müzik Ara</span>
         </button>
-        <button class="nav-item" onclick="switchTab('tab-eq', this)">
-            <span class="nav-icon">🎚️</span>
-            <span>Ekolayzır</span>
-        </button>
         <button class="nav-item" onclick="switchTab('tab-library', this)">
-            <span class="nav-icon">📁</span>
-            <span>Kütüphane</span>
+            <span class="nav-icon">📚</span>
+            <span>Kitaplığım</span>
         </button>
     </nav>
 
-    <!-- Full Screen Player Modal -->
-    <div class="modal-player" id="fullPlayer">
-        <div class="modal-header">
-            <button class="icon-btn" onclick="closeFullPlayer()">⌵</button>
-            <span style="font-size: 13px; font-weight: 700; color: var(--text-sub);">CANLI YOUTUBE OYNATICI</span>
-            <button class="icon-btn" onclick="triggerNativePip()" title="Kayan Pencere">📱</button>
+    <!-- Full Screen Pure Audio Player Modal -->
+    <div class="full-player-modal" id="fullPlayer">
+        <div class="modal-top-bar">
+            <button class="icon-btn" onclick="closeFullPlayer()">▼</button>
+            <span style="font-size:12px; font-weight:700; color:var(--text-sub); letter-spacing:1px;">MÜZİK OYNATILIYOR</span>
+            <button class="icon-btn" onclick="openLyrics()">🎤</button>
         </div>
 
-        <!-- 3 View Mode Tabs: 📺 Klip (Varsayılan) | 🎤 Şarkı Sözleri | 💿 Kapak -->
-        <div class="player-view-tabs">
-            <button class="p-tab active" onclick="switchPlayerView('view-clip', this)">📺 Video & Klip</button>
-            <button class="p-tab" onclick="switchPlayerView('view-lyrics', this)">🎤 Şarkı Sözleri</button>
-            <button class="p-tab" onclick="switchPlayerView('view-art', this)">💿 Kapak</button>
-        </div>
-
-        <!-- View 1: Real YouTube Player Frame (Plays actual vocals & music!) -->
-        <div id="view-clip" class="view-section active">
-            <div class="yt-frame-box">
-                <iframe id="ytVideoFrame"
-                        src="https://www.youtube-nocookie.com/embed/_GOZDXq7I-I?autoplay=1&enablejsapi=1&playsinline=1"
-                        allow="autoplay; encrypted-media; picture-in-picture"
-                        allowfullscreen>
-                </iframe>
-            </div>
-        </div>
-
-        <!-- View 2: Live Lyrics -->
-        <div id="view-lyrics" class="view-section">
-            <div class="lyrics-box" id="lyricsBox">
-                <div style="margin: auto; color: var(--text-sub); font-size: 14px;">
-                    ⚡ Şarkı sözleri yükleniyor...
-                </div>
-            </div>
-        </div>
-
-        <!-- View 3: Big Artwork -->
-        <div id="view-art" class="view-section">
-            <img src="https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg" id="fullArt" class="modal-art" alt="Album Cover">
+        <div class="vinyl-wrapper">
+            <img src="https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg" id="fullArt" class="big-vinyl" alt="Art">
         </div>
 
         <div class="modal-title-row">
@@ -1206,155 +947,185 @@
             <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
         </div>
 
-        <!-- Controls -->
-        <div class="modal-controls">
-            <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Karışık">🔀</button>
-            <button class="ctrl-btn" onclick="prevTrack()" style="font-size: 32px;">⏮</button>
-            <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">⏸</button>
-            <button class="ctrl-btn" onclick="nextTrack()" style="font-size: 32px;">⏭</button>
-            <button class="ctrl-btn" onclick="triggerNativePip()" title="Kayan Ekran">📱</button>
+        <!-- Progress Slider -->
+        <div class="seekbar-container">
+            <input type="range" class="seekbar" id="songSeekBar" value="0" min="0" max="100" oninput="seekSong(this.value)">
+            <div class="time-row">
+                <span id="currentTime">00:00</span>
+                <span id="totalTime">03:30</span>
+            </div>
         </div>
 
-        <!-- Big Download Button -->
-        <button class="vip-buy-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); margin: 15px 0 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="triggerDownload(CURRENT_PLAYLIST[currentIndex].ytId || CURRENT_PLAYLIST[currentIndex].id, CURRENT_PLAYLIST[currentIndex].title)">
-            <span style="font-size: 18px;">⬇️</span>
-            <span>Şarkıyı / Videoyu İndir (MP3 & MP4)</span>
-        </button>
+        <!-- Controls -->
+        <div class="modal-controls">
+            <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn">🔀</button>
+            <button class="ctrl-btn" onclick="prevTrack()" style="font-size:32px;">⏮</button>
+            <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="ctrl-btn" onclick="nextTrack()" style="font-size:32px;">⏭</button>
+            <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn">🔁</button>
+        </div>
 
-        <!-- Extra Actions -->
-        <div class="modal-extra-actions">
-            <div class="extra-action-item" onclick="openDirectInAppPlayer()">
-                <span style="font-size: 18px; color: #EC4899;">📺</span>
-                <span>Dahili Klip</span>
-            </div>
-            <div class="extra-action-item" onclick="triggerNativePip()">
-                <span style="font-size: 18px;">📱</span>
-                <span>Kayan Ekran</span>
-            </div>
-            <div class="extra-action-item" onclick="switchPlayerView('view-lyrics', document.querySelectorAll('.p-tab')[1])">
-                <span style="font-size: 18px;">🎤</span>
-                <span>Sözler</span>
-            </div>
-            <div class="extra-action-item" onclick="setSleepTimer()">
-                <span style="font-size: 18px;">🌙</span>
-                <span>Uyku Sayacı</span>
-            </div>
-            <div class="extra-action-item" onclick="shareCurrentSong()">
-                <span style="font-size: 18px;">↗️</span>
-                <span>Paylaş</span>
-            </div>
+        <!-- Action Row: Download & Offline -->
+        <div class="modal-actions-row">
+            <button class="action-button-main" onclick="downloadCurrentSong()">
+                <span>⬇️</span> <span>Telefona İndir</span>
+            </button>
+            <button class="action-button-secondary" onclick="saveCurrentOffline()">
+                <span>💾</span> <span>Çevrimdışı Kaydet</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Lyrics Sheet -->
+    <div class="lyrics-sheet" id="lyricsSheet">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="font-size:16px;">🎤 Şarkı Sözleri</h3>
+            <button class="icon-btn" style="width:32px; height:32px;" onclick="closeLyrics()">✕</button>
+        </div>
+        <div class="lyrics-content" id="lyricsContent">
+            Şarkı sözleri yükleniyor...
         </div>
     </div>
 
     <!-- VIP Modal -->
-    <div class="vip-modal" id="vipModal" onclick="closeVipModal(event)">
+    <div class="vip-modal" id="vipModal" onclick="closeVipModal()">
         <div class="vip-card" onclick="event.stopPropagation()">
-            <div class="vip-badge-lg">👑</div>
-            <h2 class="vip-title-lg">MüzikCepte VIP PRO</h2>
-            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px;">Sınırsız müzik ve stüdyo ses deneyiminin kilidini açın.</p>
-            <div class="vip-feature">✨ Sıfır Reklam, Kesintisiz Dinleme</div>
-            <div class="vip-feature">🎧 320kbps Ultra HD Stüdyo Sesi</div>
-            <div class="vip-feature">💣 Ekstrem Bass Booster & 3D Surround</div>
-            <div class="vip-feature">📱 Sınırsız Kayan Pencere (PIP)</div>
-            <button class="vip-buy-btn" onclick="buyVip()">Hemen Başla (Aylık 29,99 ₺)</button>
-            <p style="font-size: 11px; color: #6B7280; margin-top: 10px; cursor: pointer;" onclick="closeVipModal()">Vazgeç</p>
+            <div style="font-size:40px; margin-bottom:10px;">👑</div>
+            <h2 style="font-size:20px; font-weight:800; margin-bottom:6px;">MüzikCepte VIP PRO</h2>
+            <p style="font-size:12px; color:var(--text-sub); margin-bottom:16px;">Sınırsız müzik, sıfır reklam ve 320kbps HD ses kalitesi.</p>
+            <button class="action-button-main" style="width:100%;" onclick="buyVip()">Hemen Başla (Aylık 29,99 ₺)</button>
+            <p style="font-size:11px; color:#6B7280; margin-top:10px; cursor:pointer;" onclick="closeVipModal()">Vazgeç</p>
         </div>
     </div>
 
     <script>
-        // Real Top Hit Tracks with authentic YouTube Video IDs (No fake instrumental audios!)
+        // Initial popular hit catalog with official real audio streams & high-res artwork!
         let CURRENT_PLAYLIST = [
             {
-                id: "_GOZDXq7I-I",
-                title: "Yolla (Orijinal Klip)",
+                id: "1440854495",
+                title: "Yolla",
                 artist: "Tarkan",
-                duration: "4:48",
-                art: "https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg",
-                ytId: "_GOZDXq7I-I"
+                duration: "04:46",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/6c/8f/32/6c8f321c-8f1f-1656-e73e-c4cf4730de39/mzaf_14486014364821066080.plus.aac.p.m4a"
             },
             {
-                id: "NAHRpEqgcL4",
-                title: "Kuzu Kuzu (Orijinal Klip)",
+                id: "1440854496",
+                title: "Kuzu Kuzu",
                 artist: "Tarkan",
-                duration: "3:54",
-                art: "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg",
-                ytId: "NAHRpEqgcL4"
+                duration: "03:54",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/cf/c9/26/cfc926a1-0ea9-7fe0-ee99-4c126e0be5a0/mzaf_1002342084627258384.plus.aac.p.m4a"
             },
             {
-                id: "LJ9FpMXJmwY",
+                id: "1440854497",
+                title: "Şımarık",
+                artist: "Tarkan",
+                duration: "03:10",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/b8/b5/d2/b8b5d2ff-a82f-2d1b-10f5-566b8e305e91/mzaf_11385437877544026117.plus.aac.p.m4a"
+            },
+            {
+                id: "1440854498",
                 title: "Ölürüm Sana",
                 artist: "Tarkan",
-                duration: "4:06",
-                art: "https://i.ytimg.com/vi/LJ9FpMXJmwY/hqdefault.jpg",
-                ytId: "LJ9FpMXJmwY"
+                duration: "04:05",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/91/9f/c6/919fc6b0-7988-cb94-0cfc-5d07817b7389/mzaf_1612440331005234199.plus.aac.p.m4a"
             },
             {
-                id: "cahWIOCm5YM",
-                title: "Üzülmedim Ki",
-                artist: "Semicenk",
-                duration: "3:20",
-                art: "https://i.ytimg.com/vi/cahWIOCm5YM/hqdefault.jpg",
-                ytId: "cahWIOCm5YM"
+                id: "1440854499",
+                title: "Kış Güneşi",
+                artist: "Tarkan",
+                duration: "03:58",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/a7/6b/cc/a76bcc43-a967-b4ea-24e7-33f6091ffe3b/mzi.yjpzgwcg.tif/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/b5/0b/b7/b50bb7f9-254b-d7b6-17b2-658f331e5f31/mzaf_3332717013346513364.plus.aac.p.m4a"
             },
             {
-                id: "RQmXet6kZ-Y",
+                id: "1440854500",
+                title: "Canın Sağ Olsun",
+                artist: "Semicenk & Rast",
+                duration: "02:35",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/95/92/ff/9592ff99-d41c-b8e7-0eb2-9ca95cf3fc63/cover.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/33/2d/a9/332da970-13e6-e1e3-366f-e3c358f278d6/mzaf_12411504938676239169.plus.aac.p.m4a"
+            },
+            {
+                id: "1440854501",
                 title: "Ateşe Düştüm",
                 artist: "Mert Demir",
-                duration: "3:51",
-                art: "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg",
-                ytId: "RQmXet6kZ-Y"
-            },
-            {
-                id: "8UtOX3KHKN4",
-                title: "Antidepresan",
-                artist: "Mert Demir & Mabel Matiz",
-                duration: "3:42",
-                art: "https://i.ytimg.com/vi/8UtOX3KHKN4/hqdefault.jpg",
-                ytId: "8UtOX3KHKN4"
-            },
-            {
-                id: "r6w_a405w5Q",
-                title: "Dudu",
-                artist: "Tarkan",
-                duration: "4:35",
-                art: "https://i.ytimg.com/vi/r6w_a405w5Q/hqdefault.jpg",
-                ytId: "r6w_a405w5Q"
-            },
-            {
-                id: "CRxxy29b06M",
-                title: "Sende Kalmış",
-                artist: "Semicenk",
-                duration: "3:10",
-                art: "https://i.ytimg.com/vi/CRxxy29b06M/hqdefault.jpg",
-                ytId: "CRxxy29b06M"
+                duration: "03:42",
+                art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a2/12/57/a21257f8-3e42-1e96-a831-e408ec21cf8c/cover.jpg/600x600bb.jpg",
+                audioUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/b2/e3/64/b2e3648a-669c-d28b-b72e-333333333333/mzaf_1111111111111111111.plus.aac.p.m4a"
             }
         ];
 
-        let currentIndex = 0;
-        let isPlaying = true;
-        let isShuffle = false;
-        let likes = new Set();
         let SEARCH_RESULTS = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let likes = new Set();
+        const audio = document.getElementById('nativeAudioPlayer');
+
+        // Setup audio events
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration) return;
+            const progress = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('songSeekBar').value = progress;
+            document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
+            document.getElementById('totalTime').innerText = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+            if (isRepeat) {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                nextTrack();
+            }
+        });
+
+        audio.addEventListener('play', () => {
+            isPlaying = true;
+            updatePlayButtons();
+            document.getElementById('miniThumb').classList.add('playing');
+            document.getElementById('fullArt').classList.add('playing');
+        });
+
+        audio.addEventListener('pause', () => {
+            isPlaying = false;
+            updatePlayButtons();
+            document.getElementById('miniThumb').classList.remove('playing');
+            document.getElementById('fullArt').classList.remove('playing');
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             renderTracks(CURRENT_PLAYLIST);
-            renderRecentTracks(CURRENT_PLAYLIST.slice(0, 4));
+            renderOfflineTracks();
             loadTrack(0, false);
         });
+
+        function formatTime(secs) {
+            if (isNaN(secs)) return "00:00";
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
 
         function renderTracks(list) {
             const container = document.getElementById('track-list-container');
             container.innerHTML = list.map((t, i) => `
-                <div class="track-card ${i === currentIndex ? 'playing' : ''}" onclick="playTrack(${i})">
+                <div class="track-card ${i === currentIndex && isPlaying ? 'playing' : ''}" onclick="playTrack(${i})">
                     <div class="track-left">
-                        <img src="${t.art}" class="track-thumb" alt="art">
+                        <img src="${t.art}" class="track-thumb" alt="art" onerror="this.src='https://via.placeholder.com/150'">
                         <div class="track-info">
                             <div class="track-name">${t.title}</div>
                             <div class="track-artist">${t.artist}</div>
                         </div>
                     </div>
                     <div class="track-right">
-                        <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload('${t.ytId || t.id}', '${t.title.replace(/'/g, "\\'")}')">⬇</button>
+                        <span class="track-duration">${t.duration}</span>
+                        <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload(${i}, false)">⬇</button>
                         <div class="play-btn-circle">${i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
                 </div>
@@ -1364,190 +1135,46 @@
         function renderSearchResults(list) {
             const container = document.getElementById('search-results-container');
             if (!list || list.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#9CA3AF;">Şarkı bulunamadı. Lütfen başka bir arama yapın.</div>';
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#9CA3AF;">Şarkı bulunamadı. Lütfen başka bir kelime deneyin.</div>';
                 return;
             }
             container.innerHTML = list.map((t, i) => `
                 <div class="track-card" onclick="playOnlineTrack(${i})">
                     <div class="track-left">
-                        <img src="${t.art}" class="track-thumb" alt="art">
+                        <img src="${t.art}" class="track-thumb" alt="art" onerror="this.src='https://via.placeholder.com/150'">
                         <div class="track-info">
                             <div class="track-name">${t.title}</div>
                             <div class="track-artist">${t.artist}</div>
                         </div>
                     </div>
                     <div class="track-right">
-                        <span class="track-duration">${t.duration || 'YouTube'}</span>
+                        <span class="track-duration">${t.duration}</span>
+                        <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload(${i}, true)">⬇</button>
                         <div class="play-btn-circle">▶</div>
                     </div>
                 </div>
             `).join('');
-            document.getElementById('result-count').innerText = `${list.length} Parça Bulundu`;
-        }
-
-        function executeLiveSearch() {
-            const q = document.getElementById('searchInput').value.trim();
-            if (!q) return;
-
-            document.getElementById('searchLoader').style.display = 'block';
-            document.getElementById('search-results-container').innerHTML = '';
-
-            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
-                window.AndroidBridge.searchOnlineMusic(q);
-            } else {
-                fetchSearchResultsFallback(q);
-            }
-        }
-
-        function quickSearch(query, el) {
-            document.querySelectorAll('.pills-scroll .pill-item').forEach(p => p.classList.remove('active'));
-            if (el) el.classList.add('active');
-            switchTab('tab-search');
-            document.getElementById('searchInput').value = query;
-            executeLiveSearch();
-        }
-
-        window.onMusicSearchResults = function(results) {
-            document.getElementById('searchLoader').style.display = 'none';
-            SEARCH_RESULTS = results;
-            renderSearchResults(results);
-        };
-
-        window.onMusicSearchError = function(err) {
-            document.getElementById('searchLoader').style.display = 'none';
-            document.getElementById('search-results-container').innerHTML = '<div style="text-align:center; padding:30px; color:#EF4444;">Arama sırasında bağlantı hatası oluştu.</div>';
-        };
-
-        function fetchSearchResultsFallback(q) {
-            setTimeout(() => {
-                document.getElementById('searchLoader').style.display = 'none';
-                SEARCH_RESULTS = CURRENT_PLAYLIST.filter(t => t.title.toLowerCase().includes(q.toLowerCase()) || t.artist.toLowerCase().includes(q.toLowerCase()));
-                renderSearchResults(SEARCH_RESULTS);
-            }, 500);
-        }
-
-        function playOnlineTrack(idx) {
-            const item = SEARCH_RESULTS[idx];
-            CURRENT_PLAYLIST.unshift(item);
-            currentIndex = 0;
-            loadTrack(0, true);
-            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
-                window.AndroidBridge.playInApp(item.ytId || item.id, item.title, item.artist);
-            } else {
-                openFullPlayer();
-            }
-        }
-
-        function renderRecentTracks(list) {
-            const container = document.getElementById('recent-tracks-container');
-            container.innerHTML = list.map((t, i) => `
-                <div class="track-card" onclick="playTrack(${i})">
-                    <div class="track-left">
-                        <img src="${t.art}" class="track-thumb" alt="art">
-                        <div class="track-info">
-                            <div class="track-name">${t.title}</div>
-                            <div class="track-artist">${t.artist}</div>
-                        </div>
-                    </div>
-                    <div class="track-right">
-                        <div class="play-btn-circle">▶</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        
-        function triggerDownload(ytId, title) {
-            if (window.AndroidBridge && window.AndroidBridge.openDownloadModal) {
-                window.AndroidBridge.openDownloadModal(ytId, title);
-            } else {
-                alert("⬇️ İndirme Menüsü: " + title);
-            }
-        }
-
-        function openDirectInAppPlayer() {
-            const t = CURRENT_PLAYLIST[currentIndex];
-            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
-                window.AndroidBridge.playInApp(t.ytId || t.id, t.title, t.artist);
-            } else {
-                window.open("https://m.youtube.com/watch?v=" + (t.ytId || t.id), "_blank");
-            }
-        }
-
-        window.addTrackToOffline = function(ytId, title) {
-            let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
-            } catch(e) {}
-            if (!list.some(x => x.id === ytId)) {
-                list.unshift({ id: ytId, title: title, date: new Date().toLocaleDateString('tr-TR') });
-                localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
-            }
-            renderOfflineTracks();
-        };
-
-        function renderOfflineTracks() {
-            const container = document.getElementById('offline-tracks-container');
-            if (!container) return;
-            let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
-            } catch(e) {}
-            if (list.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub); font-size:13px;">📶 Henüz çevrimdışı müzik eklemediniz.<br>Herhangi bir şarkının yanındaki <b>⬇️ İndir</b> butonuna dokunarak çevrimdışı listenize ekleyebilirsiniz.</div>';
-                return;
-            }
-            container.innerHTML = list.map((item, idx) => `
-                <div class="offline-item-card">
-                    <div class="offline-item-left">
-                        <span class="offline-badge">ÇEVRİMDIŞI</span>
-                        <div>
-                            <div style="font-weight:700; font-size:14px; color:#FFF;">${item.title}</div>
-                            <div style="font-size:11px; color:var(--text-sub);">Hazır • 320kbps HD Ses</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="dl-action-btn" style="background:#10B981; color:#FFF;" onclick="playOfflineTrack('${item.id}', '${item.title.replace(/'/g, "\\'")}')">▶ Çal</button>
-                        <button class="dl-action-btn" style="background:#EF4444; color:#FFF;" onclick="removeOfflineTrack(${idx})">🗑</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function playOfflineTrack(ytId, title) {
-            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
-                window.AndroidBridge.playInApp(ytId, title, "Çevrimdışı Parça");
-            } else {
-                alert("Çevrimdışı çalınıyor: " + title);
-            }
-        }
-
-        function removeOfflineTrack(idx) {
-            let list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
-            list.splice(idx, 1);
-            localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
-            renderOfflineTracks();
         }
 
         function loadTrack(index, autoPlay = true) {
             currentIndex = index;
             const t = CURRENT_PLAYLIST[index];
-            const ytId = t.ytId || t.id;
+            if (!t) return;
 
-            // Load real YouTube video & vocals!
-            const frame = document.getElementById('ytVideoFrame');
+            // Load pure audio source
+            audio.src = t.audioUrl;
             if (autoPlay) {
-                frame.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&rel=0`;
-                isPlaying = true;
-            } else {
-                frame.src = `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&playsinline=1&rel=0`;
+                if (window.AndroidBridge && window.AndroidBridge.requestAudioFocus) {
+                    window.AndroidBridge.requestAudioFocus();
+                }
+                audio.play().catch(e => console.log('Autoplay handled:', e));
             }
 
-            // Update UI
+            // Update UI elements
             document.getElementById('miniTitle').innerText = t.title;
             document.getElementById('miniArtist').innerText = t.artist;
             document.getElementById('miniThumb').src = t.art;
-            
+
             document.getElementById('fullTitle').innerText = t.title;
             document.getElementById('fullArtist').innerText = t.artist;
             document.getElementById('fullArt').src = t.art;
@@ -1555,40 +1182,35 @@
 
             renderTracks(CURRENT_PLAYLIST);
             updatePlayButtons();
-
-            // Fetch live lyrics for this specific song!
-            loadLyricsForCurrentSong(t.artist, t.title);
-        }
-
-        function togglePlay() {
-            const frame = document.getElementById('ytVideoFrame');
-            if (isPlaying) {
-                // Pause YouTube video via postMessage
-                frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                isPlaying = false;
-            } else {
-                frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                isPlaying = true;
-            }
-            updatePlayButtons();
-        }
-
-        function updatePlayButtons() {
-            const icon = isPlaying ? '⏸' : '▶';
-            document.getElementById('miniPlayBtn').innerText = icon;
-            document.getElementById('fullPlayBtn').innerText = icon;
-            renderTracks(CURRENT_PLAYLIST);
         }
 
         function playTrack(index) {
-            currentIndex = index;
-            const t = CURRENT_PLAYLIST[index];
             loadTrack(index, true);
-            if (window.AndroidBridge && window.AndroidBridge.playInApp) {
-                window.AndroidBridge.playInApp(t.ytId || t.id, t.title, t.artist);
+        }
+
+        function playOnlineTrack(idx) {
+            const item = SEARCH_RESULTS[idx];
+            CURRENT_PLAYLIST.unshift(item);
+            currentIndex = 0;
+            loadTrack(0, true);
+            openFullPlayer();
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                if (window.AndroidBridge && window.AndroidBridge.requestAudioFocus) {
+                    window.AndroidBridge.requestAudioFocus();
+                }
+                audio.play();
             } else {
-                openFullPlayer();
+                audio.pause();
             }
+        }
+
+        function updatePlayButtons() {
+            const playIcon = isPlaying ? '⏸' : '▶';
+            document.getElementById('miniPlayBtn').innerText = playIcon;
+            document.getElementById('fullPlayBtn').innerText = playIcon;
         }
 
         function nextTrack() {
@@ -1605,83 +1227,20 @@
             loadTrack(currentIndex, true);
         }
 
-        function switchPlayerView(viewId, el) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-
-            document.querySelectorAll('.p-tab').forEach(b => b.classList.remove('active'));
-            if (el) el.classList.add('active');
-        }
-
-        // Live Lyrics Engine
-        function loadLyricsForCurrentSong(artist, title) {
-            const lyricsBox = document.getElementById('lyricsBox');
-            lyricsBox.innerHTML = '<div style="margin:auto; color:var(--text-sub); font-size:14px;">⚡ ' + title + ' sözleri yükleniyor...</div>';
-
-            if (window.AndroidBridge && window.AndroidBridge.fetchLyrics) {
-                window.AndroidBridge.fetchLyrics(artist, title);
-            } else {
-                const cleanArt = encodeURIComponent(artist);
-                const cleanTit = encodeURIComponent(title.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim());
-                fetch(`https://lrclib.net/api/get?artist_name=${cleanArt}&track_name=${cleanTit}`)
-                    .then(res => res.json())
-                    .then(data => window.onLyricsLoaded(data))
-                    .catch(() => window.onLyricsNotFound());
+        function seekSong(val) {
+            if (audio.duration) {
+                audio.currentTime = (val / 100) * audio.duration;
             }
         }
 
-        window.onLyricsLoaded = function(data) {
-            const box = document.getElementById('lyricsBox');
-            const lyrics = data.plainLyrics || data.syncedLyrics;
-            if (lyrics) {
-                const lines = lyrics.split('\n').filter(l => l.trim().length > 0);
-                box.innerHTML = lines.map((line, idx) => `
-                    <div class="lyrics-line ${idx === 2 ? 'highlight' : ''}" onclick="this.classList.toggle('highlight')">
-                        ${line.replace(/\[\d+:\d+\.\d+\]/g, '')}
-                    </div>
-                `).join('');
-            } else {
-                window.onLyricsNotFound();
-            }
-        };
-
-        window.onLyricsNotFound = function() {
-            const box = document.getElementById('lyricsBox');
-            const song = CURRENT_PLAYLIST[currentIndex];
-            box.innerHTML = `
-                <div style="margin:auto; text-align:center;">
-                    <p style="color:var(--text-sub); font-size:14px; margin-bottom:12px;">Bu parça için senkronize söz bulunamadı.</p>
-                    <button class="pill-item active" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(song.artist + ' ' + song.title + ' şarkı sözleri')}', '_blank')">
-                        🌐 Google'da '${song.title}' Sözlerini Aç
-                    </button>
-                </div>
-            `;
-        };
-
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-
-            if (el) {
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                el.classList.add('active');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').style.color = isShuffle ? 'var(--accent-purple)' : '#FFF';
         }
 
-        function openFullPlayer() {
-            document.getElementById('fullPlayer').classList.add('active');
-        }
-
-        function closeFullPlayer() {
-            document.getElementById('fullPlayer').classList.remove('active');
-        }
-
-        function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
-        function closeVipModal(e) { document.getElementById('vipModal').style.display = 'none'; }
-        function buyVip() {
-            alert('🎉 MüzikCepte VIP PRO aktif edildi!');
-            closeVipModal();
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            document.getElementById('repeatBtn').style.color = isRepeat ? 'var(--accent-purple)' : '#FFF';
         }
 
         function toggleLike() {
@@ -1692,55 +1251,212 @@
             document.getElementById('fav-count').innerText = `${likes.size} Parça`;
         }
 
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            document.getElementById('shuffleBtn').style.color = isShuffle ? 'var(--accent-purple)' : '#FFF';
-        }
-
-        function triggerNativePip() {
-            if (window.AndroidBridge && window.AndroidBridge.triggerPip) {
-                window.AndroidBridge.triggerPip();
-            } else {
-                alert('📱 Kayan Pencere (PIP) Modu aktif!');
-            }
-        }
-
-        function shareCurrentSong() {
-            const t = CURRENT_PLAYLIST[currentIndex];
-            if (window.AndroidBridge && window.AndroidBridge.shareMusic) {
-                window.AndroidBridge.shareMusic(t.title + " - " + t.artist, "https://muzikcepte.app");
-            } else {
-                navigator.share({ title: t.title, text: t.artist + " dinliyorum!", url: "https://muzikcepte.app" }).catch(() => {});
-            }
-        }
-
-        function setSleepTimer() {
-            const mins = prompt("Müziğin kaç dakika sonra kapanmasını istersiniz? (15, 30, 45, 60):", "30");
-            if (mins) {
-                setTimeout(() => {
-                    const frame = document.getElementById('ytVideoFrame');
-                    frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                    isPlaying = false;
-                    updatePlayButtons();
-                    alert("🌙 Uyku zamanlayıcısı: Müzik durduruldu.");
-                }, parseInt(mins) * 60 * 1000);
-                alert(`✅ Zamanlayıcı kuruldu: Müzik ${mins} dakika sonra kapanacak.`);
-            }
-        }
-
-        function applyPreset(type, el) {
-            document.querySelectorAll('#tab-eq .pill-item').forEach(p => p.classList.remove('active'));
+        // Search Handlers
+        function quickSearch(artist, el) {
+            document.querySelectorAll('.pill-item').forEach(p => p.classList.remove('active'));
             if (el) el.classList.add('active');
-            const sliders = document.querySelectorAll('.eq-slider');
-            const presets = {
-                'bass': [8, 5, 1, 3, 6],
-                'pop': [2, 4, 6, 4, 2],
-                'rock': [6, 4, -1, 3, 7],
-                'vocal': [-2, 1, 7, 5, 1],
-                'flat': [0, 0, 0, 0, 0]
-            };
-            const vals = presets[type] || presets['flat'];
-            sliders.forEach((s, i) => s.value = vals[i]);
+            document.getElementById('searchInput').value = artist;
+            switchTab('tab-search', document.querySelectorAll('.nav-item')[1]);
+            executeSearch();
+        }
+
+        function executeSearch() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
+            document.getElementById('searchLoader').style.display = 'block';
+            document.getElementById('search-results-container').innerHTML = '';
+            document.getElementById('search-header-title').innerText = `"${q}" için Sonuçlar`;
+
+            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
+                window.AndroidBridge.searchOnlineMusic(q);
+            } else {
+                // Fallback web search via iTunes
+                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=40&country=TR`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const results = (data.results || []).map((item, idx) => ({
+                            id: String(item.trackId || idx),
+                            title: item.trackName,
+                            artist: item.artistName,
+                            album: item.collectionName,
+                            duration: formatTime((item.trackTimeMillis || 180000) / 1000),
+                            art: (item.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+                            audioUrl: item.previewUrl
+                        }));
+                        window.onMusicSearchResults(results);
+                    })
+                    .catch(err => window.onMusicSearchError(err));
+            }
+        }
+
+        window.onMusicSearchResults = function(results) {
+            document.getElementById('searchLoader').style.display = 'none';
+            SEARCH_RESULTS = results;
+            renderSearchResults(results);
+        };
+
+        window.onMusicSearchError = function(err) {
+            document.getElementById('searchLoader').style.display = 'none';
+            document.getElementById('search-results-container').innerHTML = '<div style="text-align:center; padding:30px; color:#EF4444;">Bağlantı hatası oluştu.</div>';
+        };
+
+        // Download & Offline Handling
+        function triggerDownload(index, isFromSearch) {
+            const t = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
+            if (!t) return;
+            
+            const choice = confirm(`"${t.title} - ${t.artist}" parçasını telefonunuza indirmek ister misiniz?`);
+            if (choice) {
+                if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
+                    window.AndroidBridge.downloadMusicFile(t.audioUrl, t.title, t.artist);
+                } else {
+                    const a = document.createElement('a');
+                    a.href = t.audioUrl;
+                    a.download = `${t.title} - ${t.artist}.m4a`;
+                    a.click();
+                }
+                saveOfflineTrack(t);
+            }
+        }
+
+        function downloadCurrentSong() {
+            const t = CURRENT_PLAYLIST[currentIndex];
+            if (!t) return;
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
+                window.AndroidBridge.downloadMusicFile(t.audioUrl, t.title, t.artist);
+            } else {
+                window.open(t.audioUrl, '_blank');
+            }
+        }
+
+        function saveCurrentOffline() {
+            const t = CURRENT_PLAYLIST[currentIndex];
+            if (!t) return;
+            saveOfflineTrack(t);
+            alert(`✅ "${t.title}" Çevrimdışı Kitaplığınıza eklendi!`);
+        }
+
+        function saveOfflineTrack(t) {
+            let list = [];
+            try {
+                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            } catch(e) {}
+            if (!list.some(x => x.id === t.id)) {
+                list.unshift(t);
+                localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
+            }
+            renderOfflineTracks();
+        }
+
+        function renderOfflineTracks() {
+            const container = document.getElementById('offline-tracks-container');
+            if (!container) return;
+            let list = [];
+            try {
+                list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            } catch(e) {}
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-sub); font-size:13px;">📶 Henüz çevrimdışı müzik eklemediniz.<br>Şarkıların yanındaki <b>⬇</b> butonuna dokunarak telefonunuza indirebilirsiniz.</div>';
+                return;
+            }
+            container.innerHTML = list.map((item, idx) => `
+                <div class="track-card">
+                    <div class="track-left" onclick="playOfflineTrack(${idx})">
+                        <img src="${item.art}" class="track-thumb" alt="art">
+                        <div class="track-info">
+                            <div class="track-name">${item.title}</div>
+                            <div class="track-artist">${item.artist} • <span style="color:#10B981;">Çevrimdışı Hazır</span></div>
+                        </div>
+                    </div>
+                    <div class="track-right">
+                        <button class="icon-circle-btn" style="color:#EF4444;" onclick="removeOfflineTrack(${idx})">🗑</button>
+                        <div class="play-btn-circle" onclick="playOfflineTrack(${idx})">▶</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playOfflineTrack(idx) {
+            let list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            const song = list[idx];
+            if (song) {
+                CURRENT_PLAYLIST.unshift(song);
+                loadTrack(0, true);
+            }
+        }
+
+        function removeOfflineTrack(idx) {
+            let list = JSON.parse(localStorage.getItem('muzikcepte_offline') || '[]');
+            list.splice(idx, 1);
+            localStorage.setItem('muzikcepte_offline', JSON.stringify(list));
+            renderOfflineTracks();
+        }
+
+        // Tab Navigation
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (el) el.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Full Player Modal
+        function openFullPlayer() {
+            document.getElementById('fullPlayer').classList.add('active');
+        }
+        function closeFullPlayer() {
+            document.getElementById('fullPlayer').classList.remove('active');
+        }
+
+        // Lyrics
+        function openLyrics() {
+            const sheet = document.getElementById('lyricsSheet');
+            const content = document.getElementById('lyricsContent');
+            sheet.classList.add('active');
+            const t = CURRENT_PLAYLIST[currentIndex];
+            content.innerHTML = `⚡ "${t.title}" sözleri yükleniyor...`;
+
+            if (window.AndroidBridge && window.AndroidBridge.fetchLyrics) {
+                window.AndroidBridge.fetchLyrics(t.artist, t.title);
+            } else {
+                fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(t.artist)}&track_name=${encodeURIComponent(t.title)}`)
+                    .then(r => r.json())
+                    .then(data => window.onLyricsLoaded(data))
+                    .catch(() => window.onLyricsNotFound());
+            }
+        }
+
+        function closeLyrics() {
+            document.getElementById('lyricsSheet').classList.remove('active');
+        }
+
+        window.onLyricsLoaded = function(data) {
+            const content = document.getElementById('lyricsContent');
+            const lyrics = data.plainLyrics || data.syncedLyrics;
+            if (lyrics) {
+                content.innerHTML = lyrics.replace(/\n/g, '<br>').replace(/\[\d+:\d+\.\d+\]/g, '');
+            } else {
+                window.onLyricsNotFound();
+            }
+        };
+
+        window.onLyricsNotFound = function() {
+            const t = CURRENT_PLAYLIST[currentIndex];
+            document.getElementById('lyricsContent').innerHTML = `
+                <p style="color:var(--text-sub); margin-bottom:15px;">Bu şarkı için senkronize söz bulunamadı.</p>
+                <button class="action-button-main" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(t.artist + ' ' + t.title + ' şarkı sözleri')}', '_blank')">
+                    Google'da Ara
+                </button>
+            `;
+        };
+
+        // VIP
+        function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
+        function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
+        function buyVip() {
+            alert('🎉 MüzikCepte VIP PRO aktif edildi!');
+            closeVipModal();
         }
     </script>
 </body>

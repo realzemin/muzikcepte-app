@@ -1,7 +1,7 @@
 package com.muzikcepte.app;
 
 import android.annotation.SuppressLint;
-import android.app.PictureInPictureParams;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -10,7 +10,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Rational;
+import android.os.Environment;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -18,13 +18,10 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -39,25 +36,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     public static MainActivity instance;
     public WebView webView;
     private ProgressBar progressBar;
-
-    // Dedicated In-App Video & Audio Player with base URL autoplay
-    private LinearLayout playerContainer;
-    private WebView playerWebView;
-    private TextView txtPlayerTitle;
-    private TextView txtPlayerSub;
-    private ProgressBar playerProgressBar;
-    private String currentPlayingYtId = "";
-    private String currentPlayingTitle = "";
 
     @SuppressLint({"SetJavaScriptEnabled", "SourceLockedOrientationActivity"})
     @Override
@@ -74,16 +59,6 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
 
-        playerContainer = findViewById(R.id.playerContainer);
-        playerWebView = findViewById(R.id.playerWebView);
-        txtPlayerTitle = findViewById(R.id.txtPlayerTitle);
-        txtPlayerSub = findViewById(R.id.txtPlayerSub);
-        playerProgressBar = findViewById(R.id.playerProgressBar);
-
-        findViewById(R.id.btnBackFromPlayer).setOnClickListener(v -> closePlayer());
-        findViewById(R.id.btnDownloadInPlayer).setOnClickListener(v -> openDownloadOptions(currentPlayingYtId, currentPlayingTitle));
-        findViewById(R.id.btnPipInPlayer).setOnClickListener(v -> enterPIP());
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.mainRoot), (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() |
@@ -97,15 +72,10 @@ public class MainActivity extends AppCompatActivity {
             .setAppearanceLightStatusBars(false);
 
         setupWebView();
-        setupPlayerWebView();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (playerContainer != null && playerContainer.getVisibility() == View.VISIBLE) {
-                    closePlayer();
-                    return;
-                }
                 if (webView != null && webView.canGoBack()) {
                     webView.goBack();
                 } else {
@@ -116,193 +86,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webView.loadUrl("file:///android_asset/index.html");
-    }
-
-    public void enterPIP() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                PictureInPictureParams params = new PictureInPictureParams.Builder()
-                        .setAspectRatio(new Rational(16, 9))
-                        .build();
-                enterPictureInPictureMode(params);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, android.content.res.Configuration newConfig) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
-        if (playerContainer != null && playerContainer.getVisibility() == View.VISIBLE) {
-            findViewById(R.id.playerTopBar).setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    public void openInAppPlayer(String ytId, String title, String artist) {
-        currentPlayingYtId = ytId;
-        currentPlayingTitle = title + " - " + artist;
-        runOnUiThread(() -> {
-            if (txtPlayerTitle != null) txtPlayerTitle.setText(title);
-            if (txtPlayerSub != null) txtPlayerSub.setText(artist + " • Orijinal Klip ve Stüdyo Sesi");
-            if (playerContainer != null) playerContainer.setVisibility(View.VISIBLE);
-
-            // Request Audio focus
-            try {
-                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                if (am != null) {
-                    am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-                }
-            } catch (Exception ignored) {}
-
-            // Load YouTube IFrame with https://www.youtube.com origin so it autoplays with sound!
-            if (playerWebView != null) {
-                String html = "<!DOCTYPE html><html><head>"
-                        + "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>"
-                        + "<style>"
-                        + "* { margin: 0; padding: 0; box-sizing: border-box; }"
-                        + "body { background: #000; width: 100vw; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }"
-                        + "#player { width: 100%; height: 100%; border: none; }"
-                        + "</style></head><body>"
-                        + "<div id='player'></div>"
-                        + "<script src='https://www.youtube.com/iframe_api'></script>"
-                        + "<script>"
-                        + "var player;"
-                        + "function onYouTubeIframeAPIReady() {"
-                        + "    player = new YT.Player('player', {"
-                        + "        height: '100%',"
-                        + "        width: '100%',"
-                        + "        videoId: '" + ytId + "',"
-                        + "        playerVars: {"
-                        + "            'autoplay': 1,"
-                        + "            'playsinline': 1,"
-                        + "            'controls': 1,"
-                        + "            'rel': 0,"
-                        + "            'fs': 1,"
-                        + "            'modestbranding': 1,"
-                        + "            'origin': 'https://www.youtube.com'"
-                        + "        },"
-                        + "        events: {"
-                        + "            'onReady': function(e) { e.target.playVideo(); },"
-                        + "            'onStateChange': function(e) {"
-                        + "                if(e.data === 0) { window.location.href = 'muzikcepte://next'; }"
-                        + "            }"
-                        + "        }"
-                        + "    });"
-                        + "}"
-                        + "</script></body></html>";
-
-                playerWebView.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "UTF-8", null);
-            }
-        });
-    }
-
-    public void closePlayer() {
-        runOnUiThread(() -> {
-            if (playerWebView != null) {
-                playerWebView.loadUrl("about:blank");
-            }
-            if (playerContainer != null) {
-                playerContainer.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    public void openDownloadOptions(String ytId, String title) {
-        runOnUiThread(() -> {
-            String safeTitle = (title == null || title.isEmpty()) ? "Müzik Parçası" : title;
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("⬇️ " + safeTitle);
-            String[] options = {
-                "🎵 MP3 İndir (320kbps HD Ses)",
-                "🎬 MP4 Video İndir (HD Klip)",
-                "💾 Çevrimdışı Kitaplığıma Kaydet (İnternetsiz Dinle)",
-                "🔗 Şarkı Bağlantısını Paylaş"
-            };
-            builder.setItems(options, (dialog, which) -> {
-                switch (which) {
-                    case 0:
-                        // Direct high quality MP3 converter
-                        String mp3Url = "https://y2mate.nu/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                        Intent mp3Intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mp3Url));
-                        startActivity(mp3Intent);
-                        break;
-                    case 1:
-                        // HD Video MP4 Downloader
-                        String mp4Url = "https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                        Intent mp4Intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mp4Url));
-                        startActivity(mp4Intent);
-                        break;
-                    case 2:
-                        // Offline library save
-                        if (webView != null) {
-                            String escaped = safeTitle.replace("'", "\\'");
-                            webView.evaluateJavascript("if(window.addTrackToOffline) window.addTrackToOffline('" + ytId + "', '" + escaped + "');", null);
-                        }
-                        Toast.makeText(this, "✅ '" + safeTitle + "' Çevrimdışı Kitaplığınıza kaydedildi!", Toast.LENGTH_LONG).show();
-                        break;
-                    case 3:
-                        Intent sendIntent = new Intent();
-                        sendIntent.setAction(Intent.ACTION_SEND);
-                        sendIntent.putExtra(Intent.EXTRA_TEXT, "MüzikCepte ile dinle ve indir: " + safeTitle + " https://youtu.be/" + ytId);
-                        sendIntent.setType("text/plain");
-                        startActivity(Intent.createChooser(sendIntent, "Şarkıyı Paylaş"));
-                        break;
-                }
-            });
-            builder.setNegativeButton("Kapat", null);
-            builder.show();
-        });
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private void setupPlayerWebView() {
-        WebSettings s = playerWebView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setMediaPlaybackRequiresUserGesture(false);
-        s.setAllowFileAccess(true);
-        s.setLoadWithOverviewMode(true);
-        s.setUseWideViewPort(true);
-        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        s.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
-
-        playerWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                String url = request.getUrl().toString();
-                if (url.startsWith("muzikcepte://next")) {
-                    if (webView != null) {
-                        webView.evaluateJavascript("if(window.nextTrack) window.nextTrack();", null);
-                    }
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                if (playerProgressBar != null) playerProgressBar.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (playerProgressBar != null) playerProgressBar.setVisibility(View.GONE);
-            }
-        });
-
-        playerWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                if (playerProgressBar != null) {
-                    playerProgressBar.setProgress(newProgress);
-                    if (newProgress >= 100) playerProgressBar.setVisibility(View.GONE);
-                }
-            }
-        });
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -321,124 +104,78 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.4");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.5");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
         webView.addJavascriptInterface(new Object() {
-            @JavascriptInterface
-            public void triggerPip() {
-                runOnUiThread(() -> enterPIP());
-            }
 
             @JavascriptInterface
-            public void playInApp(String ytId, String title, String artist) {
-                openInAppPlayer(ytId, title, artist);
-            }
-
-            @JavascriptInterface
-            public void openDownloadModal(String ytId, String title) {
-                openDownloadOptions(ytId, title);
-            }
-
-            @JavascriptInterface
-            public void shareMusic(String title, String url) {
+            public void requestAudioFocus() {
                 try {
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "MüzikCepte ile dinliyorum: " + title + " " + url);
-                    sendIntent.setType("text/plain");
-                    Intent shareIntent = Intent.createChooser(sendIntent, "Şarkıyı Paylaş");
-                    shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(shareIntent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
-                try {
-                    String encoded = URLEncoder.encode(q, "UTF-8");
-                    URL url = new URL("https://www.youtube.com/results?search_query=" + encoded);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                    conn.setConnectTimeout(7000);
-                    conn.setReadTimeout(7000);
-
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        sb.append(line);
+                    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                    if (am != null) {
+                        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
                     }
-                    in.close();
-
-                    String html = sb.toString();
-                    Pattern pattern = Pattern.compile("ytInitialData\\s*=\\s*(\\{.+?\\});</script>");
-                    Matcher matcher = pattern.matcher(html);
-
-                    if (matcher.find()) {
-                        JSONObject root = new JSONObject(matcher.group(1));
-                        JSONArray sections = root.getJSONObject("contents")
-                                .getJSONObject("twoColumnSearchResultsRenderer")
-                                .getJSONObject("primaryContents")
-                                .getJSONObject("sectionListRenderer")
-                                .getJSONArray("contents");
-
-                        for (int s = 0; s < sections.length(); s++) {
-                            JSONObject section = sections.getJSONObject(s);
-                            if (section.has("itemSectionRenderer")) {
-                                JSONArray contents = section.getJSONObject("itemSectionRenderer").getJSONArray("contents");
-                                for (int i = 0; i < contents.length() && results.length() < 40; i++) {
-                                    JSONObject item = contents.getJSONObject(i);
-                                    if (item.has("videoRenderer")) {
-                                        JSONObject vr = item.getJSONObject("videoRenderer");
-                                        String vid = vr.optString("videoId");
-                                        if (vid.isEmpty() || seenIds.contains(vid)) continue;
-                                        seenIds.add(vid);
-
-                                        String title = "";
-                                        if (vr.has("title") && vr.getJSONObject("title").has("runs")) {
-                                            title = vr.getJSONObject("title").getJSONArray("runs").getJSONObject(0).optString("text");
-                                        }
-                                        String author = "";
-                                        if (vr.has("ownerText") && vr.getJSONObject("ownerText").has("runs")) {
-                                            author = vr.getJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
-                                        }
-                                        String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:30") : "03:30";
-                                        String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
-
-                                        JSONObject row = new JSONObject();
-                                        row.put("id", vid);
-                                        row.put("title", title);
-                                        row.put("artist", author);
-                                        row.put("duration", duration);
-                                        row.put("art", thumb);
-                                        row.put("ytId", vid);
-                                        results.put(row);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception ignored) {}
             }
 
             @JavascriptInterface
             public void searchOnlineMusic(String query) {
                 new Thread(() -> {
                     try {
-                        JSONArray results = new JSONArray();
-                        Set<String> seenIds = new HashSet<>();
+                        String encoded = URLEncoder.encode(query, "UTF-8");
+                        // Global Apple iTunes Music API - millions of songs with official audio streams!
+                        URL url = new URL("https://itunes.apple.com/search?term=" + encoded + "&entity=song&limit=50&country=TR");
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("GET");
+                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)");
+                        conn.setConnectTimeout(6000);
+                        conn.setReadTimeout(6000);
 
-                        fetchYouTubeQuery(query, results, seenIds);
-                        if (results.length() < 25) {
-                            fetchYouTubeQuery(query + " en çok dinlenen", results, seenIds);
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        StringBuilder sb = new StringBuilder();
+                        String line;
+                        while ((line = in.readLine()) != null) {
+                            sb.append(line);
+                        }
+                        in.close();
+
+                        JSONObject json = new JSONObject(sb.toString());
+                        JSONArray rawList = json.optJSONArray("results");
+                        JSONArray results = new JSONArray();
+
+                        if (rawList != null) {
+                            for (int i = 0; i < rawList.length(); i++) {
+                                JSONObject item = rawList.getJSONObject(i);
+                                String previewUrl = item.optString("previewUrl", "");
+                                if (previewUrl.isEmpty()) continue;
+
+                                String trackName = item.optString("trackName", "Bilinmeyen Şarkı");
+                                String artistName = item.optString("artistName", "Bilinmeyen Sanatçı");
+                                String albumName = item.optString("collectionName", "Albüm");
+                                long millis = item.optLong("trackTimeMillis", 180000);
+                                long minutes = (millis / 1000) / 60;
+                                long seconds = (millis / 1000) % 60;
+                                String duration = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+
+                                String art = item.optString("artworkUrl100", "");
+                                if (!art.isEmpty()) {
+                                    art = art.replace("100x100bb", "600x600bb");
+                                }
+
+                                JSONObject song = new JSONObject();
+                                song.put("id", String.valueOf(item.optLong("trackId", i)));
+                                song.put("title", trackName);
+                                song.put("artist", artistName);
+                                song.put("album", albumName);
+                                song.put("duration", duration);
+                                song.put("art", art);
+                                song.put("audioUrl", previewUrl);
+                                results.put(song);
+                            }
                         }
 
                         runOnUiThread(() -> {
@@ -455,6 +192,55 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void downloadMusicFile(String audioUrl, String title, String artist) {
+                runOnUiThread(() -> {
+                    try {
+                        if (audioUrl == null || audioUrl.isEmpty()) {
+                            Toast.makeText(MainActivity.this, "İndirme bağlantısı bulunamadı.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                        Uri uri = Uri.parse(audioUrl);
+                        DownloadManager.Request req = new DownloadManager.Request(uri);
+
+                        String cleanName = (title + " - " + artist).replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ _-]", "");
+                        req.setTitle(title);
+                        req.setDescription(artist + " - MüzikCepte indiriliyor");
+                        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName + ".m4a");
+                        req.setMimeType("audio/mp4");
+
+                        dm.enqueue(req);
+                        Toast.makeText(MainActivity.this, "⬇️ İndirme başladı: " + title, Toast.LENGTH_SHORT).show();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        // Fallback browser download
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(audioUrl));
+                            startActivity(intent);
+                        } catch (Exception ignored) {}
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void shareMusic(String title, String artist) {
+                try {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "MüzikCepte ile dinliyorum: " + title + " - " + artist);
+                    sendIntent.setType("text/plain");
+                    Intent shareIntent = Intent.createChooser(sendIntent, "Şarkıyı Paylaş");
+                    shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(shareIntent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @JavascriptInterface
             public void fetchLyrics(String artist, String title) {
                 new Thread(() -> {
                     try {
@@ -463,9 +249,9 @@ public class MainActivity extends AppCompatActivity {
                         URL url = new URL("https://lrclib.net/api/get?artist_name=" + cleanArtist + "&track_name=" + cleanTitle);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.4 (https://muzikcepte.app)");
-                        conn.setConnectTimeout(6000);
-                        conn.setReadTimeout(6000);
+                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.5 (https://muzikcepte.app)");
+                        conn.setConnectTimeout(5000);
+                        conn.setReadTimeout(5000);
 
                         if (conn.getResponseCode() == 200) {
                             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
