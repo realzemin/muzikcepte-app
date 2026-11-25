@@ -1,20 +1,18 @@
 package com.muzikcepte.app;
 
 import android.annotation.SuppressLint;
-import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,6 +25,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.webkit.WebViewAssetLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,7 +35,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Locale;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -76,16 +78,13 @@ public class MainActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (webView != null && webView.canGoBack()) {
-                    webView.goBack();
-                } else {
-                    setEnabled(false);
-                    finish();
-                }
+                // If full player is active in JS, close it first
+                webView.evaluateJavascript("if(document.getElementById('fullPlayer') && document.getElementById('fullPlayer').classList.contains('active')){ closeFullPlayer(); } else if(window.canGoBackApp && window.canGoBackApp()){ window.goBackApp(); } else { window.AndroidBridge.closeApp(); }", null);
             }
         });
 
-        webView.loadUrl("file:///android_asset/index.html");
+        // Load via secure HTTPS domain so YouTube IFrame API has valid origin and never shows errors!
+        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -104,13 +103,24 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.5");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.2.0");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
+        final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .build();
+
         webView.addJavascriptInterface(new Object() {
+
+            @JavascriptInterface
+            public void closeApp() {
+                runOnUiThread(() -> {
+                    finish();
+                });
+            }
 
             @JavascriptInterface
             public void requestAudioFocus() {
@@ -122,60 +132,87 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception ignored) {}
             }
 
+            private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
+                try {
+                    String encoded = URLEncoder.encode(q, "UTF-8");
+                    URL url = new URL("https://www.youtube.com/results?search_query=" + encoded);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    conn.setConnectTimeout(7000);
+                    conn.setReadTimeout(7000);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    in.close();
+
+                    String html = sb.toString();
+                    Pattern pattern = Pattern.compile("ytInitialData\\s*=\\s*(\\{.+?\\});</script>");
+                    Matcher matcher = pattern.matcher(html);
+
+                    if (matcher.find()) {
+                        JSONObject root = new JSONObject(matcher.group(1));
+                        JSONArray sections = root.getJSONObject("contents")
+                                .getJSONObject("twoColumnSearchResultsRenderer")
+                                .getJSONObject("primaryContents")
+                                .getJSONObject("sectionListRenderer")
+                                .getJSONArray("contents");
+
+                        for (int s = 0; s < sections.length(); s++) {
+                            JSONObject section = sections.getJSONObject(s);
+                            if (section.has("itemSectionRenderer")) {
+                                JSONArray contents = section.getJSONObject("itemSectionRenderer").getJSONArray("contents");
+                                for (int i = 0; i < contents.length() && results.length() < 40; i++) {
+                                    JSONObject item = contents.getJSONObject(i);
+                                    if (item.has("videoRenderer")) {
+                                        JSONObject vr = item.getJSONObject("videoRenderer");
+                                        String vid = vr.optString("videoId");
+                                        if (vid.isEmpty() || seenIds.contains(vid)) continue;
+                                        seenIds.add(vid);
+
+                                        String title = "";
+                                        if (vr.has("title") && vr.getJSONObject("title").has("runs")) {
+                                            title = vr.getJSONObject("title").getJSONArray("runs").getJSONObject(0).optString("text");
+                                        }
+                                        String author = "";
+                                        if (vr.has("ownerText") && vr.getJSONObject("ownerText").has("runs")) {
+                                            author = vr.getJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
+                                        }
+                                        String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:45") : "03:45";
+                                        String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
+
+                                        JSONObject row = new JSONObject();
+                                        row.put("id", vid);
+                                        row.put("ytId", vid);
+                                        row.put("title", title);
+                                        row.put("artist", author);
+                                        row.put("duration", duration);
+                                        row.put("art", thumb);
+                                        results.put(row);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
             @JavascriptInterface
             public void searchOnlineMusic(String query) {
                 new Thread(() -> {
                     try {
-                        String encoded = URLEncoder.encode(query, "UTF-8");
-                        // Global Apple iTunes Music API - millions of songs with official audio streams!
-                        URL url = new URL("https://itunes.apple.com/search?term=" + encoded + "&entity=song&limit=50&country=TR");
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)");
-                        conn.setConnectTimeout(6000);
-                        conn.setReadTimeout(6000);
-
-                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = in.readLine()) != null) {
-                            sb.append(line);
-                        }
-                        in.close();
-
-                        JSONObject json = new JSONObject(sb.toString());
-                        JSONArray rawList = json.optJSONArray("results");
                         JSONArray results = new JSONArray();
+                        Set<String> seenIds = new HashSet<>();
 
-                        if (rawList != null) {
-                            for (int i = 0; i < rawList.length(); i++) {
-                                JSONObject item = rawList.getJSONObject(i);
-                                String previewUrl = item.optString("previewUrl", "");
-                                if (previewUrl.isEmpty()) continue;
-
-                                String trackName = item.optString("trackName", "Bilinmeyen Şarkı");
-                                String artistName = item.optString("artistName", "Bilinmeyen Sanatçı");
-                                String albumName = item.optString("collectionName", "Albüm");
-                                long millis = item.optLong("trackTimeMillis", 180000);
-                                long minutes = (millis / 1000) / 60;
-                                long seconds = (millis / 1000) % 60;
-                                String duration = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
-
-                                String art = item.optString("artworkUrl100", "");
-                                if (!art.isEmpty()) {
-                                    art = art.replace("100x100bb", "600x600bb");
-                                }
-
-                                JSONObject song = new JSONObject();
-                                song.put("id", String.valueOf(item.optLong("trackId", i)));
-                                song.put("title", trackName);
-                                song.put("artist", artistName);
-                                song.put("album", albumName);
-                                song.put("duration", duration);
-                                song.put("art", art);
-                                song.put("audioUrl", previewUrl);
-                                results.put(song);
-                            }
+                        fetchYouTubeQuery(query, results, seenIds);
+                        if (results.length() < 25) {
+                            fetchYouTubeQuery(query + " şarkıları", results, seenIds);
                         }
 
                         runOnUiThread(() -> {
@@ -192,35 +229,15 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
-            public void downloadMusicFile(String audioUrl, String title, String artist) {
+            public void downloadMusicFile(String ytId, String title, String artist) {
                 runOnUiThread(() -> {
                     try {
-                        if (audioUrl == null || audioUrl.isEmpty()) {
-                            Toast.makeText(MainActivity.this, "İndirme bağlantısı bulunamadı.", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                        Uri uri = Uri.parse(audioUrl);
-                        DownloadManager.Request req = new DownloadManager.Request(uri);
-
-                        String cleanName = (title + " - " + artist).replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ _-]", "");
-                        req.setTitle(title);
-                        req.setDescription(artist + " - MüzikCepte indiriliyor");
-                        req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                        req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName + ".m4a");
-                        req.setMimeType("audio/mp4");
-
-                        dm.enqueue(req);
-                        Toast.makeText(MainActivity.this, "⬇️ İndirme başladı: " + title, Toast.LENGTH_SHORT).show();
-
+                        String downloadUrl = "https://y2mate.nu/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
+                        startActivity(intent);
+                        Toast.makeText(MainActivity.this, "⬇️ İndirme sayfası açılıyor: " + title, Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         e.printStackTrace();
-                        // Fallback browser download
-                        try {
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(audioUrl));
-                            startActivity(intent);
-                        } catch (Exception ignored) {}
                     }
                 });
             }
@@ -245,11 +262,11 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(() -> {
                     try {
                         String cleanArtist = URLEncoder.encode(artist, "UTF-8");
-                        String cleanTitle = URLEncoder.encode(title, "UTF-8");
+                        String cleanTitle = URLEncoder.encode(title.replaceAll("\\(.*\\)", "").replaceAll("\\[.*\\]", "").trim(), "UTF-8");
                         URL url = new URL("https://lrclib.net/api/get?artist_name=" + cleanArtist + "&track_name=" + cleanTitle);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.5 (https://muzikcepte.app)");
+                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.2.0 (https://muzikcepte.app)");
                         conn.setConnectTimeout(5000);
                         conn.setReadTimeout(5000);
 
@@ -282,9 +299,17 @@ public class MainActivity extends AppCompatActivity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("file:///android_asset/") || url.startsWith("file://") || url.startsWith("about:blank") || url.startsWith("javascript:")) {
+                if (url.startsWith("https://appassets.androidplatform.net/") || url.startsWith("about:blank") || url.startsWith("javascript:")) {
+                    return false;
+                }
+                if (url.contains("youtube.com") || url.contains("youtu.be")) {
                     return false;
                 }
                 try {
