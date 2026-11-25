@@ -796,8 +796,8 @@
 </head>
 <body>
 
-    <!-- Hidden Background YouTube Audio Engine (Full 3-5 minute authentic songs with real vocals!) -->
-    <div id="ytEngineBox" style="position: absolute; width: 1px; height: 1px; left: -9999px; top: -9999px; overflow: hidden; opacity: 0; pointer-events: none;">
+    <!-- Background Audio Engine (Kept inside viewport with low opacity so Android WebView NEVER throttles audio!) -->
+    <div id="ytEngineBox" style="position: fixed; bottom: 0; right: 0; width: 160px; height: 90px; z-index: -1; pointer-events: none; opacity: 0.02;">
         <div id="ytAudioPlayer"></div>
     </div>
 
@@ -819,7 +819,7 @@
             <div class="spotlight-card">
                 <span class="spotlight-badge">👑 MİLYONLARCA ŞARKI</span>
                 <h2 class="spotlight-title">Tarkan & Tüm Sanatçılar</h2>
-                <p class="spotlight-desc">Tam uzunlukta orijinal şarkılar (30 saniye sınırı yok!). Dokun ve anında dinle.</p>
+                <p class="spotlight-desc">Tam uzunlukta orijinal şarkılar. Dokun ve kendi olduğu yerde anında dinle.</p>
                 <button class="spotlight-play-btn" onclick="playTrack(0)">
                     <span>▶ Tarkan - Yolla Çal</span>
                 </button>
@@ -861,6 +861,11 @@
                 <div style="text-align:center; padding:40px; color:var(--text-sub);">
                     İstediğiniz şarkıcıyı veya şarkıyı aratıp anında tam uzunlukta dinleyebilir ve indirebilirsiniz.
                 </div>
+            </div>
+            <div id="loadMoreBox" style="display:none; margin-top:16px;">
+                <button class="spotlight-play-btn" style="width:100%; justify-content:center; background:var(--bg-card); color:#FFF; border:1px solid var(--border-glass);" onclick="loadMoreSearchResults()">
+                    ➕ Daha Fazla Şarkı Yükle
+                </button>
             </div>
         </section>
 
@@ -1044,6 +1049,22 @@
                 art: "https://i.ytimg.com/vi/iSxhp49FbBk/hqdefault.jpg"
             },
             {
+                id: "r6w_a405w5Q",
+                ytId: "r6w_a405w5Q",
+                title: "Dudu",
+                artist: "Tarkan",
+                duration: "04:35",
+                art: "https://i.ytimg.com/vi/r6w_a405w5Q/hqdefault.jpg"
+            },
+            {
+                id: "bdoqdoLSZCM",
+                ytId: "bdoqdoLSZCM",
+                title: "Adımı Kalbine Yaz",
+                artist: "Tarkan",
+                duration: "05:12",
+                art: "https://i.ytimg.com/vi/bdoqdoLSZCM/hqdefault.jpg"
+            },
+            {
                 id: "cahWIOCm5YM",
                 ytId: "cahWIOCm5YM",
                 title: "Canın Sağ Olsun",
@@ -1058,10 +1079,36 @@
                 artist: "Mert Demir",
                 duration: "03:42",
                 art: "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg"
+            },
+            {
+                id: "fVpU_03P6f0",
+                ytId: "fVpU_03P6f0",
+                title: "Antidepresan",
+                artist: "Mert Demir & Mabel Matiz",
+                duration: "03:50",
+                art: "https://i.ytimg.com/vi/fVpU_03P6f0/hqdefault.jpg"
+            },
+            {
+                id: "QNoC_mVojhc",
+                ytId: "QNoC_mVojhc",
+                title: "Öp",
+                artist: "Tarkan",
+                duration: "04:31",
+                art: "https://i.ytimg.com/vi/QNoC_mVojhc/hqdefault.jpg"
+            },
+            {
+                id: "fR0Q97u7Uis",
+                ytId: "fR0Q97u7Uis",
+                title: "Firuze",
+                artist: "Sezen Aksu",
+                duration: "05:08",
+                art: "https://i.ytimg.com/vi/fR0Q97u7Uis/hqdefault.jpg"
             }
         ];
 
         let SEARCH_RESULTS = [];
+        let currentSearchQuery = "";
+        let currentSearchPage = 1;
         let currentIndex = 0;
         let isPlaying = false;
         let isShuffle = false;
@@ -1242,15 +1289,19 @@
                     window.AndroidBridge.requestAudioFocus();
                 }
                 if (autoPlay) {
-                    ytPlayer.loadVideoById(ytId);
+                    ytPlayer.loadVideoById({
+                        videoId: ytId,
+                        startSeconds: 0
+                    });
+                    ytPlayer.playVideo();
                 } else {
                     ytPlayer.cueVideoById(ytId);
                 }
             } else {
-                // If API not ready yet, wait briefly and play
                 setTimeout(() => {
                     if (ytPlayer && ytPlayer.loadVideoById && autoPlay) {
-                        ytPlayer.loadVideoById(ytId);
+                        ytPlayer.loadVideoById({ videoId: ytId, startSeconds: 0 });
+                        ytPlayer.playVideo();
                     }
                 }, 800);
             }
@@ -1315,7 +1366,7 @@
             document.getElementById('fav-count').innerText = `${likes.size} Parça`;
         }
 
-        // Search Handlers
+        // Search Handlers & Pagination
         function quickSearch(artist, el) {
             document.querySelectorAll('.pill-item').forEach(p => p.classList.remove('active'));
             if (el) el.classList.add('active');
@@ -1327,19 +1378,38 @@
         function executeSearch() {
             const q = document.getElementById('searchInput').value.trim();
             if (!q) return;
+            currentSearchQuery = q;
+            currentSearchPage = 1;
             document.getElementById('searchLoader').style.display = 'block';
             document.getElementById('search-results-container').innerHTML = '';
+            document.getElementById('loadMoreBox').style.display = 'none';
             document.getElementById('search-header-title').innerText = `"${q}" için Sonuçlar`;
 
             if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
-                window.AndroidBridge.searchOnlineMusic(q);
+                window.AndroidBridge.searchOnlineMusic(q, 1);
             }
         }
 
-        window.onMusicSearchResults = function(results) {
+        function loadMoreSearchResults() {
+            currentSearchPage++;
+            document.getElementById('searchLoader').style.display = 'block';
+            document.getElementById('loadMoreBox').style.display = 'none';
+            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
+                window.AndroidBridge.searchOnlineMusic(currentSearchQuery, currentSearchPage);
+            }
+        }
+
+        window.onMusicSearchResults = function(results, page = 1) {
             document.getElementById('searchLoader').style.display = 'none';
-            SEARCH_RESULTS = results;
-            renderSearchResults(results);
+            if (page === 1) {
+                SEARCH_RESULTS = results;
+            } else {
+                SEARCH_RESULTS = SEARCH_RESULTS.concat(results);
+            }
+            renderSearchResults(SEARCH_RESULTS);
+            if (results && results.length > 0) {
+                document.getElementById('loadMoreBox').style.display = 'block';
+            }
         };
 
         window.onMusicSearchError = function(err) {
@@ -1352,12 +1422,11 @@
             const t = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
             if (!t) return;
             
-            const choice = confirm(`"${t.title} - ${t.artist}" parçasını telefonunuza indirmek ister misiniz?`);
-            if (choice) {
-                if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
-                    window.AndroidBridge.downloadMusicFile(t.ytId || t.id, t.title, t.artist);
-                }
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
+                window.AndroidBridge.downloadMusicFile(t.ytId || t.id, t.title, t.artist);
+            } else {
                 saveOfflineTrack(t);
+                alert(`✅ "${t.title}" Çevrimdışı listenize kaydedildi!`);
             }
         }
 
@@ -1387,6 +1456,13 @@
             }
             renderOfflineTracks();
         }
+
+        window.saveOfflineTrackById = function(ytId) {
+            const song = CURRENT_PLAYLIST.find(x => (x.ytId || x.id) === ytId) || SEARCH_RESULTS.find(x => (x.ytId || x.id) === ytId);
+            if (song) {
+                saveOfflineTrack(song);
+            }
+        };
 
         function renderOfflineTracks() {
             const container = document.getElementById('offline-tracks-container');

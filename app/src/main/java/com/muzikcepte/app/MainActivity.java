@@ -183,6 +183,17 @@ public class MainActivity extends AppCompatActivity {
                                             author = vr.getJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
                                         }
                                         String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:45") : "03:45";
+                                        
+                                        // Filter out movies / long mixes over 15 minutes
+                                        if (duration.split(":").length > 2) continue;
+                                        String[] parts = duration.split(":");
+                                        if (parts.length == 2) {
+                                            try {
+                                                int m = Integer.parseInt(parts[0].trim());
+                                                if (m > 15) continue;
+                                            } catch (Exception ignored) {}
+                                        }
+
                                         String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
 
                                         JSONObject row = new JSONObject();
@@ -204,19 +215,27 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
-            public void searchOnlineMusic(String query) {
+            public void searchOnlineMusic(String query, int page) {
                 new Thread(() -> {
                     try {
                         JSONArray results = new JSONArray();
                         Set<String> seenIds = new HashSet<>();
 
-                        fetchYouTubeQuery(query, results, seenIds);
-                        if (results.length() < 25) {
-                            fetchYouTubeQuery(query + " şarkıları", results, seenIds);
+                        if (page <= 1) {
+                            fetchYouTubeQuery(query, results, seenIds);
+                            if (results.length() < 25) {
+                                fetchYouTubeQuery(query + " şarkıları", results, seenIds);
+                            }
+                        } else if (page == 2) {
+                            fetchYouTubeQuery(query + " albüm", results, seenIds);
+                            fetchYouTubeQuery(query + " hit", results, seenIds);
+                        } else {
+                            fetchYouTubeQuery(query + " official audio", results, seenIds);
+                            fetchYouTubeQuery(query + " klip", results, seenIds);
                         }
 
                         runOnUiThread(() -> {
-                            webView.evaluateJavascript("if(window.onMusicSearchResults) window.onMusicSearchResults(" + results.toString() + ");", null);
+                            webView.evaluateJavascript("if(window.onMusicSearchResults) window.onMusicSearchResults(" + results.toString() + ", " + page + ");", null);
                         });
 
                     } catch (Exception e) {
@@ -229,13 +248,40 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void searchOnlineMusic(String query) {
+                searchOnlineMusic(query, 1);
+            }
+
+            @JavascriptInterface
             public void downloadMusicFile(String ytId, String title, String artist) {
                 runOnUiThread(() -> {
                     try {
-                        String downloadUrl = "https://y2mate.nu/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl));
-                        startActivity(intent);
-                        Toast.makeText(MainActivity.this, "⬇️ İndirme sayfası açılıyor: " + title, Toast.LENGTH_SHORT).show();
+                        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("⬇️ " + title);
+                        String[] options = {
+                            "🎵 1. Hızlı MP3 İndir (Snapsave - Önerilen)",
+                            "⚡ 2. Alternatif MP3 İndir (OnlyMP3)",
+                            "🎬 3. HD Video İndir (MP4)",
+                            "💾 4. Çevrimdışı Kitaplığıma Kaydet"
+                        };
+                        builder.setItems(options, (dialog, which) -> {
+                            try {
+                                if (which == 0 || which == 2) {
+                                    String url = "https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                                } else if (which == 1) {
+                                    String url = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                                } else if (which == 3) {
+                                    webView.evaluateJavascript("if(window.saveOfflineTrackById) window.saveOfflineTrackById('" + ytId + "');", null);
+                                    Toast.makeText(MainActivity.this, "✅ '" + title + "' Çevrimdışı Listenize Eklendi!", Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (Exception e) {
+                                Toast.makeText(MainActivity.this, "Tarayıcı açılamadı.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        builder.setNegativeButton("Kapat", null);
+                        builder.show();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
