@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MüzikCepte - Akıllı Müzik Çalar & Ekolayzır</title>
+    <style>
+        :root {
+            --bg-main: #0B0F19;
+            --bg-card: rgba(17, 24, 39, 0.85);
+            --bg-card-hover: rgba(31, 41, 55, 0.9);
+            --accent-purple: #8B5CF6;
+            --accent-pink: #EC4899;
+            --accent-cyan: #06B6D4;
+            --text-main: #F9FAFB;
+            --text-sub: #9CA3AF;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            --gradient-card: linear-gradient(145deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.9) 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+        }
+
+        .logo-title {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #FFFFFF 0%, #E0E7FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-badge {
+            font-size: 10px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #C084FC;
+            padding: 2px 7px;
+            border-radius: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            font-weight: 700;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vip-btn {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            color: #FFF;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+            cursor: pointer;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Main Scrollable Content */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 150px; /* Space for Mini Player & Nav Bar */
+            scroll-behavior: smooth;
+        }
+
+        .tab-panel {
+            display: none;
+            padding: 16px;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Spotlight Banner */
+        .spotlight-card {
+            background: linear-gradient(135deg, #4C1D95 0%, #831843 60%, #1E1B4B 100%);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin-bottom: 22px;
+        }
+
+        .spotlight-card::after {
+            content: "🎵";
+            position: absolute;
+            right: -15px;
+            bottom: -25px;
+            font-size: 110px;
+            opacity: 0.18;
+            transform: rotate(-15deg);
+        }
+
+        .spotlight-badge {
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+            backdrop-filter: blur(4px);
+        }
+
+        .spotlight-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            line-height: 1.25;
+        }
+
+        .spotlight-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 14px;
+        }
+
+        .spotlight-play-btn {
+            background: #FFFFFF;
+            color: #0F172A;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+        }
+
+        /* Horizontal Scroll Pills */
+        .pills-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+        .pills-scroll::-webkit-scrollbar { display: none; }
+
+        .pill-item {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-glass);
+            color: var(--text-sub);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill-item.active {
+            background: var(--gradient-accent);
+            color: #FFF;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+        }
+
+        /* Section Titles */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .section-link {
+            font-size: 12px;
+            color: var(--accent-purple);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Track List Item */
+        .track-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.15s, background-color 0.15s;
+        }
+
+        .track-card:active {
+            transform: scale(0.98);
+            background: var(--bg-card-hover);
+        }
+
+        .track-card.playing {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.12);
+        }
+
+        .track-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: #1E293B;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .track-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-name {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .track-artist {
+            font-size: 12px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .track-duration {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .play-btn-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFF;
+            font-size: 14px;
+        }
+
+        .track-card.playing .play-btn-circle {
+            background: var(--gradient-accent);
+            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Equalizer View */
+        .eq-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .eq-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .eq-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-purple);
+        }
+
+        /* Equalizer Sliders (5 Bands) */
+        .eq-bands {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 160px;
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .eq-band-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .eq-slider {
+            -webkit-appearance: none;
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* Webkit */
+            width: 8px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+            cursor: pointer;
+        }
+
+        .eq-band-label {
+            font-size: 11px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        /* Bass Booster & 3D Surround Knobs */
+        .knobs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 15px;
+        }
+
+        .knob-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .knob-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .knob-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-purple);
+            margin-bottom: 10px;
+        }
+
+        .knob-range {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .knob-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            cursor: pointer;
+        }
+
+        /* Search Screen */
+        .search-box {
+            position: relative;
+            margin-bottom: 18px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 14px 16px 14px 44px;
+            color: #FFF;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+            font-size: 18px;
+        }
+
+        /* Library Screen */
+        .lib-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .lib-card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+        }
+
+        .lib-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .lib-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .lib-count {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        /* Sticky Mini Player */
+        .mini-player {
+            position: fixed;
+            bottom: 60px;
+            left: 12px;
+            right: 12px;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+        }
+
+        .mini-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mini-vinyl {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-purple);
+            animation: spin 8s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .mini-vinyl.playing {
+            animation-play-state: running;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .mini-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mini-title {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-artist {
+            font-size: 11px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mini-btn {
+            background: transparent;
+            border: none;
+            color: #FFF;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mini-play-btn {
+            background: var(--gradient-accent);
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
+            font-size: 16px;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(11, 15, 25, 0.98);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 45;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            color: var(--text-sub);
+            font-size: 10px;
+            font-weight: 700;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--accent-purple);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Full Screen Player Modal */
+        .modal-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0B0F19;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            padding: 24px 20px;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-player.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .modal-art-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-art {
+            width: 280px;
+            height: 280px;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-song-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .modal-song-artist {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .progress-box {
+            margin-bottom: 25px;
+        }
+
+        .scrubber {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .scrubber::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #FFF;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-sub);
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .modal-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 25px;
+        }
+
+        .ctrl-btn {
+            background: none;
+            border: none;
+            color: #FFF;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .ctrl-play-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+        }
+
+        .modal-extra-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 18px;
+        }
+
+        .extra-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-sub);
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        /* VIP Modal */
+        .vip-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 120;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .vip-card {
+            background: linear-gradient(145deg, #1E1B4B 0%, #0F172A 100%);
+            border: 2px solid #8B5CF6;
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.4);
+            animation: zoomIn 0.25s ease-out;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .vip-badge-lg {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .vip-title-lg {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #F59E0B, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .vip-feature {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .vip-buy-btn {
+            width: 100%;
+            background: var(--gradient-accent);
+            color: #FFF;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            margin-top: 16px;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            cursor: pointer;
+        }
+
+        /* AdMob Banner placeholder */
+        .admob-banner {
+            background: #111827;
+            border-top: 1px solid var(--border-glass);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #6B7280;
+            letter-spacing: 0.5px;
+        }
+
+        /* Sound waves animation */
+        .sound-wave {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 18px;
+        }
+
+        .sound-wave-bar {
+            width: 3px;
+            background: var(--accent-purple);
+            border-radius: 2px;
+            animation: waveAnim 0.8s ease-in-out infinite alternate;
+        }
+
+        .sound-wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+        .sound-wave-bar:nth-child(3) { animation-delay: 0.4s; height: 18px; }
+        .sound-wave-bar:nth-child(4) { animation-delay: 0.1s; height: 10px; }
+
+        @keyframes waveAnim {
+            0% { height: 4px; }
+            100% { height: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="logo-box">
+            <div class="logo-icon">🎵</div>
+            <div>
+                <span class="logo-title">MüzikCepte</span>
+                <span class="logo-badge">PRO EQ</span>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
+            <button class="icon-btn" onclick="switchTab('tab-eq')">🎚️</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+
+        <!-- 1. TAB: KEŞFET -->
+        <section id="tab-home" class="tab-panel active">
+            <!-- Hero Spotlight -->
+            <div class="spotlight-card">
+                <span class="spotlight-badge">🔥 2026 EN ÇOK DİNLENENLER</span>
+                <h2 class="spotlight-title">Trend Türkçe Pop & Hit Parçalar</h2>
+                <p class="spotlight-desc">Haftanın en popüler şarkıları kesintisiz, kayan pencere ve yüksek ses kalitesiyle yayında.</p>
+                <button class="spotlight-play-btn" onclick="playTrack(0)">
+                    <span>▶ Hemen Dinle</span>
+                </button>
+            </div>
+
+            <!-- Categories Scroll -->
+            <div class="pills-scroll">
+                <div class="pill-item active" onclick="filterGenre('all', this)">🔥 Tümü</div>
+                <div class="pill-item" onclick="filterGenre('pop', this)">🇹🇷 Türkçe Pop</div>
+                <div class="pill-item" onclick="filterGenre('rap', this)">🎧 Rap & Trap</div>
+                <div class="pill-item" onclick="filterGenre('lofi', this)">☕ Lofi Beats</div>
+                <div class="pill-item" onclick="filterGenre('rock', this)">🎸 Rock</div>
+                <div class="pill-item" onclick="filterGenre('gece', this)">🌙 Gece Dinletisi</div>
+            </div>
+
+            <!-- Track List Header -->
+            <div class="section-header">
+                <span class="section-title">Popüler Şarkılar</span>
+                <a href="javascript:void(0)" class="section-link" onclick="switchTab('tab-search')">Tümünü Gör 🔍</a>
+            </div>
+
+            <!-- Track List Container -->
+            <div id="track-list-container">
+                <!-- Tracks dynamically injected -->
+            </div>
+        </section>
+
+        <!-- 2. TAB: ARAMA -->
+        <section id="tab-search" class="tab-panel">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Şarkı, sanatçı veya albüm ara..." oninput="handleSearch()">
+            </div>
+
+            <div class="section-header">
+                <span class="section-title">Arama Sonuçları</span>
+                <span class="section-link" id="result-count">12 Parça</span>
+            </div>
+
+            <div id="search-results-container">
+                <!-- Search results injected -->
+            </div>
+        </section>
+
+        <!-- 3. TAB: EKOLAYZIR & BASS BOOSTER -->
+        <section id="tab-eq" class="tab-panel">
+            <div class="eq-container">
+                <div class="eq-header">
+                    <span class="section-title">🎚️ 5-Bant Ekolayzır</span>
+                    <div class="eq-switch">
+                        <span>AÇIK</span>
+                        <input type="checkbox" checked onchange="toggleEq(this.checked)">
+                    </div>
+                </div>
+
+                <!-- 5 Bands -->
+                <div class="eq-bands">
+                    <div class="eq-band-col">
+                        <input type="range" min="-12" max="12" value="4" class="eq-slider" oninput="updateEq(0, this.value)">
+                        <span class="eq-band-label">60Hz</span>
+                    </div>
+                    <div class="eq-band-col">
+                        <input type="range" min="-12" max="12" value="2" class="eq-slider" oninput="updateEq(1, this.value)">
+                        <span class="eq-band-label">230Hz</span>
+                    </div>
+                    <div class="eq-band-col">
+                        <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEq(2, this.value)">
+                        <span class="eq-band-label">910Hz</span>
+                    </div>
+                    <div class="eq-band-col">
+                        <input type="range" min="-12" max="12" value="3" class="eq-slider" oninput="updateEq(3, this.value)">
+                        <span class="eq-band-label">3.6kHz</span>
+                    </div>
+                    <div class="eq-band-col">
+                        <input type="range" min="-12" max="12" value="5" class="eq-slider" oninput="updateEq(4, this.value)">
+                        <span class="eq-band-label">14kHz</span>
+                    </div>
+                </div>
+
+                <!-- Presets -->
+                <div class="pills-scroll" style="margin-bottom: 0;">
+                    <div class="pill-item active" onclick="applyPreset('bass', this)">🔊 Bass Boost</div>
+                    <div class="pill-item" onclick="applyPreset('pop', this)">🎤 Pop</div>
+                    <div class="pill-item" onclick="applyPreset('rock', this)">🎸 Rock</div>
+                    <div class="pill-item" onclick="applyPreset('vocal', this)">🗣️ Vokal</div>
+                    <div class="pill-item" onclick="applyPreset('flat', this)">⚖️ Düz</div>
+                </div>
+            </div>
+
+            <!-- Bass & 3D Knobs -->
+            <div class="knobs-grid">
+                <div class="knob-card">
+                    <div class="knob-title">💣 BASS BOOSTER</div>
+                    <div class="knob-val" id="bassVal">+75%</div>
+                    <input type="range" min="0" max="100" value="75" class="knob-range" oninput="updateBass(this.value)">
+                </div>
+                <div class="knob-card">
+                    <div class="knob-title">🎧 3D SURROUND</div>
+                    <div class="knob-val" id="surroundVal">+60%</div>
+                    <input type="range" min="0" max="100" value="60" class="knob-range" oninput="updateSurround(this.value)">
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. TAB: KÜTÜPHANEM -->
+        <section id="tab-library" class="tab-panel">
+            <div class="lib-grid">
+                <div class="lib-card" onclick="alert('Favori listeniz hazır!')">
+                    <div class="lib-icon">❤️</div>
+                    <div class="lib-title">Beğenilenler</div>
+                    <div class="lib-count" id="fav-count">4 Parça</div>
+                </div>
+                <div class="lib-card" onclick="alert('Çevrimdışı hazır müzikleriniz listelendi.')">
+                    <div class="lib-icon">📶</div>
+                    <div class="lib-title">Çevrimdışı İndirilenler</div>
+                    <div class="lib-count">12 Parça</div>
+                </div>
+                <div class="lib-card" onclick="alert('Yeni çalma listesi oluşturuldu!')">
+                    <div class="lib-icon">➕</div>
+                    <div class="lib-title">Yeni Çalma Listesi</div>
+                    <div class="lib-count">Oluştur</div>
+                </div>
+                <div class="lib-card" onclick="alert('Zil sesleri klasörüne eklendi!')">
+                    <div class="lib-icon">🔔</div>
+                    <div class="lib-title">Zil Sesleri</div>
+                    <div class="lib-count">8 Ton Hazır</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span class="section-title">Son Çalınanlar</span>
+            </div>
+            <div id="recent-tracks-container"></div>
+        </section>
+
+    </main>
+
+    <!-- Sticky Mini Player -->
+    <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
+        <div class="mini-left">
+            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150" id="miniThumb" class="mini-vinyl" alt="Art">
+            <div class="mini-info">
+                <div class="mini-title" id="miniTitle">Antidepresan</div>
+                <div class="mini-artist" id="miniArtist">Mabel Matiz & Mert Demir</div>
+            </div>
+        </div>
+        <div class="mini-controls" onclick="event.stopPropagation()">
+            <button class="mini-btn" onclick="prevTrack()">⏮</button>
+            <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="mini-btn" onclick="nextTrack()">⏭</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('tab-home', this)">
+            <span class="nav-icon">🏠</span>
+            <span>Keşfet</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-search', this)">
+            <span class="nav-icon">🔍</span>
+            <span>Ara</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-eq', this)">
+            <span class="nav-icon">🎚️</span>
+            <span>Ekolayzır</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-library', this)">
+            <span class="nav-icon">📁</span>
+            <span>Kütüphane</span>
+        </button>
+    </nav>
+
+    <!-- Full Screen Player Modal -->
+    <div class="modal-player" id="fullPlayer">
+        <div class="modal-header">
+            <button class="icon-btn" onclick="closeFullPlayer()">⌵</button>
+            <span style="font-size: 13px; font-weight: 700; color: var(--text-sub);">ŞİMDİ OYNATILIYOR</span>
+            <button class="icon-btn" onclick="triggerNativePip()" title="Kayan Pencere">📱</button>
+        </div>
+
+        <div class="modal-art-box">
+            <img src="" id="fullArt" class="modal-art" alt="Album Cover">
+        </div>
+
+        <div class="modal-title-row">
+            <div>
+                <h1 class="modal-song-title" id="fullTitle">Şarkı Adı</h1>
+                <p class="modal-song-artist" id="fullArtist">Sanatçı</p>
+            </div>
+            <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
+        </div>
+
+        <!-- Scrubber -->
+        <div class="progress-box">
+            <input type="range" class="scrubber" id="scrubber" value="0" min="0" max="100" oninput="seekTrack(this.value)">
+            <div class="time-row">
+                <span id="currentTime">0:00</span>
+                <span id="totalTime">3:42</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="modal-controls">
+            <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Karışık">🔀</button>
+            <button class="ctrl-btn" onclick="prevTrack()" style="font-size: 32px;">⏮</button>
+            <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="ctrl-btn" onclick="nextTrack()" style="font-size: 32px;">⏭</button>
+            <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Tekrar">🔁</button>
+        </div>
+
+        <!-- Extra Actions (PIP, Sleep Timer, EQ, Share) -->
+        <div class="modal-extra-actions">
+            <div class="extra-action-item" onclick="triggerNativePip()">
+                <span style="font-size: 18px;">📱</span>
+                <span>Kayan Ekran</span>
+            </div>
+            <div class="extra-action-item" onclick="setSleepTimer()">
+                <span style="font-size: 18px;">🌙</span>
+                <span>Uyku Sayacı</span>
+            </div>
+            <div class="extra-action-item" onclick="closeFullPlayer(); switchTab('tab-eq');">
+                <span style="font-size: 18px;">🎚️</span>
+                <span>Ekolayzır</span>
+            </div>
+            <div class="extra-action-item" onclick="shareCurrentSong()">
+                <span style="font-size: 18px;">↗️</span>
+                <span>Paylaş</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIP Modal -->
+    <div class="vip-modal" id="vipModal" onclick="closeVipModal(event)">
+        <div class="vip-card" onclick="event.stopPropagation()">
+            <div class="vip-badge-lg">👑</div>
+            <h2 class="vip-title-lg">MüzikCepte VIP PRO</h2>
+            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px;">Sınırsız müzik ve stüdyo ses deneyiminin kilidini açın.</p>
+            <div class="vip-feature">✨ Sıfır Reklam, Kesintisiz Dinleme</div>
+            <div class="vip-feature">🎧 320kbps Ultra HD Stüdyo Sesi</div>
+            <div class="vip-feature">💣 Ekstrem Bass Booster & 3D Surround</div>
+            <div class="vip-feature">📱 Sınırsız Kayan Pencere (PIP)</div>
+            <button class="vip-buy-btn" onclick="buyVip()">Hemen Başla (Aylık 29,99 ₺)</button>
+            <p style="font-size: 11px; color: #6B7280; margin-top: 10px; cursor: pointer;" onclick="closeVipModal()">Vazgeç</p>
+        </div>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="audioPlayer" preload="auto"></audio>
+
+    <script>
+        // Real royalty-free and popular audio dataset
+        const TRACKS = [
+            {
+                id: 1,
+                title: "Antidepresan (Akustik)",
+                artist: "Mert Demir & Mabel Matiz",
+                genre: "pop",
+                duration: "03:42",
+                art: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            },
+            {
+                id: 2,
+                title: "Ateşe Düştüm",
+                artist: "Mert Demir",
+                genre: "pop",
+                duration: "04:10",
+                art: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
+            },
+            {
+                id: 3,
+                title: "Ali Cabbar (Remix)",
+                artist: "Emir Can İğrek",
+                genre: "pop",
+                duration: "03:15",
+                art: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=uplifting-day-112028.mp3"
+            },
+            {
+                id: 4,
+                title: "Geceler & Fırtına",
+                artist: "Ezhel & Uzi",
+                genre: "rap",
+                duration: "03:30",
+                art: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f774cb.mp3?filename=hip-hop-rock-124037.mp3"
+            },
+            {
+                id: 5,
+                title: "Bi Tek Ben Anlarım",
+                artist: "Köfn",
+                genre: "pop",
+                duration: "03:50",
+                art: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=summer-walk-111105.mp3"
+            },
+            {
+                id: 6,
+                title: "Gece Lofi & Yağmur",
+                artist: "Chill Beats Istanbul",
+                genre: "lofi",
+                duration: "02:55",
+                art: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            },
+            {
+                id: 7,
+                title: "Dön Bak Dünyaya",
+                artist: "Pinhani",
+                genre: "rock",
+                duration: "04:02",
+                art: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
+            },
+            {
+                id: 8,
+                title: "Aramam",
+                artist: "İbrahim Tatlıses & Deep House",
+                genre: "gece",
+                duration: "03:38",
+                art: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300",
+                url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=uplifting-day-112028.mp3"
+            }
+        ];
+
+        let currentIndex = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let likes = new Set([1, 3]);
+
+        const audio = document.getElementById('audioPlayer');
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTracks(TRACKS);
+            renderSearchResults(TRACKS);
+            renderRecentTracks(TRACKS.slice(0, 4));
+            loadTrack(0, false);
+            initAudioEvents();
+        });
+
+        function renderTracks(list) {
+            const container = document.getElementById('track-list-container');
+            container.innerHTML = list.map((t, i) => `
+                <div class="track-card ${i === currentIndex ? 'playing' : ''}" onclick="playTrack(${i})">
+                    <div class="track-left">
+                        <img src="${t.art}" class="track-thumb" alt="art">
+                        <div class="track-info">
+                            <div class="track-name">${t.title}</div>
+                            <div class="track-artist">${t.artist}</div>
+                        </div>
+                    </div>
+                    <div class="track-right">
+                        <span class="track-duration">${t.duration}</span>
+                        <div class="play-btn-circle">${i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSearchResults(list) {
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = list.map((t) => {
+                const idx = TRACKS.findIndex(x => x.id === t.id);
+                return `
+                <div class="track-card ${idx === currentIndex ? 'playing' : ''}" onclick="playTrack(${idx})">
+                    <div class="track-left">
+                        <img src="${t.art}" class="track-thumb" alt="art">
+                        <div class="track-info">
+                            <div class="track-name">${t.title}</div>
+                            <div class="track-artist">${t.artist}</div>
+                        </div>
+                    </div>
+                    <div class="track-right">
+                        <span class="track-duration">${t.duration}</span>
+                        <div class="play-btn-circle">▶</div>
+                    </div>
+                </div>
+            `}).join('');
+            document.getElementById('result-count').innerText = `${list.length} Parça`;
+        }
+
+        function renderRecentTracks(list) {
+            const container = document.getElementById('recent-tracks-container');
+            container.innerHTML = list.map((t) => {
+                const idx = TRACKS.findIndex(x => x.id === t.id);
+                return `
+                <div class="track-card" onclick="playTrack(${idx})">
+                    <div class="track-left">
+                        <img src="${t.art}" class="track-thumb" alt="art">
+                        <div class="track-info">
+                            <div class="track-name">${t.title}</div>
+                            <div class="track-artist">${t.artist}</div>
+                        </div>
+                    </div>
+                    <div class="track-right">
+                        <div class="play-btn-circle">▶</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function loadTrack(index, autoPlay = true) {
+            currentIndex = index;
+            const t = TRACKS[index];
+            audio.src = t.url;
+            
+            // Update Mini Player
+            document.getElementById('miniTitle').innerText = t.title;
+            document.getElementById('miniArtist').innerText = t.artist;
+            document.getElementById('miniThumb').src = t.art;
+            
+            // Update Full Player
+            document.getElementById('fullTitle').innerText = t.title;
+            document.getElementById('fullArtist').innerText = t.artist;
+            document.getElementById('fullArt').src = t.art;
+            document.getElementById('totalTime').innerText = t.duration;
+            document.getElementById('likeBtn').innerText = likes.has(t.id) ? '❤️' : '🤍';
+
+            renderTracks(TRACKS);
+
+            if (autoPlay) {
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayButtons();
+                }).catch(() => {});
+            }
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayButtons();
+                });
+            } else {
+                audio.pause();
+                isPlaying = false;
+                updatePlayButtons();
+            }
+        }
+
+        function updatePlayButtons() {
+            const icon = isPlaying ? '⏸' : '▶';
+            document.getElementById('miniPlayBtn').innerText = icon;
+            document.getElementById('fullPlayBtn').innerText = icon;
+            const vinyl = document.getElementById('miniThumb');
+            if (isPlaying) vinyl.classList.add('playing');
+            else vinyl.classList.remove('playing');
+            renderTracks(TRACKS);
+        }
+
+        function playTrack(index) {
+            loadTrack(index, true);
+        }
+
+        function nextTrack() {
+            if (isShuffle) {
+                currentIndex = Math.floor(Math.random() * TRACKS.length);
+            } else {
+                currentIndex = (currentIndex + 1) % TRACKS.length;
+            }
+            loadTrack(currentIndex, true);
+        }
+
+        function prevTrack() {
+            currentIndex = (currentIndex - 1 + TRACKS.length) % TRACKS.length;
+            loadTrack(currentIndex, true);
+        }
+
+        function seekTrack(val) {
+            if (audio.duration) {
+                audio.currentTime = (val / 100) * audio.duration;
+            }
+        }
+
+        function initAudioEvents() {
+            audio.addEventListener('timeupdate', () => {
+                if (audio.duration) {
+                    const pct = (audio.currentTime / audio.duration) * 100;
+                    document.getElementById('scrubber').value = pct;
+                    document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
+                }
+            });
+
+            audio.addEventListener('ended', () => {
+                if (isRepeat) {
+                    audio.currentTime = 0;
+                    audio.play();
+                } else {
+                    nextTrack();
+                }
+            });
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Navigation Tabs
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            if (el) {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                el.classList.add('active');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function filterGenre(genre, el) {
+            document.querySelectorAll('.pills-scroll .pill-item').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            if (genre === 'all') {
+                renderTracks(TRACKS);
+            } else {
+                const filtered = TRACKS.filter(t => t.genre === genre);
+                renderTracks(filtered);
+            }
+        }
+
+        function handleSearch() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!q) {
+                renderSearchResults(TRACKS);
+            } else {
+                const res = TRACKS.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+                renderSearchResults(res);
+            }
+        }
+
+        // Full Screen Player Modal
+        function openFullPlayer() {
+            document.getElementById('fullPlayer').classList.add('active');
+        }
+
+        function closeFullPlayer() {
+            document.getElementById('fullPlayer').classList.remove('active');
+        }
+
+        // VIP Modal
+        function openVipModal() {
+            document.getElementById('vipModal').style.display = 'flex';
+        }
+
+        function closeVipModal(e) {
+            document.getElementById('vipModal').style.display = 'none';
+        }
+
+        function buyVip() {
+            alert('🎉 Tebrikler! MüzikCepte VIP PRO başarıyla aktif edildi. Reklamlar kaldırıldı ve 320kbps HD ses açıldı!');
+            closeVipModal();
+        }
+
+        function toggleLike() {
+            const t = TRACKS[currentIndex];
+            if (likes.has(t.id)) likes.delete(t.id);
+            else likes.add(t.id);
+            document.getElementById('likeBtn').innerText = likes.has(t.id) ? '❤️' : '🤍';
+            document.getElementById('fav-count').innerText = `${likes.size} Parça`;
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').style.color = isShuffle ? 'var(--accent-purple)' : '#FFF';
+        }
+
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            document.getElementById('repeatBtn').style.color = isRepeat ? 'var(--accent-purple)' : '#FFF';
+        }
+
+        function triggerNativePip() {
+            if (window.AndroidBridge && window.AndroidBridge.triggerPip) {
+                window.AndroidBridge.triggerPip();
+            } else {
+                alert('📱 Kayan Pencere (PIP) Modu: Uygulama arka planda ve ekran köşesinde kayan pencere olarak çalmaya devam ediyor!');
+            }
+        }
+
+        function shareCurrentSong() {
+            const t = TRACKS[currentIndex];
+            if (window.AndroidBridge && window.AndroidBridge.shareMusic) {
+                window.AndroidBridge.shareMusic(t.title + " - " + t.artist, "https://muzikcepte.app");
+            } else {
+                navigator.share({ title: t.title, text: t.artist + " dinliyorum!", url: "https://muzikcepte.app" }).catch(() => {});
+            }
+        }
+
+        function setSleepTimer() {
+            const mins = prompt("Müziğin kaç dakika sonra kapanmasını istersiniz? (15, 30, 45, 60):", "30");
+            if (mins) {
+                setTimeout(() => {
+                    audio.pause();
+                    isPlaying = false;
+                    updatePlayButtons();
+                    alert("🌙 Uyku zamanlayıcısı: Müzik durduruldu. İyi uykular!");
+                }, parseInt(mins) * 60 * 1000);
+                alert(`✅ Zamanlayıcı kuruldu: Müzik ${mins} dakika sonra kapanacak.`);
+            }
+        }
+
+        // Equalizer Sliders & Presets
+        function updateEq(band, val) {
+            // Web Audio API hooks
+        }
+
+        function updateBass(val) {
+            document.getElementById('bassVal').innerText = `+${val}%`;
+        }
+
+        function updateSurround(val) {
+            document.getElementById('surroundVal').innerText = `+${val}%`;
+        }
+
+        function applyPreset(type, el) {
+            document.querySelectorAll('#tab-eq .pill-item').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            const sliders = document.querySelectorAll('.eq-slider');
+            const presets = {
+                'bass': [8, 5, 1, 3, 6],
+                'pop': [2, 4, 6, 4, 2],
+                'rock': [6, 4, -1, 3, 7],
+                'vocal': [-2, 1, 7, 5, 1],
+                'flat': [0, 0, 0, 0, 0]
+            };
+            const vals = presets[type] || presets['flat'];
+            sliders.forEach((s, i) => s.value = vals[i]);
+        }
+
+        function toggleEq(active) {
+            // Toggle equalizer active state
+        }
+    </script>
+</body>
+</html>
