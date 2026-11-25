@@ -325,24 +325,24 @@
         }
 
         
-        .dl-action-btn {
-            background: rgba(139, 92, 246, 0.2);
-            border: 1px solid rgba(139, 92, 246, 0.4);
+        .icon-circle-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: #C4B5FD;
-            border-radius: 12px;
-            padding: 6px 10px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            cursor: pointer;
             transition: all 0.2s;
         }
-        .dl-action-btn:active {
+        .icon-circle-btn:active {
             background: var(--accent-purple);
             color: #FFF;
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
         .offline-item-card {
             background: var(--bg-card);
@@ -1354,7 +1354,7 @@
                         </div>
                     </div>
                     <div class="track-right">
-                        <button class="dl-action-btn" onclick="event.stopPropagation(); triggerDownload('${t.ytId || t.id}', '${t.title.replace(/'/g, "\\'")}')">⬇️ İndir</button>
+                        <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload('${t.ytId || t.id}', '${t.title.replace(/'/g, "\\'")}')">⬇</button>
                         <div class="play-btn-circle">${i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
                 </div>

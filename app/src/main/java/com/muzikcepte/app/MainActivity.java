@@ -2,9 +2,11 @@ package com.muzikcepte.app;
 
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     public WebView webView;
     private ProgressBar progressBar;
 
-    // Dedicated In-App Video & Audio Player
+    // Dedicated In-App Video & Audio Player with base URL autoplay
     private LinearLayout playerContainer;
     private WebView playerWebView;
     private TextView txtPlayerTitle;
@@ -144,9 +146,53 @@ public class MainActivity extends AppCompatActivity {
             if (txtPlayerTitle != null) txtPlayerTitle.setText(title);
             if (txtPlayerSub != null) txtPlayerSub.setText(artist + " • Orijinal Klip ve Stüdyo Sesi");
             if (playerContainer != null) playerContainer.setVisibility(View.VISIBLE);
+
+            // Request Audio focus
+            try {
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (am != null) {
+                    am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+                }
+            } catch (Exception ignored) {}
+
+            // Load YouTube IFrame with https://www.youtube.com origin so it autoplays with sound!
             if (playerWebView != null) {
-                String targetUrl = "https://m.youtube.com/watch?v=" + ytId;
-                playerWebView.loadUrl(targetUrl);
+                String html = "<!DOCTYPE html><html><head>"
+                        + "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>"
+                        + "<style>"
+                        + "* { margin: 0; padding: 0; box-sizing: border-box; }"
+                        + "body { background: #000; width: 100vw; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }"
+                        + "#player { width: 100%; height: 100%; border: none; }"
+                        + "</style></head><body>"
+                        + "<div id='player'></div>"
+                        + "<script src='https://www.youtube.com/iframe_api'></script>"
+                        + "<script>"
+                        + "var player;"
+                        + "function onYouTubeIframeAPIReady() {"
+                        + "    player = new YT.Player('player', {"
+                        + "        height: '100%',"
+                        + "        width: '100%',"
+                        + "        videoId: '" + ytId + "',"
+                        + "        playerVars: {"
+                        + "            'autoplay': 1,"
+                        + "            'playsinline': 1,"
+                        + "            'controls': 1,"
+                        + "            'rel': 0,"
+                        + "            'fs': 1,"
+                        + "            'modestbranding': 1,"
+                        + "            'origin': 'https://www.youtube.com'"
+                        + "        },"
+                        + "        events: {"
+                        + "            'onReady': function(e) { e.target.playVideo(); },"
+                        + "            'onStateChange': function(e) {"
+                        + "                if(e.data === 0) { window.location.href = 'muzikcepte://next'; }"
+                        + "            }"
+                        + "        }"
+                        + "    });"
+                        + "}"
+                        + "</script></body></html>";
+
+                playerWebView.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "UTF-8", null);
             }
         });
     }
@@ -224,6 +270,18 @@ public class MainActivity extends AppCompatActivity {
 
         playerWebView.setWebViewClient(new WebViewClient() {
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                if (url.startsWith("muzikcepte://next")) {
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.nextTrack) window.nextTrack();", null);
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
                 if (playerProgressBar != null) playerProgressBar.setVisibility(View.VISIBLE);
@@ -233,11 +291,6 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (playerProgressBar != null) playerProgressBar.setVisibility(View.GONE);
-                // Clean header elements so it looks like an authentic integrated music player
-                String cleanCss = "var style = document.createElement('style');" +
-                        "style.innerHTML = 'header, ytm-header-bar, .mobile-topbar-header, ytm-pivot-bar-renderer { display: none !important; }';" +
-                        "document.head.appendChild(style);";
-                view.evaluateJavascript(cleanCss, null);
             }
         });
 
@@ -268,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.3");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.4");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -410,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
                         URL url = new URL("https://lrclib.net/api/get?artist_name=" + cleanArtist + "&track_name=" + cleanTitle);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.3 (https://muzikcepte.app)");
+                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.0.4 (https://muzikcepte.app)");
                         conn.setConnectTimeout(6000);
                         conn.setReadTimeout(6000);
 
