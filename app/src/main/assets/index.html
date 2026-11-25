@@ -127,7 +127,7 @@
         .content-area {
             flex: 1;
             overflow-y: auto;
-            padding-bottom: 150px;
+            padding-bottom: 160px;
             scroll-behavior: smooth;
         }
 
@@ -146,7 +146,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Hero Spotlight Banner */
+        /* Spotlight */
         .spotlight-card {
             background: linear-gradient(135deg, #4C1D95 0%, #831843 60%, #1E1B4B 100%);
             border-radius: 20px;
@@ -155,17 +155,7 @@
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            margin-bottom: 22px;
-        }
-
-        .spotlight-card::after {
-            content: "🎵";
-            position: absolute;
-            right: -15px;
-            bottom: -25px;
-            font-size: 110px;
-            opacity: 0.18;
-            transform: rotate(-15deg);
+            margin-bottom: 20px;
         }
 
         .spotlight-badge {
@@ -176,7 +166,6 @@
             border-radius: 12px;
             display: inline-block;
             margin-bottom: 8px;
-            backdrop-filter: blur(4px);
         }
 
         .spotlight-title {
@@ -213,7 +202,7 @@
             gap: 8px;
             overflow-x: auto;
             padding-bottom: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             scrollbar-width: none;
         }
         .pills-scroll::-webkit-scrollbar { display: none; }
@@ -411,7 +400,331 @@
             display: none;
         }
 
-        /* Equalizer View */
+        /* Sticky Mini Player */
+        .mini-player {
+            position: fixed;
+            bottom: 60px;
+            left: 12px;
+            right: 12px;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 16px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+        }
+
+        .mini-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mini-vinyl {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-purple);
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .mini-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mini-title {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-artist {
+            font-size: 11px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mini-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mini-btn {
+            background: transparent;
+            border: none;
+            color: #FFF;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mini-play-btn {
+            background: var(--gradient-accent);
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
+            font-size: 16px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(11, 15, 25, 0.98);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 45;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            color: var(--text-sub);
+            font-size: 10px;
+            font-weight: 700;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--accent-purple);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Full Screen Player Modal */
+        .modal-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0B0F19;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            padding: 20px 20px;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-player.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .player-view-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .p-tab {
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.2s;
+        }
+
+        .p-tab.active {
+            background: var(--gradient-accent);
+            color: #FFF;
+        }
+
+        .view-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            min-height: 250px;
+            justify-content: center;
+        }
+
+        .view-section.active {
+            display: flex;
+        }
+
+        /* Video Clip Frame */
+        .yt-frame-box {
+            width: 100%;
+            height: 230px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-glass);
+            background: #000;
+        }
+
+        .yt-frame-box iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .modal-art {
+            width: 240px;
+            height: 240px;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Lyrics View */
+        .lyrics-box {
+            width: 100%;
+            height: 250px;
+            overflow-y: auto;
+            text-align: center;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 18px;
+            border: 1px solid var(--border-glass);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .lyrics-line {
+            font-size: 17px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            transition: all 0.3s ease;
+            line-height: 1.4;
+        }
+
+        .lyrics-line.highlight {
+            color: #FFF;
+            font-size: 21px;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+            transform: scale(1.05);
+        }
+
+        .modal-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            margin-bottom: 18px;
+        }
+
+        .modal-song-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-song-artist {
+            font-size: 13px;
+            color: var(--text-sub);
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 22px;
+        }
+
+        .ctrl-btn {
+            background: none;
+            border: none;
+            color: #FFF;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .ctrl-play-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--gradient-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+        }
+
+        .modal-extra-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 16px;
+        }
+
+        .extra-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-sub);
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        /* Presets & Equalizer */
         .eq-container {
             background: var(--bg-card);
             border: 1px solid var(--border-glass);
@@ -524,401 +837,6 @@
             cursor: pointer;
         }
 
-        /* Library Screen */
-        .lib-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 22px;
-        }
-
-        .lib-card {
-            background: var(--gradient-card);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 16px;
-            cursor: pointer;
-        }
-
-        .lib-icon {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .lib-title {
-            font-size: 14px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
-        .lib-count {
-            font-size: 11px;
-            color: var(--text-sub);
-        }
-
-        /* Sticky Mini Player */
-        .mini-player {
-            position: fixed;
-            bottom: 60px;
-            left: 12px;
-            right: 12px;
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(139, 92, 246, 0.35);
-            border-radius: 16px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 50;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            cursor: pointer;
-        }
-
-        .mini-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .mini-vinyl {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--accent-purple);
-            animation: spin 8s linear infinite;
-            animation-play-state: paused;
-        }
-
-        .mini-vinyl.playing {
-            animation-play-state: running;
-        }
-
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-
-        .mini-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .mini-title {
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .mini-artist {
-            font-size: 11px;
-            color: var(--text-sub);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .mini-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .mini-btn {
-            background: transparent;
-            border: none;
-            color: #FFF;
-            font-size: 20px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .mini-play-btn {
-            background: var(--gradient-accent);
-            border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
-            font-size: 16px;
-        }
-
-        /* Bottom Navigation Bar */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: rgba(11, 15, 25, 0.98);
-            backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border-glass);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 45;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            color: var(--text-sub);
-            font-size: 10px;
-            font-weight: 700;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px 14px;
-            transition: color 0.2s;
-        }
-
-        .nav-item.active {
-            color: var(--accent-purple);
-        }
-
-        .nav-icon {
-            font-size: 20px;
-        }
-
-        /* Full Screen Player Modal */
-        .modal-player {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #0B0F19;
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            padding: 20px 20px;
-            overflow-y: auto;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .modal-player.active {
-            display: flex;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        /* View Mode Tabs inside Player: 💿 Kapak | 📺 Klip | 🎤 Şarkı Sözleri */
-        .player-view-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-
-        .p-tab {
-            padding: 6px 16px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-sub);
-            cursor: pointer;
-            border: none;
-            background: none;
-            transition: all 0.2s;
-        }
-
-        .p-tab.active {
-            background: var(--gradient-accent);
-            color: #FFF;
-        }
-
-        .view-section {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            min-height: 280px;
-            justify-content: center;
-        }
-
-        .view-section.active {
-            display: flex;
-        }
-
-        .modal-art {
-            width: 260px;
-            height: 260px;
-            border-radius: 24px;
-            object-fit: cover;
-            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Embedded YouTube Frame */
-        .yt-frame-box {
-            width: 100%;
-            height: 240px;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-glass);
-            background: #000;
-        }
-
-        .yt-frame-box iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Apple Music Style Live Lyrics View */
-        .lyrics-box {
-            width: 100%;
-            height: 280px;
-            overflow-y: auto;
-            text-align: center;
-            padding: 10px 16px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 18px;
-            border: 1px solid var(--border-glass);
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .lyrics-line {
-            font-size: 18px;
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.45);
-            transition: all 0.3s ease;
-            line-height: 1.4;
-            cursor: pointer;
-        }
-
-        .lyrics-line.highlight {
-            color: #FFF;
-            font-size: 22px;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
-            transform: scale(1.05);
-        }
-
-        .modal-title-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 15px;
-            margin-bottom: 18px;
-        }
-
-        .modal-song-title {
-            font-size: 19px;
-            font-weight: 800;
-            margin-bottom: 4px;
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .modal-song-artist {
-            font-size: 13px;
-            color: var(--text-sub);
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .progress-box {
-            margin-bottom: 20px;
-        }
-
-        .scrubber {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 3px;
-            outline: none;
-            -webkit-appearance: none;
-            cursor: pointer;
-        }
-
-        .scrubber::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #FFF;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-        }
-
-        .time-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-sub);
-            font-weight: 600;
-            margin-top: 6px;
-        }
-
-        .modal-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            margin-bottom: 22px;
-        }
-
-        .ctrl-btn {
-            background: none;
-            border: none;
-            color: #FFF;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .ctrl-play-btn {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--gradient-accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
-        }
-
-        .modal-extra-actions {
-            display: flex;
-            justify-content: space-around;
-            border-top: 1px solid var(--border-glass);
-            padding-top: 16px;
-        }
-
-        .extra-action-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: var(--text-sub);
-            font-size: 11px;
-            cursor: pointer;
-        }
-
         /* VIP Modal */
         .vip-modal {
             position: fixed;
@@ -941,12 +859,6 @@
             max-width: 360px;
             text-align: center;
             box-shadow: 0 20px 50px rgba(139, 92, 246, 0.4);
-            animation: zoomIn 0.25s ease-out;
-        }
-
-        @keyframes zoomIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
         }
 
         .vip-badge-lg { font-size: 40px; margin-bottom: 10px; }
@@ -992,7 +904,7 @@
             <div class="logo-icon">🎵</div>
             <div>
                 <span class="logo-title">MüzikCepte</span>
-                <span class="logo-badge">CANLI YOUTUBE & SÖZLER</span>
+                <span class="logo-badge">CANLI YOUTUBE</span>
             </div>
         </div>
         <div class="top-actions">
@@ -1008,27 +920,28 @@
         <section id="tab-home" class="tab-panel active">
             <!-- Hero Spotlight -->
             <div class="spotlight-card">
-                <span class="spotlight-badge">🔥 2026 EN ÇOK DİNLENENLER</span>
-                <h2 class="spotlight-title">Trend Türkçe Pop & Hit Parçalar</h2>
-                <p class="spotlight-desc">Milyonlarca şarkı canlı arama, kayan pencere ve gerçek zamanlı şarkı sözleriyle parmaklarınızın ucunda.</p>
+                <span class="spotlight-badge">🔥 TARKAN ÖZEL LİSTESİ</span>
+                <h2 class="spotlight-title">Tarkan - Yolla & Hit Şarkıları</h2>
+                <p class="spotlight-desc">Gerçek orijinal klip sesi ve şarkı sözleriyle Tarkan ve tüm sanatçılar parmaklarınızın ucunda.</p>
                 <button class="spotlight-play-btn" onclick="playTrack(0)">
-                    <span>▶ Hemen Dinle</span>
+                    <span>▶ Tarkan - Yolla Dinle</span>
                 </button>
             </div>
 
             <!-- Categories Scroll -->
             <div class="pills-scroll">
-                <div class="pill-item active" onclick="quickSearch('Trend Türkçe Müzik 2026', this)">🔥 Trendler</div>
+                <div class="pill-item active" onclick="quickSearch('Tarkan', this)">👑 Tarkan</div>
                 <div class="pill-item" onclick="quickSearch('Semicenk', this)">🎤 Semicenk</div>
                 <div class="pill-item" onclick="quickSearch('Mert Demir', this)">🎸 Mert Demir</div>
+                <div class="pill-item" onclick="quickSearch('Sezen Aksu', this)">✨ Sezen Aksu</div>
+                <div class="pill-item" onclick="quickSearch('Müslüm Gürses', this)">🌙 Müslüm Gürses</div>
                 <div class="pill-item" onclick="quickSearch('BLOK3', this)">🎧 BLOK3</div>
-                <div class="pill-item" onclick="quickSearch('Mabel Matiz', this)">✨ Mabel Matiz</div>
-                <div class="pill-item" onclick="quickSearch('Lofi Hip Hop Chill Beats', this)">☕ Lofi Beats</div>
-                <div class="pill-item" onclick="quickSearch('Sezen Aksu', this)">👑 Sezen Aksu</div>
+                <div class="pill-item" onclick="quickSearch('Mabel Matiz', this)">🌸 Mabel Matiz</div>
+                <div class="pill-item" onclick="quickSearch('Duman', this)">⚡ Duman</div>
             </div>
 
             <div class="section-header">
-                <span class="section-title">Popüler & Öne Çıkanlar</span>
+                <span class="section-title">Popüler & Hit Parçalar</span>
                 <a href="javascript:void(0)" class="section-link" onclick="switchTab('tab-search')">Milyonlarca Şarkı Ara 🔍</a>
             </div>
 
@@ -1042,9 +955,18 @@
             <div class="search-box-wrap">
                 <div class="search-input-box">
                     <span class="search-icon-pos">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Herhangi bir şarkı veya sanatçı yazın..." onkeydown="if(event.key==='Enter') executeLiveSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Tarkan, Semicenk, Mert Demir veya şarkı adı yazın..." onkeydown="if(event.key==='Enter') executeLiveSearch()">
                 </div>
                 <button class="search-action-btn" onclick="executeLiveSearch()">Bul</button>
+            </div>
+
+            <!-- Quick sub-search buttons -->
+            <div class="pills-scroll" style="margin-bottom: 12px;">
+                <div class="pill-item" onclick="quickSearch('Tarkan Sevilen Şarkıları', this)">Tarkan En İyiler</div>
+                <div class="pill-item" onclick="quickSearch('Tarkan Canlı Konser', this)">Tarkan Konser</div>
+                <div class="pill-item" onclick="quickSearch('Tarkan Remix', this)">Tarkan Remix</div>
+                <div class="pill-item" onclick="quickSearch('Tarkan Dudu', this)">Tarkan - Dudu</div>
+                <div class="pill-item" onclick="quickSearch('Tarkan Kuzu Kuzu', this)">Tarkan - Kuzu Kuzu</div>
             </div>
 
             <div class="search-loader" id="searchLoader">
@@ -1057,7 +979,7 @@
             </div>
 
             <div id="search-results-container">
-                <!-- Live search results injected -->
+                <!-- Search results injected -->
             </div>
         </section>
 
@@ -1121,7 +1043,7 @@
         <!-- 4. TAB: KÜTÜPHANEM -->
         <section id="tab-library" class="tab-panel">
             <div class="lib-grid">
-                <div class="lib-card" onclick="alert('Beğendiğiniz tüm şarkılar listenizde saklanıyor!')">
+                <div class="lib-card" onclick="alert('Beğendiğiniz tüm şarkılar saklanıyor!')">
                     <div class="lib-icon">❤️</div>
                     <div class="lib-title">Beğenilenler</div>
                     <div class="lib-count" id="fav-count">4 Parça</div>
@@ -1154,15 +1076,15 @@
     <!-- Sticky Mini Player -->
     <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
         <div class="mini-left">
-            <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150" id="miniThumb" class="mini-vinyl" alt="Art">
+            <img src="https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg" id="miniThumb" class="mini-vinyl" alt="Art">
             <div class="mini-info">
-                <div class="mini-title" id="miniTitle">Ateşe Düştüm</div>
-                <div class="mini-artist" id="miniArtist">Mert Demir</div>
+                <div class="mini-title" id="miniTitle">Yolla</div>
+                <div class="mini-artist" id="miniArtist">Tarkan</div>
             </div>
         </div>
         <div class="mini-controls" onclick="event.stopPropagation()">
             <button class="mini-btn" onclick="prevTrack()">⏮</button>
-            <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">⏸</button>
             <button class="mini-btn" onclick="nextTrack()">⏭</button>
         </div>
     </div>
@@ -1191,30 +1113,29 @@
     <div class="modal-player" id="fullPlayer">
         <div class="modal-header">
             <button class="icon-btn" onclick="closeFullPlayer()">⌵</button>
-            <span style="font-size: 13px; font-weight: 700; color: var(--text-sub);">ŞİMDİ OYNATILIYOR</span>
+            <span style="font-size: 13px; font-weight: 700; color: var(--text-sub);">CANLI YOUTUBE OYNATICI</span>
             <button class="icon-btn" onclick="triggerNativePip()" title="Kayan Pencere">📱</button>
         </div>
 
-        <!-- 3 View Mode Tabs: 💿 Kapak | 📺 Klip | 🎤 Şarkı Sözleri -->
+        <!-- 3 View Mode Tabs: 📺 Klip (Varsayılan) | 🎤 Şarkı Sözleri | 💿 Kapak -->
         <div class="player-view-tabs">
-            <button class="p-tab active" onclick="switchPlayerView('view-art', this)">💿 Kapak</button>
-            <button class="p-tab" onclick="switchPlayerView('view-clip', this)">📺 Klip</button>
+            <button class="p-tab active" onclick="switchPlayerView('view-clip', this)">📺 Video & Klip</button>
             <button class="p-tab" onclick="switchPlayerView('view-lyrics', this)">🎤 Şarkı Sözleri</button>
+            <button class="p-tab" onclick="switchPlayerView('view-art', this)">💿 Kapak</button>
         </div>
 
-        <!-- View 1: Art -->
-        <div id="view-art" class="view-section active">
-            <img src="" id="fullArt" class="modal-art" alt="Album Cover">
-        </div>
-
-        <!-- View 2: Video Clip (YouTube Embed) -->
-        <div id="view-clip" class="view-section">
+        <!-- View 1: Real YouTube Player Frame (Plays actual vocals & music!) -->
+        <div id="view-clip" class="view-section active">
             <div class="yt-frame-box">
-                <iframe id="ytVideoFrame" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="ytVideoFrame"
+                        src="https://www.youtube-nocookie.com/embed/_GOZDXq7I-I?autoplay=1&enablejsapi=1&playsinline=1"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
             </div>
         </div>
 
-        <!-- View 3: Live Lyrics (Apple Music Style) -->
+        <!-- View 2: Live Lyrics -->
         <div id="view-lyrics" class="view-section">
             <div class="lyrics-box" id="lyricsBox">
                 <div style="margin: auto; color: var(--text-sub); font-size: 14px;">
@@ -1223,30 +1144,26 @@
             </div>
         </div>
 
-        <div class="modal-title-row">
-            <div>
-                <h1 class="modal-song-title" id="fullTitle">Ateşe Düştüm</h1>
-                <p class="modal-song-artist" id="fullArtist">Mert Demir</p>
-            </div>
-            <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
+        <!-- View 3: Big Artwork -->
+        <div id="view-art" class="view-section">
+            <img src="https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg" id="fullArt" class="modal-art" alt="Album Cover">
         </div>
 
-        <!-- Scrubber -->
-        <div class="progress-box">
-            <input type="range" class="scrubber" id="scrubber" value="0" min="0" max="100" oninput="seekTrack(this.value)">
-            <div class="time-row">
-                <span id="currentTime">0:00</span>
-                <span id="totalTime">3:51</span>
+        <div class="modal-title-row">
+            <div>
+                <h1 class="modal-song-title" id="fullTitle">Yolla</h1>
+                <p class="modal-song-artist" id="fullArtist">Tarkan</p>
             </div>
+            <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
         </div>
 
         <!-- Controls -->
         <div class="modal-controls">
             <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Karışık">🔀</button>
             <button class="ctrl-btn" onclick="prevTrack()" style="font-size: 32px;">⏮</button>
-            <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">⏸</button>
             <button class="ctrl-btn" onclick="nextTrack()" style="font-size: 32px;">⏭</button>
-            <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Tekrar">🔁</button>
+            <button class="ctrl-btn" onclick="triggerNativePip()" title="Kayan Ekran">📱</button>
         </div>
 
         <!-- Extra Actions -->
@@ -1255,7 +1172,7 @@
                 <span style="font-size: 18px;">📱</span>
                 <span>Kayan Ekran</span>
             </div>
-            <div class="extra-action-item" onclick="switchPlayerView('view-lyrics', document.querySelectorAll('.p-tab')[2])">
+            <div class="extra-action-item" onclick="switchPlayerView('view-lyrics', document.querySelectorAll('.p-tab')[1])">
                 <span style="font-size: 18px;">🎤</span>
                 <span>Sözler</span>
             </div>
@@ -1285,19 +1202,32 @@
         </div>
     </div>
 
-    <audio id="audioPlayer" preload="auto"></audio>
-
     <script>
-        // High quality initial track database
+        // Real Top Hit Tracks with authentic YouTube Video IDs (No fake instrumental audios!)
         let CURRENT_PLAYLIST = [
             {
-                id: "RQmXet6kZ-Y",
-                title: "Ateşe Düştüm",
-                artist: "Mert Demir",
-                duration: "3:51",
-                art: "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg",
-                ytId: "RQmXet6kZ-Y",
-                url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
+                id: "_GOZDXq7I-I",
+                title: "Yolla (Orijinal Klip)",
+                artist: "Tarkan",
+                duration: "4:48",
+                art: "https://i.ytimg.com/vi/_GOZDXq7I-I/hqdefault.jpg",
+                ytId: "_GOZDXq7I-I"
+            },
+            {
+                id: "NAHRpEqgcL4",
+                title: "Kuzu Kuzu (Orijinal Klip)",
+                artist: "Tarkan",
+                duration: "3:54",
+                art: "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg",
+                ytId: "NAHRpEqgcL4"
+            },
+            {
+                id: "LJ9FpMXJmwY",
+                title: "Ölürüm Sana",
+                artist: "Tarkan",
+                duration: "4:06",
+                art: "https://i.ytimg.com/vi/LJ9FpMXJmwY/hqdefault.jpg",
+                ytId: "LJ9FpMXJmwY"
             },
             {
                 id: "cahWIOCm5YM",
@@ -1305,8 +1235,31 @@
                 artist: "Semicenk",
                 duration: "3:20",
                 art: "https://i.ytimg.com/vi/cahWIOCm5YM/hqdefault.jpg",
-                ytId: "cahWIOCm5YM",
-                url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+                ytId: "cahWIOCm5YM"
+            },
+            {
+                id: "RQmXet6kZ-Y",
+                title: "Ateşe Düştüm",
+                artist: "Mert Demir",
+                duration: "3:51",
+                art: "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg",
+                ytId: "RQmXet6kZ-Y"
+            },
+            {
+                id: "8UtOX3KHKN4",
+                title: "Antidepresan",
+                artist: "Mert Demir & Mabel Matiz",
+                duration: "3:42",
+                art: "https://i.ytimg.com/vi/8UtOX3KHKN4/hqdefault.jpg",
+                ytId: "8UtOX3KHKN4"
+            },
+            {
+                id: "r6w_a405w5Q",
+                title: "Dudu",
+                artist: "Tarkan",
+                duration: "4:35",
+                art: "https://i.ytimg.com/vi/r6w_a405w5Q/hqdefault.jpg",
+                ytId: "r6w_a405w5Q"
             },
             {
                 id: "CRxxy29b06M",
@@ -1314,51 +1267,20 @@
                 artist: "Semicenk",
                 duration: "3:10",
                 art: "https://i.ytimg.com/vi/CRxxy29b06M/hqdefault.jpg",
-                ytId: "CRxxy29b06M",
-                url: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=uplifting-day-112028.mp3"
-            },
-            {
-                id: "1514525253",
-                title: "Antidepresan",
-                artist: "Mert Demir & Mabel Matiz",
-                duration: "3:42",
-                art: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300",
-                ytId: "8UtOX3KHKN4",
-                url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=summer-walk-111105.mp3"
-            },
-            {
-                id: "1508700115",
-                title: "Geceler & Fırtına",
-                artist: "Ezhel & Uzi",
-                duration: "3:30",
-                art: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300",
-                ytId: "riwF4OyxKys",
-                url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f774cb.mp3?filename=hip-hop-rock-124037.mp3"
-            },
-            {
-                id: "1487180144",
-                title: "Bi Tek Ben Anlarım",
-                artist: "Köfn",
-                duration: "3:50",
-                art: "https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=300",
-                ytId: "QPXU_mvj2dg",
-                url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=summer-walk-111105.mp3"
+                ytId: "CRxxy29b06M"
             }
         ];
 
         let currentIndex = 0;
-        let isPlaying = false;
+        let isPlaying = true;
         let isShuffle = false;
-        let isRepeat = false;
         let likes = new Set();
-
-        const audio = document.getElementById('audioPlayer');
+        let SEARCH_RESULTS = [];
 
         window.addEventListener('DOMContentLoaded', () => {
             renderTracks(CURRENT_PLAYLIST);
             renderRecentTracks(CURRENT_PLAYLIST.slice(0, 4));
             loadTrack(0, false);
-            initAudioEvents();
         });
 
         function renderTracks(list) {
@@ -1383,7 +1305,7 @@
         function renderSearchResults(list) {
             const container = document.getElementById('search-results-container');
             if (!list || list.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#9CA3AF;">Şarkı bulunamadı. Lütfen başka bir kelime deneyin.</div>';
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#9CA3AF;">Şarkı bulunamadı. Lütfen başka bir arama yapın.</div>';
                 return;
             }
             container.innerHTML = list.map((t, i) => `
@@ -1404,8 +1326,6 @@
             document.getElementById('result-count').innerText = `${list.length} Parça Bulundu`;
         }
 
-        let SEARCH_RESULTS = [];
-
         function executeLiveSearch() {
             const q = document.getElementById('searchInput').value.trim();
             if (!q) return;
@@ -1416,20 +1336,18 @@
             if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
                 window.AndroidBridge.searchOnlineMusic(q);
             } else {
-                // Fallback web fetch
                 fetchSearchResultsFallback(q);
             }
         }
 
-        function quickSearch(artist, el) {
+        function quickSearch(query, el) {
             document.querySelectorAll('.pills-scroll .pill-item').forEach(p => p.classList.remove('active'));
             if (el) el.classList.add('active');
             switchTab('tab-search');
-            document.getElementById('searchInput').value = artist;
+            document.getElementById('searchInput').value = query;
             executeLiveSearch();
         }
 
-        // Bridge Callbacks from Android Java
         window.onMusicSearchResults = function(results) {
             document.getElementById('searchLoader').style.display = 'none';
             SEARCH_RESULTS = results;
@@ -1438,22 +1356,22 @@
 
         window.onMusicSearchError = function(err) {
             document.getElementById('searchLoader').style.display = 'none';
-            document.getElementById('search-results-container').innerHTML = '<div style="text-align:center; padding:30px; color:#EF4444;">Arama sırasında bağlantı hatası oluştu. Tekrar deneyiniz.</div>';
+            document.getElementById('search-results-container').innerHTML = '<div style="text-align:center; padding:30px; color:#EF4444;">Arama sırasında bağlantı hatası oluştu.</div>';
         };
 
         function fetchSearchResultsFallback(q) {
-            // Simulated fallback results if offline
             setTimeout(() => {
                 document.getElementById('searchLoader').style.display = 'none';
                 SEARCH_RESULTS = CURRENT_PLAYLIST.filter(t => t.title.toLowerCase().includes(q.toLowerCase()) || t.artist.toLowerCase().includes(q.toLowerCase()));
                 renderSearchResults(SEARCH_RESULTS);
-            }, 600);
+            }, 500);
         }
 
         function playOnlineTrack(idx) {
             const item = SEARCH_RESULTS[idx];
             CURRENT_PLAYLIST.unshift(item);
             loadTrack(0, true);
+            openFullPlayer();
         }
 
         function renderRecentTracks(list) {
@@ -1477,14 +1395,15 @@
         function loadTrack(index, autoPlay = true) {
             currentIndex = index;
             const t = CURRENT_PLAYLIST[index];
-            
-            // If YouTube ID exists, set embedded player
-            if (t.ytId) {
-                document.getElementById('ytVideoFrame').src = `https://www.youtube-nocookie.com/embed/${t.ytId}?autoplay=1&enablejsapi=1&playsinline=1`;
-            }
+            const ytId = t.ytId || t.id;
 
-            if (t.url) {
-                audio.src = t.url;
+            // Load real YouTube video & vocals!
+            const frame = document.getElementById('ytVideoFrame');
+            if (autoPlay) {
+                frame.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&enablejsapi=1&playsinline=1&rel=0`;
+                isPlaying = true;
+            } else {
+                frame.src = `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&playsinline=1&rel=0`;
             }
 
             // Update UI
@@ -1495,29 +1414,24 @@
             document.getElementById('fullTitle').innerText = t.title;
             document.getElementById('fullArtist').innerText = t.artist;
             document.getElementById('fullArt').src = t.art;
-            document.getElementById('totalTime').innerText = t.duration || "03:30";
             document.getElementById('likeBtn').innerText = likes.has(t.id) ? '❤️' : '🤍';
 
             renderTracks(CURRENT_PLAYLIST);
+            updatePlayButtons();
 
-            // Fetch Lyrics automatically!
+            // Fetch live lyrics for this specific song!
             loadLyricsForCurrentSong(t.artist, t.title);
-
-            if (autoPlay) {
-                isPlaying = true;
-                if (t.url) {
-                    audio.play().catch(() => {});
-                }
-                updatePlayButtons();
-            }
         }
 
         function togglePlay() {
-            isPlaying = !isPlaying;
+            const frame = document.getElementById('ytVideoFrame');
             if (isPlaying) {
-                audio.play().catch(() => {});
+                // Pause YouTube video via postMessage
+                frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                isPlaying = false;
             } else {
-                audio.pause();
+                frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                isPlaying = true;
             }
             updatePlayButtons();
         }
@@ -1526,14 +1440,12 @@
             const icon = isPlaying ? '⏸' : '▶';
             document.getElementById('miniPlayBtn').innerText = icon;
             document.getElementById('fullPlayBtn').innerText = icon;
-            const vinyl = document.getElementById('miniThumb');
-            if (isPlaying) vinyl.classList.add('playing');
-            else vinyl.classList.remove('playing');
             renderTracks(CURRENT_PLAYLIST);
         }
 
         function playTrack(index) {
             loadTrack(index, true);
+            openFullPlayer();
         }
 
         function nextTrack() {
@@ -1550,38 +1462,6 @@
             loadTrack(currentIndex, true);
         }
 
-        function seekTrack(val) {
-            if (audio.duration) {
-                audio.currentTime = (val / 100) * audio.duration;
-            }
-        }
-
-        function initAudioEvents() {
-            audio.addEventListener('timeupdate', () => {
-                if (audio.duration) {
-                    const pct = (audio.currentTime / audio.duration) * 100;
-                    document.getElementById('scrubber').value = pct;
-                    document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
-                }
-            });
-
-            audio.addEventListener('ended', () => {
-                if (isRepeat) {
-                    audio.currentTime = 0;
-                    audio.play();
-                } else {
-                    nextTrack();
-                }
-            });
-        }
-
-        function formatTime(sec) {
-            const m = Math.floor(sec / 60);
-            const s = Math.floor(sec % 60);
-            return `${m}:${s < 10 ? '0' : ''}${s}`;
-        }
-
-        // View Tabs in Full Screen Player
         function switchPlayerView(viewId, el) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
@@ -1590,17 +1470,16 @@
             if (el) el.classList.add('active');
         }
 
-        // Live Lyrics Engine (Apple Music Style)
+        // Live Lyrics Engine
         function loadLyricsForCurrentSong(artist, title) {
             const lyricsBox = document.getElementById('lyricsBox');
-            lyricsBox.innerHTML = '<div style="margin:auto; color:var(--text-sub); font-size:14px;">⚡ Şarkı sözleri aranıyor...</div>';
+            lyricsBox.innerHTML = '<div style="margin:auto; color:var(--text-sub); font-size:14px;">⚡ ' + title + ' sözleri yükleniyor...</div>';
 
             if (window.AndroidBridge && window.AndroidBridge.fetchLyrics) {
                 window.AndroidBridge.fetchLyrics(artist, title);
             } else {
-                // Fallback web fetch from lrclib
                 const cleanArt = encodeURIComponent(artist);
-                const cleanTit = encodeURIComponent(title.replace(/\(.*?\)/g, '').trim());
+                const cleanTit = encodeURIComponent(title.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim());
                 fetch(`https://lrclib.net/api/get?artist_name=${cleanArt}&track_name=${cleanTit}`)
                     .then(res => res.json())
                     .then(data => window.onLyricsLoaded(data))
@@ -1630,13 +1509,12 @@
                 <div style="margin:auto; text-align:center;">
                     <p style="color:var(--text-sub); font-size:14px; margin-bottom:12px;">Bu parça için senkronize söz bulunamadı.</p>
                     <button class="pill-item active" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(song.artist + ' ' + song.title + ' şarkı sözleri')}', '_blank')">
-                        🌐 Google'da Sözleri Aç
+                        🌐 Google'da '${song.title}' Sözlerini Aç
                     </button>
                 </div>
             `;
         };
 
-        // Tab Switching
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -1648,7 +1526,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Full Screen Player
         function openFullPlayer() {
             document.getElementById('fullPlayer').classList.add('active');
         }
@@ -1657,11 +1534,10 @@
             document.getElementById('fullPlayer').classList.remove('active');
         }
 
-        // VIP
         function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
         function closeVipModal(e) { document.getElementById('vipModal').style.display = 'none'; }
         function buyVip() {
-            alert('🎉 Tebrikler! MüzikCepte VIP PRO başarıyla aktif edildi. Reklamlar kaldırıldı ve 320kbps HD ses açıldı!');
+            alert('🎉 MüzikCepte VIP PRO aktif edildi!');
             closeVipModal();
         }
 
@@ -1678,16 +1554,11 @@
             document.getElementById('shuffleBtn').style.color = isShuffle ? 'var(--accent-purple)' : '#FFF';
         }
 
-        function toggleRepeat() {
-            isRepeat = !isRepeat;
-            document.getElementById('repeatBtn').style.color = isRepeat ? 'var(--accent-purple)' : '#FFF';
-        }
-
         function triggerNativePip() {
             if (window.AndroidBridge && window.AndroidBridge.triggerPip) {
                 window.AndroidBridge.triggerPip();
             } else {
-                alert('📱 Kayan Pencere (PIP) Modu: Uygulama arka planda ve ekran köşesinde kayan pencere olarak çalmaya devam ediyor!');
+                alert('📱 Kayan Pencere (PIP) Modu aktif!');
             }
         }
 
@@ -1704,10 +1575,11 @@
             const mins = prompt("Müziğin kaç dakika sonra kapanmasını istersiniz? (15, 30, 45, 60):", "30");
             if (mins) {
                 setTimeout(() => {
-                    audio.pause();
+                    const frame = document.getElementById('ytVideoFrame');
+                    frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                     isPlaying = false;
                     updatePlayButtons();
-                    alert("🌙 Uyku zamanlayıcısı: Müzik durduruldu. İyi uykular!");
+                    alert("🌙 Uyku zamanlayıcısı: Müzik durduruldu.");
                 }, parseInt(mins) * 60 * 1000);
                 alert(`✅ Zamanlayıcı kuruldu: Müzik ${mins} dakika sonra kapanacak.`);
             }

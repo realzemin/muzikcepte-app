@@ -33,6 +33,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.1");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.0.2");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -150,62 +152,87 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
+                try {
+                    String encoded = URLEncoder.encode(q, "UTF-8");
+                    URL url = new URL("https://www.youtube.com/results?search_query=" + encoded);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    conn.setConnectTimeout(7000);
+                    conn.setReadTimeout(7000);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    in.close();
+
+                    String html = sb.toString();
+                    Pattern pattern = Pattern.compile("ytInitialData\\s*=\\s*(\\{.+?\\});</script>");
+                    Matcher matcher = pattern.matcher(html);
+
+                    if (matcher.find()) {
+                        JSONObject root = new JSONObject(matcher.group(1));
+                        JSONArray sections = root.getJSONObject("contents")
+                                .getJSONObject("twoColumnSearchResultsRenderer")
+                                .getJSONObject("primaryContents")
+                                .getJSONObject("sectionListRenderer")
+                                .getJSONArray("contents");
+
+                        for (int s = 0; s < sections.length(); s++) {
+                            JSONObject section = sections.getJSONObject(s);
+                            if (section.has("itemSectionRenderer")) {
+                                JSONArray contents = section.getJSONObject("itemSectionRenderer").getJSONArray("contents");
+                                for (int i = 0; i < contents.length() && results.length() < 40; i++) {
+                                    JSONObject item = contents.getJSONObject(i);
+                                    if (item.has("videoRenderer")) {
+                                        JSONObject vr = item.getJSONObject("videoRenderer");
+                                        String vid = vr.optString("videoId");
+                                        if (vid.isEmpty() || seenIds.contains(vid)) continue;
+                                        seenIds.add(vid);
+
+                                        String title = "";
+                                        if (vr.has("title") && vr.getJSONObject("title").has("runs")) {
+                                            title = vr.getJSONObject("title").getJSONArray("runs").getJSONObject(0).optString("text");
+                                        }
+                                        String author = "";
+                                        if (vr.has("ownerText") && vr.getJSONObject("ownerText").has("runs")) {
+                                            author = vr.getJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
+                                        }
+                                        String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:30") : "03:30";
+                                        String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
+
+                                        JSONObject row = new JSONObject();
+                                        row.put("id", vid);
+                                        row.put("title", title);
+                                        row.put("artist", author);
+                                        row.put("duration", duration);
+                                        row.put("art", thumb);
+                                        row.put("ytId", vid);
+                                        results.put(row);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
             @JavascriptInterface
             public void searchOnlineMusic(String query) {
                 new Thread(() -> {
                     try {
-                        String encoded = URLEncoder.encode(query + " music", "UTF-8");
-                        URL url = new URL("https://www.youtube.com/results?search_query=" + encoded);
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-                        conn.setConnectTimeout(6000);
-                        conn.setReadTimeout(6000);
-
-                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = in.readLine()) != null) {
-                            sb.append(line);
-                        }
-                        in.close();
-
-                        String html = sb.toString();
-                        Pattern pattern = Pattern.compile("ytInitialData\\s*=\\s*(\\{.+?\\});</script>");
-                        Matcher matcher = pattern.matcher(html);
                         JSONArray results = new JSONArray();
+                        Set<String> seenIds = new HashSet<>();
 
-                        if (matcher.find()) {
-                            JSONObject root = new JSONObject(matcher.group(1));
-                            JSONArray contents = root.getJSONObject("contents")
-                                    .getJSONObject("twoColumnSearchResultsRenderer")
-                                    .getJSONObject("primaryContents")
-                                    .getJSONObject("sectionListRenderer")
-                                    .getJSONArray("contents")
-                                    .getJSONObject(0)
-                                    .getJSONObject("itemSectionRenderer")
-                                    .getJSONArray("contents");
-
-                            for (int i = 0; i < contents.length() && results.length() < 25; i++) {
-                                JSONObject item = contents.getJSONObject(i);
-                                if (item.has("videoRenderer")) {
-                                    JSONObject vr = item.getJSONObject("videoRenderer");
-                                    String vid = vr.optString("videoId");
-                                    String title = vr.optJSONObject("title").getJSONArray("runs").getJSONObject(0).optString("text");
-                                    String author = vr.optJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
-                                    String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:30") : "03:30";
-                                    String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
-
-                                    JSONObject row = new JSONObject();
-                                    row.put("id", vid);
-                                    row.put("title", title);
-                                    row.put("artist", author);
-                                    row.put("duration", duration);
-                                    row.put("art", thumb);
-                                    row.put("ytId", vid);
-                                    results.put(row);
-                                }
-                            }
+                        fetchYouTubeQuery(query, results, seenIds);
+                        if (results.length() < 25) {
+                            fetchYouTubeQuery(query + " en çok dinlenen", results, seenIds);
                         }
 
                         runOnUiThread(() -> {
