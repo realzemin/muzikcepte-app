@@ -132,6 +132,38 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception ignored) {}
             }
 
+            @JavascriptInterface
+            public void startBackgroundPlayback(String title, String artist) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_START);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(serviceIntent);
+                        } else {
+                            startService(serviceIntent);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void stopBackgroundPlayback() {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_STOP);
+                        startService(serviceIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
             private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
                 try {
                     String encoded = URLEncoder.encode(q, "UTF-8");
