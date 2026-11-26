@@ -396,6 +396,71 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
+        private String pendingDlYtId = "";
+    private String pendingDlTitle = "";
+    private String pendingDlArtist = "";
+
+    public void requestDownloadWithReward(String ytId, String title, String artist) {
+        if (isVip) {
+            executeDirectDownload(ytId, title, artist);
+            return;
+        }
+
+        pendingDlYtId = ytId;
+        pendingDlTitle = title;
+        pendingDlArtist = artist;
+
+        runOnUiThread(() -> {
+            if (mRewardedAd != null) {
+                mRewardedAd.show(MainActivity.this, rewardItem -> {
+                    Toast.makeText(MainActivity.this, "🎉 Video tamamlandı! Şarkı telefonunuza indiriliyor...", Toast.LENGTH_SHORT).show();
+                    executeDirectDownload(pendingDlYtId, pendingDlTitle, pendingDlArtist);
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.onDownloadUnlocked) window.onDownloadUnlocked('" + pendingDlYtId + "');", null);
+                    }
+                });
+            } else {
+                Toast.makeText(MainActivity.this, "📥 İndirme başlatılıyor...", Toast.LENGTH_SHORT).show();
+                executeDirectDownload(ytId, title, artist);
+                loadRewardedAd();
+            }
+        });
+    }
+
+    public void executeDirectDownload(String ytId, String title, String artist) {
+        new Thread(() -> {
+            try {
+                String cleanTitle = (title != null && !title.isEmpty() ? title : "MuzikCepte_Sarki")
+                        .replaceAll("[\\/:*?"<>|]", "_").trim();
+                
+                String downloadUrl = "https://api.vevioz.com/apis/widget?url=https://www.youtube.com/watch?v=" + ytId;
+
+                android.app.DownloadManager dm = (android.app.DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(Uri.parse(downloadUrl));
+                    request.setTitle("🎵 " + cleanTitle);
+                    request.setDescription("MüzikCepte ile telefona indiriliyor...");
+                    request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".mp3");
+                    request.setMimeType("audio/mpeg");
+                    dm.enqueue(request);
+
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' telefonunuza indiriliyor. Bildirim çubuğundan takip edebilirsiniz!", Toast.LENGTH_LONG).show();
+                        if (webView != null) {
+                            webView.evaluateJavascript("if(window.onDownloadStarted) window.onDownloadStarted('" + ytId + "');", null);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "İndirme başlatıldı. İndirilenler klasörünüzü kontrol edin.", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
     public void showRewardedAd() {
         runOnUiThread(() -> {
             if (mRewardedAd != null) {
@@ -914,39 +979,18 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
-            public void downloadMusicFile(String ytId, String title) {
-                downloadMusicFile(ytId, title, "");
+            public void requestDownloadWithReward(String ytId, String title, String artist) {
+                MainActivity.this.requestDownloadWithReward(ytId, title, artist);
             }
 
             @JavascriptInterface
             public void downloadMusicFile(String ytId, String title, String artist) {
-                runOnUiThread(() -> {
-                    try {
-                        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this);
-                        builder.setTitle("⬇️ " + title);
-                        String[] options = {
-                            "⚡ Alternatif MP3 İndir (OnlyMP3)",
-                            "💾 Çevrimdışı Kitaplığıma Kaydet"
-                        };
-                        builder.setItems(options, (dialog, which) -> {
-                            try {
-                                if (which == 0) {
-                                    String url = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                                } else if (which == 1) {
-                                    webView.evaluateJavascript("if(window.saveOfflineTrackById) window.saveOfflineTrackById('" + ytId + "');", null);
-                                    Toast.makeText(MainActivity.this, "✅ '" + title + "' Çevrimdışı Listenize Eklendi!", Toast.LENGTH_SHORT).show();
-                                }
-                            } catch (Exception e) {
-                                Toast.makeText(MainActivity.this, "Tarayıcı açılamadı.", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        builder.setNegativeButton("Kapat", null);
-                        builder.show();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
+                MainActivity.this.requestDownloadWithReward(ytId, title, artist);
+            }
+
+            @JavascriptInterface
+            public void downloadMusicFile(String ytId, String title) {
+                MainActivity.this.requestDownloadWithReward(ytId, title, "");
             }
 
             @JavascriptInterface
