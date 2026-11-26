@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
     private ProductDetails vipProductDetails;
 
     private int trackChangeCounter = 0;
+    private long lastInterstitialShowTime = System.currentTimeMillis();
+    private static final long MIN_INTERSTITIAL_INTERVAL_MS = 6 * 60 * 1000L; // Minimum 6 dakika ara!
     private boolean isVip = false;
     private long rewardedAdFreeUntil = 0;
     private SharedPreferences prefs;
@@ -302,8 +304,11 @@ public class MainActivity extends AppCompatActivity {
     private void triggerTrackChangeAd() {
         if (isVip || isRewardedActive()) return;
         trackChangeCounter++;
-        // Show Interstitial every 3 track switches
-        if (trackChangeCounter % 3 == 0) {
+        long now = System.currentTimeMillis();
+        // En az 6 şarkı değişimi VE son gösterimden sonra en az 6 dakika geçmiş olmalı
+        if (trackChangeCounter >= 6 && (now - lastInterstitialShowTime >= MIN_INTERSTITIAL_INTERVAL_MS)) {
+            trackChangeCounter = 0;
+            lastInterstitialShowTime = now;
             runOnUiThread(() -> {
                 if (mInterstitialAd != null) {
                     mInterstitialAd.show(MainActivity.this);
@@ -507,6 +512,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         webView.addJavascriptInterface(new Object() {
+
+            @JavascriptInterface
+            public void onTrackChanged() {
+                triggerTrackChangeAd();
+            }
 
             @JavascriptInterface
             public void closeApp() {

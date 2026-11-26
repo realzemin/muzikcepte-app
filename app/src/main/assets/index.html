@@ -1346,6 +1346,9 @@
             }
 
             notifyAndroidBackground(true);
+            if (window.AndroidBridge && window.AndroidBridge.onTrackChanged) {
+                window.AndroidBridge.onTrackChanged();
+            }
             renderTracks(CURRENT_PLAYLIST);
             renderRadios();
         }
