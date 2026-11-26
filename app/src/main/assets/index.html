@@ -1302,13 +1302,22 @@
                 startProgress();
                 notifyAndroidBackground(true);
             } else if (event.data === YT.PlayerState.BUFFERING) {
-                // Buffer audio smoothly without 100ms forced interrupt
+                // Buffer audio smoothly
             } else if (event.data === YT.PlayerState.PAUSED) {
                 if (isUserPaused) {
                     isPlaying = false;
                     updatePlayButtons();
                     stopProgress();
                     notifyAndroidBackground(false);
+                } else {
+                    // CRITICAL AUTO-RESUME: If YouTube paused itself during seeking or buffering, resume instantly!
+                    setTimeout(() => {
+                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
+                            ytPlayer.playVideo();
+                            isPlaying = true;
+                            updatePlayButtons();
+                        }
+                    }, 60);
                 }
             } else if (event.data === YT.PlayerState.ENDED) {
                 nextTrack();
@@ -1880,10 +1889,12 @@
 
         window.seekToSeconds = function(sec) {
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
+                isSeeking = false;
                 ytPlayer.seekTo(sec, true);
                 if (!isUserPaused) {
+                    ytPlayer.playVideo();
                     setTimeout(() => {
-                        if (ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
                     }, 80);
                 }
             }
@@ -2086,14 +2097,16 @@
         }
 
         function onSeekComplete(val) {
+            isSeeking = false;
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
                 try {
                     const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
                     const targetSec = (parseFloat(val) / 100) * dur;
                     ytPlayer.seekTo(targetSec, true);
                     if (!isUserPaused) {
+                        ytPlayer.playVideo();
                         setTimeout(() => {
-                            if (ytPlayer && ytPlayer.playVideo) {
+                            if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
                                 ytPlayer.playVideo();
                             }
                         }, 80);
@@ -2102,30 +2115,37 @@
                     console.error("Seek error:", e);
                 }
             }
-            setTimeout(() => { isSeeking = false; }, 400);
         }
 
         function skipBackward(sec = 10) {
             if (isRadioMode) return;
+            isSeeking = false;
             if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
                 const target = Math.max(cur - sec, 0);
                 ytPlayer.seekTo(target, true);
                 if (!isUserPaused && ytPlayer.playVideo) {
-                    setTimeout(() => ytPlayer.playVideo(), 80);
+                    ytPlayer.playVideo();
+                    setTimeout(() => {
+                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+                    }, 80);
                 }
             }
         }
 
         function skipForward(sec = 10) {
             if (isRadioMode) return;
+            isSeeking = false;
             if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
                 const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
                 const target = Math.min(cur + sec, dur - 1);
                 ytPlayer.seekTo(target, true);
                 if (!isUserPaused && ytPlayer.playVideo) {
-                    setTimeout(() => ytPlayer.playVideo(), 80);
+                    ytPlayer.playVideo();
+                    setTimeout(() => {
+                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+                    }, 80);
                 }
             }
         }
