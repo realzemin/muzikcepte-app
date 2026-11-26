@@ -270,16 +270,27 @@ public class MusicPlaybackService extends Service {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build());
-            nativeRadioPlayer.setDataSource(url);
+            java.util.Map<String, String> headers = new java.util.HashMap<>();
+            headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36");
+            nativeRadioPlayer.setDataSource(this, android.net.Uri.parse(url), headers);
             nativeRadioPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
             nativeRadioPlayer.setOnPreparedListener(mp -> {
                 mp.start();
                 isPlaying = true;
                 updateMediaSession();
                 updateNotification();
+                if (MainActivity.instance != null) {
+                    MainActivity.instance.updateJsRadioState(true);
+                }
             });
             nativeRadioPlayer.setOnErrorListener((mp, what, extra) -> {
                 stopNativeRadio();
+                isPlaying = false;
+                updateMediaSession();
+                updateNotification();
+                if (MainActivity.instance != null) {
+                    MainActivity.instance.updateJsRadioState(false);
+                }
                 return true;
             });
             nativeRadioPlayer.prepareAsync();
