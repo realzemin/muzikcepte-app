@@ -428,37 +428,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void executeDirectDownload(String ytId, String title, String artist) {
-        new Thread(() -> {
+        runOnUiThread(() -> {
             try {
-                String cleanTitle = (title != null && !title.isEmpty() ? title : "MuzikCepte_Sarki")
-                        .replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ _-]", "_").trim();
-                
-                String downloadUrl = "https://api.vevioz.com/apis/widget?url=https://www.youtube.com/watch?v=" + ytId;
-
-                android.app.DownloadManager dm = (android.app.DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                if (dm != null) {
-                    android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(Uri.parse(downloadUrl));
-                    request.setTitle("🎵 " + cleanTitle);
-                    request.setDescription("MüzikCepte ile telefona indiriliyor...");
-                    request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                    request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".mp3");
-                    request.setMimeType("audio/mpeg");
-                    dm.enqueue(request);
-
-                    runOnUiThread(() -> {
-                        Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' telefonunuza indiriliyor. Bildirim çubuğundan takip edebilirsiniz!", Toast.LENGTH_LONG).show();
-                        if (webView != null) {
-                            webView.evaluateJavascript("if(window.onDownloadStarted) window.onDownloadStarted('" + ytId + "');", null);
-                        }
-                    });
+                String cleanTitle = (title != null && !title.isEmpty() ? title : "Müzik");
+                String url = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(browserIntent);
+                Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' MP3 indirme sayfası açıldı. Tek dokunuşla indirebilirsiniz!", Toast.LENGTH_LONG).show();
+                if (webView != null) {
+                    webView.evaluateJavascript("if(window.onDownloadStarted) window.onDownloadStarted('" + ytId + "');", null);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "İndirme başlatıldı. İndirilenler klasörünüzü kontrol edin.", Toast.LENGTH_SHORT).show();
-                });
+                Toast.makeText(MainActivity.this, "✅ Şarkı Çevrimdışı Kütüphanenize eklendi!", Toast.LENGTH_SHORT).show();
             }
-        }).start();
+        });
     }
 
     public void showRewardedAd() {

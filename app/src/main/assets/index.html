@@ -890,9 +890,14 @@
     <!-- Top Header -->
     <header class="app-header">
         <div class="logo-wrap">
-            <div class="logo-icon">🎵</div>
-            <div class="logo-text">MüzikCepte</div>
-            <span class="logo-badge">PRO SES</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="logo-icon">🎵</div>
+                <div class="logo-text">MüzikCepte</div>
+                <span class="logo-badge" style="background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 10px; font-weight: 800;">KESİNTİSİZ MÜZİK</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-sub); margin-top: 2px; font-weight: 500;">
+                Müzik & Canlı Radyo • Her An Yanında
+            </div>
         </div>
         <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
     </header>
@@ -1238,6 +1243,15 @@
         ];
 
         let CURRENT_PLAYLIST = [...CATEGORIES["all"]];
+                // ==========================================
+        // Favoriler & Çevrimdışı Kitaplığı (Gerçek LocalStorage)
+        // ==========================================
+        let FAVORITES = [];
+        try { FAVORITES = JSON.parse(localStorage.getItem('mc_favorites') || '[]'); } catch(e){ FAVORITES = []; }
+        let OFFLINE_TRACKS = [];
+        try { OFFLINE_TRACKS = JSON.parse(localStorage.getItem('mc_offline') || '[]'); } catch(e){ OFFLINE_TRACKS = []; }
+
+        let isSeeking = false;
         let currentIndex = 0;
         let isPlaying = false;
         let isRadioMode = false;
@@ -1293,6 +1307,13 @@
                     isPlaying = false;
                     updatePlayButtons();
                     stopProgress();
+                } else {
+                    // Unintended background throttling or buffering pause -> auto-resume!
+                    setTimeout(() => {
+                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
+                            try { ytPlayer.playVideo(); } catch(e){}
+                        }
+                    }, 250);
                 }
             } else if (event.data === YT.PlayerState.ENDED) {
                 nextTrack();
@@ -1466,7 +1487,6 @@
             renderTracks(CURRENT_PLAYLIST);
             updateFavBadges();
             updateOfflineBadges();
-            showOfflineList();
             renderRadios();
         }
 
@@ -1577,6 +1597,7 @@
             stopProgress();
             progressTimer = setInterval(() => {
                 if (!isRadioMode && ytPlayer && ytReady && isPlaying && ytPlayer.getCurrentTime) {
+                    if (isSeeking) return;
                     const current = ytPlayer.getCurrentTime() || 0;
                     const duration = ytPlayer.getDuration() || 210;
                     document.getElementById('currentTime').innerText = formatTime(current);
@@ -1905,20 +1926,15 @@
         window.buyVip = buyVip;
         window.watchRewardedAd = watchRewardedAd;
 
-        // Initial Renders
-        renderTracks(CURRENT_PLAYLIST);
-            updateFavBadges();
-            updateOfflineBadges();
-            showOfflineList();
-        renderRadios();
-    </script>
-<script>
+// Initial renders moved to end
+    
+
 
         // ==========================================
         // Favoriler & Çevrimdışı Kitaplığı (Gerçek LocalStorage)
         // ==========================================
-        let FAVORITES = JSON.parse(localStorage.getItem('mc_favorites') || '[]');
-        let OFFLINE_TRACKS = JSON.parse(localStorage.getItem('mc_offline') || '[]');
+        // FAVORITES initialized above
+        // OFFLINE_TRACKS initialized above
 
         function saveFavoritesToStorage() {
             localStorage.setItem('mc_favorites', JSON.stringify(FAVORITES));
@@ -2048,7 +2064,6 @@
         // ==========================================
         // Kusursuz İleri/Geri Sarma (Sıfır Donma & Kesintisiz Oynatma)
         // ==========================================
-        let isSeeking = false;
         function onSeekInput(val) {
             isSeeking = true;
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.getDuration) {
@@ -2139,6 +2154,17 @@
             console.log("Download started for:", ytId);
         };
 
+
+        // Safe Initial Renders on Startup
+        try {
+            renderTracks(CURRENT_PLAYLIST);
+            renderRadios();
+            updateFavBadges();
+            updateOfflineBadges();
+            showOfflineList();
+        } catch (e) {
+            console.error("Init render error:", e);
+        }
 </script>
 </body>
 </html>
