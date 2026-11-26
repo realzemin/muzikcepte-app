@@ -431,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 String cleanTitle = (title != null && !title.isEmpty() ? title : "MuzikCepte_Sarki")
-                        .replaceAll("[\\/:*?"<>|]", "_").trim();
+                        .replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ _-]", "_").trim();
                 
                 String downloadUrl = "https://api.vevioz.com/apis/widget?url=https://www.youtube.com/watch?v=" + ytId;
 
