@@ -1040,80 +1040,125 @@ public class MainActivity extends AppCompatActivity {
                 return Math.max(0, left);
             }
 
-            private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
+
+            private void fetchYouTubeInnertubeSearch(String q, JSONArray results, Set<String> seenIds) {
                 try {
-                    String encoded = URLEncoder.encode(q, "UTF-8");
-                    URL url = new URL("https://www.youtube.com/results?search_query=" + encoded);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                    conn.setConnectTimeout(7000);
-                    conn.setReadTimeout(7000);
+                    String apiUrl = "https://www.youtube.com/youtubei/v1/search?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
+                    JSONObject clientJson = new JSONObject();
+                    clientJson.put("clientName", "ANDROID");
+                    clientJson.put("clientVersion", "20.10.38");
+                    clientJson.put("hl", "tr");
+                    clientJson.put("gl", "TR");
 
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        sb.append(line);
+                    JSONObject contextJson = new JSONObject();
+                    contextJson.put("client", clientJson);
+
+                    JSONObject payloadJson = new JSONObject();
+                    payloadJson.put("context", contextJson);
+                    payloadJson.put("query", q);
+
+                    byte[] postBytes = payloadJson.toString().getBytes(StandardCharsets.UTF_8);
+
+                    HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38 (Linux; U; Android 14; TR) gzip");
+                    conn.setDoOutput(true);
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(8000);
+
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(postBytes);
+                        os.flush();
                     }
-                    in.close();
 
-                    String html = sb.toString();
-                    Pattern pattern = Pattern.compile("ytInitialData\\s*=\\s*(\\{.+?\\});</script>");
-                    Matcher matcher = pattern.matcher(html);
+                    int code = conn.getResponseCode();
+                    if (code != 200) {
+                        conn.disconnect();
+                        return;
+                    }
 
-                    if (matcher.find()) {
-                        JSONObject root = new JSONObject(matcher.group(1));
-                        JSONArray sections = root.getJSONObject("contents")
-                                .getJSONObject("twoColumnSearchResultsRenderer")
-                                .getJSONObject("primaryContents")
-                                .getJSONObject("sectionListRenderer")
-                                .getJSONArray("contents");
+                    StringBuilder sb = new StringBuilder();
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            sb.append(line);
+                        }
+                    }
+                    conn.disconnect();
 
-                        for (int s = 0; s < sections.length(); s++) {
-                            JSONObject section = sections.getJSONObject(s);
-                            if (section.has("itemSectionRenderer")) {
-                                JSONArray contents = section.getJSONObject("itemSectionRenderer").getJSONArray("contents");
-                                for (int i = 0; i < contents.length() && results.length() < 40; i++) {
-                                    JSONObject item = contents.getJSONObject(i);
-                                    if (item.has("videoRenderer")) {
-                                        JSONObject vr = item.getJSONObject("videoRenderer");
-                                        String vid = vr.optString("videoId");
-                                        if (vid.isEmpty() || seenIds.contains(vid)) continue;
-                                        seenIds.add(vid);
+                    JSONObject root = new JSONObject(sb.toString());
+                    JSONObject contentsObj = root.optJSONObject("contents");
+                    if (contentsObj == null) return;
+                    JSONObject sectionList = contentsObj.optJSONObject("sectionListRenderer");
+                    if (sectionList == null) return;
+                    JSONArray sections = sectionList.optJSONArray("contents");
+                    if (sections == null) return;
 
-                                        String title = "";
-                                        if (vr.has("title") && vr.getJSONObject("title").has("runs")) {
-                                            title = vr.getJSONObject("title").getJSONArray("runs").getJSONObject(0).optString("text");
-                                        }
-                                        String author = "";
-                                        if (vr.has("ownerText") && vr.getJSONObject("ownerText").has("runs")) {
-                                            author = vr.getJSONObject("ownerText").getJSONArray("runs").getJSONObject(0).optString("text");
-                                        }
-                                        String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:45") : "03:45";
-                                        
-                                        if (duration.split(":").length > 2) continue;
-                                        String[] parts = duration.split(":");
-                                        if (parts.length == 2) {
-                                            try {
-                                                int m = Integer.parseInt(parts[0].trim());
-                                                if (m > 15) continue;
-                                            } catch (Exception ignored) {}
-                                        }
+                    for (int s = 0; s < sections.length(); s++) {
+                        JSONObject sec = sections.getJSONObject(s);
+                        JSONObject itemSection = sec.optJSONObject("itemSectionRenderer");
+                        if (itemSection == null) continue;
+                        JSONArray items = itemSection.optJSONArray("contents");
+                        if (items == null) continue;
 
-                                        String thumb = "https://i.ytimg.com/vi/" + vid + "/hqdefault.jpg";
+                        for (int i = 0; i < items.length(); i++) {
+                            JSONObject item = items.getJSONObject(i);
+                            JSONObject videoObj = item.optJSONObject("compactVideoRenderer");
+                            if (videoObj == null) {
+                                videoObj = item.optJSONObject("videoRenderer");
+                            }
+                            if (videoObj == null) continue;
 
-                                        JSONObject row = new JSONObject();
-                                        row.put("id", vid);
-                                        row.put("ytId", vid);
-                                        row.put("title", title);
-                                        row.put("artist", author);
-                                        row.put("duration", duration);
-                                        row.put("art", thumb);
-                                        results.put(row);
-                                    }
+                            String videoId = videoObj.optString("videoId", "");
+                            if (videoId.isEmpty() || seenIds.contains(videoId)) continue;
+                            seenIds.add(videoId);
+
+                            String title = "";
+                            JSONObject titleObj = videoObj.optJSONObject("title");
+                            if (titleObj != null) {
+                                JSONArray runs = titleObj.optJSONArray("runs");
+                                if (runs != null && runs.length() > 0) {
+                                    title = runs.getJSONObject(0).optString("text", "");
+                                } else {
+                                    title = titleObj.optString("simpleText", "");
                                 }
                             }
+                            if (title.isEmpty()) continue;
+
+                            String artist = "";
+                            JSONObject byline = videoObj.optJSONObject("longBylineText");
+                            if (byline == null) byline = videoObj.optJSONObject("shortBylineText");
+                            if (byline != null) {
+                                JSONArray runs = byline.optJSONArray("runs");
+                                if (runs != null && runs.length() > 0) {
+                                    artist = runs.getJSONObject(0).optString("text", "");
+                                }
+                            }
+                            if (artist.isEmpty()) artist = "Müzik";
+
+                            String duration = "03:30";
+                            JSONObject lengthObj = videoObj.optJSONObject("lengthText");
+                            if (lengthObj != null) {
+                                JSONArray runs = lengthObj.optJSONArray("runs");
+                                if (runs != null && runs.length() > 0) {
+                                    duration = runs.getJSONObject(0).optString("text", "03:30");
+                                } else {
+                                    duration = lengthObj.optString("simpleText", "03:30");
+                                }
+                            }
+
+                            String art = "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg";
+
+                            JSONObject song = new JSONObject();
+                            song.put("id", videoId);
+                            song.put("title", title);
+                            song.put("artist", artist);
+                            song.put("duration", duration);
+                            song.put("art", art);
+                            song.put("thumb", art);
+
+                            results.put(song);
                         }
                     }
                 } catch (Exception e) {
@@ -1128,27 +1173,29 @@ public class MainActivity extends AppCompatActivity {
                         JSONArray results = new JSONArray();
                         Set<String> seenIds = new HashSet<>();
 
-                        if (page <= 1) {
-                            fetchYouTubeQuery(query, results, seenIds);
-                            if (results.length() < 25) {
-                                fetchYouTubeQuery(query + " şarkıları", results, seenIds);
-                            }
-                        } else if (page == 2) {
-                            fetchYouTubeQuery(query + " albüm", results, seenIds);
-                            fetchYouTubeQuery(query + " hit", results, seenIds);
-                        } else {
-                            fetchYouTubeQuery(query + " official audio", results, seenIds);
-                            fetchYouTubeQuery(query + " klip", results, seenIds);
+                        String targetQuery = query;
+                        if (page == 2) {
+                            targetQuery = query + " şarkıları";
+                        } else if (page == 3) {
+                            targetQuery = query + " albüm";
+                        } else if (page > 3) {
+                            targetQuery = query + " hit şarkılar";
                         }
 
+                        fetchYouTubeInnertubeSearch(targetQuery, results, seenIds);
+
                         runOnUiThread(() -> {
-                            webView.evaluateJavascript("if(window.onMusicSearchResults) window.onMusicSearchResults(" + results.toString() + ", " + page + ");", null);
+                            if (webView != null) {
+                                webView.evaluateJavascript("if(window.onMusicSearchResults) window.onMusicSearchResults(" + results.toString() + ", " + page + ");", null);
+                            }
                         });
 
                     } catch (Exception e) {
                         e.printStackTrace();
                         runOnUiThread(() -> {
-                            webView.evaluateJavascript("if(window.onMusicSearchError) window.onMusicSearchError('" + e.getMessage() + "');", null);
+                            if (webView != null) {
+                                webView.evaluateJavascript("if(window.onMusicSearchError) window.onMusicSearchError('" + e.getMessage() + "');", null);
+                            }
                         });
                     }
                 }).start();
