@@ -1090,15 +1090,66 @@
 
     <!-- VIP Modal -->
     <div class="vip-modal" id="vipModal">
-        <div class="vip-card">
-            <div style="font-size:36px; margin-bottom:12px;">👑</div>
-            <h2 style="font-size:20px; font-weight:800; margin-bottom:8px;">Reklamlardan Sıkıldın mı?</h2>
-            <p style="font-size:13px; color:var(--text-sub); line-height:1.5; margin-bottom:20px;">
-                1 kısa video izleyerek 30 dakika boyunca sıfır reklamla dinleyebilir veya tek seferlik VIP üye olarak reklamları sonsuza dek kapatabilirsin!
+        <div class="vip-card" style="max-width:390px; width:92%; max-height:92vh; overflow-y:auto; padding:22px 18px; box-sizing:border-box;">
+            <div style="font-size:36px; margin-bottom:6px;">👑</div>
+            <h2 style="font-size:20px; font-weight:800; margin-bottom:4px; color:#fff;">Reklamsız Müzik Keyfi</h2>
+            <p style="font-size:12px; color:var(--text-sub); line-height:1.4; margin-bottom:14px;">
+                Tüm reklamları kaldırın, kesintisiz arka plan ve kilit ekranı müzik deneyiminin tadını çıkarın!
             </p>
-            <button class="action-button-main" style="width:100%; margin-bottom:12px; background:linear-gradient(135deg, #10B981, #059669); font-size:14px; padding:14px;" onclick="watchRewardedAd()">🎁 1 Video İzle (30 Dk Reklamsız)</button>
-            <button class="action-button-main" style="width:100%; margin-bottom:12px; font-size:14px; padding:14px;" onclick="buyVip()">👑 Ömür Boyu Reklamsız VIP Ol</button>
-            <button class="action-button-secondary" style="width:100%; padding:12px;" onclick="closeVipModal()">Şimdilik Devam Et</button>
+
+            <!-- VIP Paket Seçenekleri -->
+            <div style="display:flex; flex-direction:column; gap:9px; margin-bottom:14px;">
+                
+                <!-- 1. Ömür Boyu VIP (199.00 TL) -->
+                <div onclick="buyVipPlan('lifetime')" style="border:2px solid #F59E0B; background:rgba(245, 158, 11, 0.12); border-radius:14px; padding:12px 14px; cursor:pointer; text-align:left; position:relative; box-shadow:0 4px 15px rgba(245, 158, 11, 0.2);">
+                    <span style="position:absolute; top:-10px; right:12px; background:linear-gradient(135deg, #F59E0B, #D97706); color:#fff; font-size:9px; font-weight:800; padding:2px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;">EN POPÜLER 🔥</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#fff;">👑 Ömür Boyu VIP</div>
+                            <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">Tek seferlik ödeme • Sonsuza dek</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:17px; font-weight:800; color:#F59E0B;">199.00 TL</div>
+                            <div style="font-size:10px; color:#10B981; font-weight:600;">Tek Seferlik</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Aylık VIP (39.99 TL) -->
+                <div onclick="buyVipPlan('monthly')" style="border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); border-radius:14px; padding:12px 14px; cursor:pointer; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#fff;">⭐ Aylık VIP</div>
+                            <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">Her ay otomatik yenilenir • Kolay iptal</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:17px; font-weight:800; color:#fff;">39.99 TL</div>
+                            <div style="font-size:10px; color:var(--text-sub);">/ ay</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Haftalık VIP (12.99 TL) -->
+                <div onclick="buyVipPlan('weekly')" style="border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); border-radius:14px; padding:12px 14px; cursor:pointer; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#fff;">⚡ Haftalık VIP</div>
+                            <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">Her hafta yenilenir</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:17px; font-weight:800; color:#fff;">12.99 TL</div>
+                            <div style="font-size:10px; color:var(--text-sub);">/ hafta</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Ücretsiz Ödüllü Reklam -->
+            <button class="action-button-main" style="width:100%; margin-bottom:8px; background:linear-gradient(135deg, #10B981, #059669); font-size:13px; padding:12px; font-weight:700; border-radius:12px;" onclick="watchRewardedAd()">🎁 1 Video İzle (30 Dk Ücretsiz Reklamsız)</button>
+
+            <!-- Kapat -->
+            <button class="action-button-secondary" style="width:100%; padding:10px; font-size:12px; border-radius:12px;" onclick="closeVipModal()">Şimdilik Devam Et</button>
         </div>
     </div>
 
@@ -1721,7 +1772,17 @@
         // VIP Modal
         function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
         function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
+                function buyVipPlan(plan) {
+            if (window.AndroidBridge && window.AndroidBridge.buyVipPlan) {
+                window.AndroidBridge.buyVipPlan(plan);
+            } else if (window.AndroidBridge && window.AndroidBridge.launchVipPurchase) {
+                window.AndroidBridge.launchVipPurchase();
+            }
+        }
         function buyVip() {
+            buyVipPlan('lifetime');
+        }
+        function _oldBuyVip() {
             if (window.AndroidBridge && window.AndroidBridge.launchVipPurchase) {
                 window.AndroidBridge.launchVipPurchase();
             } else {

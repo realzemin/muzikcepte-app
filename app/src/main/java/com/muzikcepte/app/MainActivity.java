@@ -83,13 +83,18 @@ public class MainActivity extends AppCompatActivity {
     public static final String ADMOB_REWARDED_ID = "ca-app-pub-6369758923216272/9604558008";
 
     // Google Play Billing Product ID
-    public static final String PRODUCT_ID_VIP = "muzikcepte_vip_reklamsiz";
+    public static final String PRODUCT_ID_LIFETIME = "muzikcepte_vip_lifetime";
+    public static final String PRODUCT_ID_LIFETIME_LEGACY = "muzikcepte_vip_reklamsiz";
+    public static final String PRODUCT_ID_MONTHLY = "muzikcepte_vip_monthly";
+    public static final String PRODUCT_ID_WEEKLY = "muzikcepte_vip_weekly";
+    public static final String PRODUCT_ID_VIP = PRODUCT_ID_LIFETIME;
 
     private AdView adView;
     private InterstitialAd mInterstitialAd;
     private RewardedAd mRewardedAd;
     private BillingClient billingClient;
     private ProductDetails vipProductDetails;
+    private final java.util.Map<String, ProductDetails> productDetailsMap = new java.util.concurrent.ConcurrentHashMap<>();
 
     private int trackChangeCounter = 0;
     private boolean isFirstInteractionDone = false;
@@ -427,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    queryVipProductDetails();
+                    queryAllVipProducts();
                     restorePreviousPurchases();
                 }
             }
@@ -437,34 +442,88 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void queryVipProductDetails() {
-        QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_ID_VIP)
+    private void queryAllVipProducts() {
+        // 1. In-App Products (Lifetime)
+        List<QueryProductDetailsParams.Product> inAppList = new ArrayList<>();
+        inAppList.add(QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_LIFETIME)
                 .setProductType(BillingClient.ProductType.INAPP)
-                .build();
+                .build());
+        inAppList.add(QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_LIFETIME_LEGACY)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build());
 
-        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
-                .setProductList(Collections.singletonList(product))
-                .build();
-
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsResult) -> {
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
-                    && productDetailsResult != null
-                    && productDetailsResult.getProductDetailsList() != null
-                    && !productDetailsResult.getProductDetailsList().isEmpty()) {
-                vipProductDetails = productDetailsResult.getProductDetailsList().get(0);
+        billingClient.queryProductDetailsAsync(
+            QueryProductDetailsParams.newBuilder().setProductList(inAppList).build(),
+            (billingResult, productDetailsResult) -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                        && productDetailsResult != null
+                        && productDetailsResult.getProductDetailsList() != null) {
+                    for (ProductDetails pd : productDetailsResult.getProductDetailsList()) {
+                        productDetailsMap.put(pd.getProductId(), pd);
+                        vipProductDetails = pd;
+                    }
+                }
             }
-        });
+        );
+
+        // 2. Subscriptions (Monthly & Weekly)
+        List<QueryProductDetailsParams.Product> subsList = new ArrayList<>();
+        subsList.add(QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_MONTHLY)
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build());
+        subsList.add(QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_WEEKLY)
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build());
+
+        billingClient.queryProductDetailsAsync(
+            QueryProductDetailsParams.newBuilder().setProductList(subsList).build(),
+            (billingResult, productDetailsResult) -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                        && productDetailsResult != null
+                        && productDetailsResult.getProductDetailsList() != null) {
+                    for (ProductDetails pd : productDetailsResult.getProductDetailsList()) {
+                        productDetailsMap.put(pd.getProductId(), pd);
+                    }
+                }
+            }
+        );
     }
 
     private void restorePreviousPurchases() {
+        // Restore In-App purchases
         billingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
             (billingResult, purchases) -> {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     for (Purchase purchase : purchases) {
-                        if (purchase.getProducts().contains(PRODUCT_ID_VIP) && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                            activateVipStatus();
+                        for (String prodId : purchase.getProducts()) {
+                            if ((prodId.equals(PRODUCT_ID_LIFETIME) || prodId.equals(PRODUCT_ID_LIFETIME_LEGACY))
+                                    && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                                activateVipStatus();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Restore Subscriptions
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build(),
+            (billingResult, purchases) -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    for (Purchase purchase : purchases) {
+                        for (String prodId : purchase.getProducts()) {
+                            if ((prodId.equals(PRODUCT_ID_MONTHLY) || prodId.equals(PRODUCT_ID_WEEKLY))
+                                    && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                                activateVipStatus();
+                                return;
+                            }
                         }
                     }
                 }
@@ -500,31 +559,54 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void launchVipPurchase() {
+    public void launchVipPurchase(String plan) {
         runOnUiThread(() -> {
             if (isVip) {
                 Toast.makeText(MainActivity.this, "Zaten VIP üyesiniz, tüm reklamlar kapalı!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (vipProductDetails != null) {
-                List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
-                productDetailsParamsList.add(
+            String targetProductId;
+            if ("monthly".equalsIgnoreCase(plan)) {
+                targetProductId = PRODUCT_ID_MONTHLY;
+            } else if ("weekly".equalsIgnoreCase(plan)) {
+                targetProductId = PRODUCT_ID_WEEKLY;
+            } else {
+                targetProductId = PRODUCT_ID_LIFETIME;
+            }
+
+            ProductDetails targetProduct = productDetailsMap.get(targetProductId);
+            if (targetProduct == null && "lifetime".equalsIgnoreCase(plan)) {
+                targetProduct = productDetailsMap.get(PRODUCT_ID_LIFETIME_LEGACY);
+            }
+
+            if (targetProduct != null) {
+                BillingFlowParams.ProductDetailsParams.Builder productDetailsParamsBuilder =
                     BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(vipProductDetails)
-                        .build()
-                );
+                        .setProductDetails(targetProduct);
+
+                // If subscription, attach selected offer token
+                if (targetProduct.getProductType().equals(BillingClient.ProductType.SUBS)) {
+                    List<ProductDetails.SubscriptionOfferDetails> offers = targetProduct.getSubscriptionOfferDetails();
+                    if (offers != null && !offers.isEmpty()) {
+                        productDetailsParamsBuilder.setOfferToken(offers.get(0).getOfferToken());
+                    }
+                }
 
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                        .setProductDetailsParamsList(productDetailsParamsList)
+                        .setProductDetailsParamsList(Collections.singletonList(productDetailsParamsBuilder.build()))
                         .build();
 
                 billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
             } else {
                 Toast.makeText(MainActivity.this, "Google Play Mağaza bağlantısı kuruluyor, lütfen tekrar deneyin.", Toast.LENGTH_SHORT).show();
-                queryVipProductDetails();
+                queryAllVipProducts();
             }
         });
+    }
+
+    public void launchVipPurchase() {
+        launchVipPurchase("lifetime");
     }
 
     // ==========================================
@@ -558,6 +640,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         webView.addJavascriptInterface(new Object() {
+
+            @JavascriptInterface
+            public void buyVipPlan(String plan) {
+                launchVipPurchase(plan);
+            }
 
             @JavascriptInterface
             public void onFirstClick() {

@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.9 (v22) - Akıllı Reklam & VIP Satış Yönlendirmesi</b>%0A%0A🎯 <b>AKILLI VIP & ÖDÜLLÜ REKLAM NUDGE:</b> Her 3 şarkıda bir geçiş reklamı çıktığında, reklam kapanır kapanmaz ekrana '1 Video İzle (30 Dk Reklamsız) veya VIP Ol' teklifi gelir.%0A👑 <b>GOOGLE PLAY BILLING 8.2.1:</b> En son resmi faturalandırma motoru aktif.%0A⚡ <b>SIFIR TAKILMA MOTORU:</b> WifiLock + Partial WakeLock devrede." \
+             -F caption="🎵 <b>MüzikCepte v1.7.0 (v23) - Akıllı Reklam & VIP Satış Yönlendirmesi</b>%0A%0A🎯 <b>AKILLI VIP & ÖDÜLLÜ REKLAM NUDGE:</b> Her 3 şarkıda bir geçiş reklamı çıktığında, reklam kapanır kapanmaz ekrana '1 Video İzle (30 Dk Reklamsız) veya VIP Ol' teklifi gelir.%0A👑 <b>GOOGLE PLAY BILLING 8.2.1:</b> Ömür Boyu (199 TL), Aylık (39.99 TL) ve Haftalık (12.99 TL) VIP paketleri entegre edildi.%0A⚡ <b>SIFIR TAKILMA MOTORU:</b> WifiLock + Partial WakeLock devrede." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.9 (v22) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.7.0 (v23) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
