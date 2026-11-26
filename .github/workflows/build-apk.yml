@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.6 (v19) - Target SDK 35 & Billing 7.1.1</b>%0A%0A✅ <b>GOOGLE PLAY ONAYLI:</b> Hedeflenen API düzeyi 35 (Android 15) yapıldı ve Play Faturalandırma Kitaplığı v7.1.1'e yükseltildi.%0A📻 <b>CANLI RADYOLAR:</b> PowerTürk, Kral Pop, Süper FM, JoyTürk, Best FM, Show Radyo, TRT FM yerel C++ motoruyla yayında.%0A🎬 <b>VİDEO SIZINTISI YOK:</b> Görünmez audio engine devrede.%0A🎧 <b>BÜYÜK BİLDİRİM PLAYER:</b> Aktif." \
+             -F caption="🎵 <b>MüzikCepte v1.6.7 (v20) - Target SDK 36 & Kesintisiz Arka Plan</b>%0A%0A✅ <b>GOOGLE PLAY HATALARI BİTTİ:</b> API 36 hedefi yapıldı ve gereksiz Billing kütüphanesi kaldırılarak mağaza hatası sıfırlandı!%0A⚡ <b>SIFIR TAKILMA MOTORU:</b> Yüksek performanslı WifiLock + Partial WakeLock eklendi; ekran kapandığında ve başka uygulamaya geçildiğinde müzik sıfır takılmayla akmaya devam eder.%0A📻 <b>CANLI RADYOLAR:</b> Tamamı aktif ve stabil.%0A🎬 <b>VİDEO SIZINTISI YOK:</b> Görünmez audio motoru.%0A🎯 <b>GEÇİŞ REKLAMI:</b> Her 3 şarkı değişiminde 1 tam ekran reklam." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.6 (v19) Google Play AAB Paketi</b>%0A%0AGoogle Play Console API 35 & Billing 7.1.1 onaylı resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.6.7 (v20) Google Play AAB Paketi</b>%0A%0AGoogle Play Console API 36 onaylı ve faturalandırma hatasından arındırılmış resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

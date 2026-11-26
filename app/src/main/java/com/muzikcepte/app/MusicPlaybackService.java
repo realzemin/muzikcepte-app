@@ -31,6 +31,7 @@ public class MusicPlaybackService extends Service {
     private static final String CHANNEL_ID = "muzikcepte_playback_channel";
     private static final int NOTIFICATION_ID = 101;
     private PowerManager.WakeLock wakeLock;
+    private android.net.wifi.WifiManager.WifiLock wifiLock;
     private MediaSessionCompat mediaSession;
 
     public static final String ACTION_START = "com.muzikcepte.app.START_PLAYBACK";
@@ -68,6 +69,12 @@ public class MusicPlaybackService extends Service {
         if (powerManager != null) {
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MuzikCepte::PlaybackWakelock");
             wakeLock.setReferenceCounted(false);
+        }
+
+        android.net.wifi.WifiManager wifiManager = (android.net.wifi.WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager != null) {
+            wifiLock = wifiManager.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MuzikCepte::PlaybackWifiLock");
+            wifiLock.setReferenceCounted(false);
         }
 
         initMediaSession();
@@ -336,6 +343,9 @@ public class MusicPlaybackService extends Service {
         if (wakeLock != null && !wakeLock.isHeld()) {
             wakeLock.acquire(12 * 60 * 60 * 1000L); // 12 hours safe wakelock
         }
+        if (wifiLock != null && !wifiLock.isHeld()) {
+            wifiLock.acquire();
+        }
         updateMediaSession();
         updateNotification();
     }
@@ -455,6 +465,11 @@ public class MusicPlaybackService extends Service {
         if (wakeLock != null && wakeLock.isHeld()) {
             try {
                 wakeLock.release();
+            } catch (Exception ignored) {}
+        }
+        if (wifiLock != null && wifiLock.isHeld()) {
+            try {
+                wifiLock.release();
             } catch (Exception ignored) {}
         }
         if (mediaSession != null) {

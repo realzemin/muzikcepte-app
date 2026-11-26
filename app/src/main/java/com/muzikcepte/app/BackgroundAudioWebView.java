@@ -26,6 +26,11 @@ public class BackgroundAudioWebView extends WebView {
     }
 
     @Override
+    public void dispatchWindowVisibilityChanged(int visibility) {
+        super.dispatchWindowVisibilityChanged(View.VISIBLE);
+    }
+
+    @Override
     public void onPause() {
         // Prevent default pause that halts media threads
     }
