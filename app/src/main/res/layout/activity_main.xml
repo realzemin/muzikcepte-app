@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     android:background="#0B0F19">
 
-    <!-- 100% Pure Audio Music Player Interface -->
-    <WebView
+    <!-- Uninterrupted Background Audio WebView -->
+    <com.muzikcepte.app.BackgroundAudioWebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

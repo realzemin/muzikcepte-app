@@ -44,8 +44,24 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
 
     public static MainActivity instance;
-    public WebView webView;
+    public BackgroundAudioWebView webView;
     private ProgressBar progressBar;
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (webView != null) {
+            webView.resumeTimers();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (webView != null) {
+            webView.resumeTimers();
+        }
+    }
 
     @SuppressLint({"SetJavaScriptEnabled", "SourceLockedOrientationActivity"})
     @Override
