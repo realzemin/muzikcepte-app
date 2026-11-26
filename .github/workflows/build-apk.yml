@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.1 (v14) Güncel APK</b>%0A%0A⚡ <b>Takılma Sorunu Kalıcı Olarak Çözüldü:</b> Ses motoru ve önbellek akışı pürüzsüzleştirildi, artık şarkılar takılmadan akıp gidiyor!%0A✅ <b>İndirme Seçenekleri Sadeleştirildi:</b> Sadece OnlyMP3 ve Çevrimdışı Kaydet bırakıldı.%0A✅ <b>Bildirim Çubuğu Medya Kontrolleri:</b> MYT tarzı Oynat/Durdur, İleri/Geri ve Kapatma butonları aktif!%0A✅ <b>AdMob & VIP:</b> Banner, Geçiş ve 30 Dk Reklamsız Ödüllü Video entegrasyonu hazır." \
+             -F caption="🎵 <b>MüzikCepte v1.6.2 (v15) Büyük Player & Sıfır Takılma</b>%0A%0A🎧 <b>BÜYÜK BİLDİRİM MEDYA PLAYERI:</b> Bildirim çubuğunda ve kilit ekranında büyük albüm kapağı, ileri/geri sarma çubuğu (Seekbar), büyük Oynat/Durdur ve parça değiştirme butonları (MYT/Spotify MediaStyle)!%0A🚀 <b>SIFIR TAKILMA GARANTİSİ:</b> 2px daraltma ve UserAgent kısıtlamaları kaldırıldı; tam GPU hızlandırma ve orijinal akışla ses takılmaları kökünden çözüldü!%0A✅ <b>İndirme:</b> Sadece OnlyMP3 ve Çevrimdışı Kaydet." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.1 (v14) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.6.2 (v15) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

@@ -208,6 +208,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void seekToPosition(long posMs) {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                double sec = posMs / 1000.0;
+                webView.evaluateJavascript("if(window.seekToSeconds) window.seekToSeconds(" + sec + ");", null);
+            }
+        });
+    }
+
     // ==========================================
     // AdMob Banner, Interstitial, Rewarded
     // ==========================================
@@ -486,7 +495,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.6.0");
+        // Keep pristine standard Android Chrome user agent so YouTube never throttles media packets
+        // settings.setUserAgentString(...)
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -515,11 +525,16 @@ public class MainActivity extends AppCompatActivity {
 
             @JavascriptInterface
             public void startBackgroundPlayback(String title, String artist) {
-                startBackgroundPlayback(title, artist, true);
+                startBackgroundPlayback(title, artist, true, "", 0, 0);
             }
 
             @JavascriptInterface
             public void startBackgroundPlayback(String title, String artist, boolean isPlaying) {
+                startBackgroundPlayback(title, artist, isPlaying, "", 0, 0);
+            }
+
+            @JavascriptInterface
+            public void startBackgroundPlayback(String title, String artist, boolean isPlaying, String artUrl, int durationSec, int positionSec) {
                 runOnUiThread(() -> {
                     try {
                         Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
@@ -527,6 +542,9 @@ public class MainActivity extends AppCompatActivity {
                         serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
                         serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
                         serviceIntent.putExtra(MusicPlaybackService.EXTRA_IS_PLAYING, isPlaying);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_ART_URL, artUrl);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_DURATION, (long) durationSec * 1000L);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_POSITION, (long) positionSec * 1000L);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             startForegroundService(serviceIntent);
                         } else {
@@ -536,7 +554,6 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 });
-                triggerTrackChangeAd();
             }
 
             @JavascriptInterface

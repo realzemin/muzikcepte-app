@@ -846,13 +846,13 @@
         /* Viewport Audio Engine */
         #audioEngineContainer {
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
-            width: 2px;
-            height: 2px;
-            opacity: 0.01;
+            width: 320px;
+            height: 180px;
+            opacity: 1;
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
             overflow: hidden;
         }
     </style>
@@ -1157,7 +1157,10 @@
                 events: {
                     'onReady': () => { ytReady = true; },
                     'onStateChange': onPlayerStateChange,
-                    'onError': () => nextTrack()
+                    'onError': (e) => {
+                        console.error('YT Player Error:', e);
+                        setTimeout(() => nextTrack(), 1500);
+                    }
                 }
             });
         }
@@ -1187,19 +1190,33 @@
         function notifyAndroidBackground(isPlayingState = true) {
             let title = "Müzik Çalıyor";
             let artist = "MüzikCepte";
+            let artUrl = "";
+            let duration = 210;
+            let position = 0;
+
             if (isRadioMode && currentRadioIndex >= 0) {
                 const r = RADIOS[currentRadioIndex];
                 title = r.name;
                 artist = "🔴 Canlı Radyo • " + r.genre;
+                artUrl = r.logo || "";
             } else if (CURRENT_PLAYLIST[currentIndex]) {
                 const t = CURRENT_PLAYLIST[currentIndex];
                 title = t.title;
                 artist = t.artist;
+                artUrl = t.art || t.thumb || ('https://i.ytimg.com/vi/' + t.id + '/hqdefault.jpg');
+                if (ytPlayer && ytReady && ytPlayer.getDuration) {
+                    try {
+                        duration = ytPlayer.getDuration() || 210;
+                        position = ytPlayer.getCurrentTime() || 0;
+                    } catch (e) {}
+                }
             }
 
             if (window.AndroidBridge) {
                 if (window.AndroidBridge.requestAudioFocus) window.AndroidBridge.requestAudioFocus();
-                if (window.AndroidBridge.startBackgroundPlayback) window.AndroidBridge.startBackgroundPlayback(title, artist, isPlayingState);
+                if (window.AndroidBridge.startBackgroundPlayback) {
+                    window.AndroidBridge.startBackgroundPlayback(title, artist, isPlayingState, artUrl, Math.round(duration), Math.round(position));
+                }
             }
         }
 
@@ -1698,6 +1715,12 @@
             }
             closeVipModal();
         }
+
+        window.seekToSeconds = function(sec) {
+            if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
+                ytPlayer.seekTo(sec, true);
+            }
+        };
 
         // Global exports for Android Notification controls & Bridge
         window.togglePlay = togglePlay;
