@@ -47,6 +47,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
@@ -312,11 +313,9 @@ public class MainActivity extends AppCompatActivity {
     private void triggerTrackChangeAd() {
         if (isVip || isRewardedActive()) return;
         trackChangeCounter++;
-        long now = System.currentTimeMillis();
-        // En az 6 şarkı değişimi VE son gösterimden sonra en az 6 dakika geçmiş olmalı
-        if (trackChangeCounter >= 6 && (now - lastInterstitialShowTime >= MIN_INTERSTITIAL_INTERVAL_MS)) {
+        // Her 3 şarkı değişiminde 1 geçiş reklamı göster
+        if (trackChangeCounter >= 3) {
             trackChangeCounter = 0;
-            lastInterstitialShowTime = now;
             runOnUiThread(() -> {
                 if (mInterstitialAd != null) {
                     mInterstitialAd.show(MainActivity.this);
@@ -382,9 +381,12 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void setupBillingClient() {
+        PendingPurchasesParams pendingPurchasesParams = PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build();
         billingClient = BillingClient.newBuilder(this)
                 .setListener(purchasesUpdatedListener)
-                .enablePendingPurchases()
+                .enablePendingPurchases(pendingPurchasesParams)
                 .build();
 
         billingClient.startConnection(new BillingClientStateListener() {

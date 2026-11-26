@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.5 (v18) - Kusursuz Ses & Canlı Radyolar</b>%0A%0A📻 <b>CANLI RADYOLAR DÜZELTİLDİ:</b> PowerTürk, Kral Pop, Süper FM, JoyTürk, Best FM, Show Radyo, TRT FM doğrudan Native C++ Android MediaPlayer motoruyla sıfır takılma ile açılıyor!%0A🎬 <b>VİDEO SIZINTISI YOK EDİLDİ:</b> Arka planda görünen video kalıntıları tamamen gizlendi, sıfır görüntü sızıntısı.%0A🎧 <b>BÜYÜK BİLDİRİM PLAYER'I:</b> Kilit ekranında büyük albüm kapağı, kaydırılabilir seekbar ve medya kontrolleri aktif.%0A⏭ <b>OTOMATİK GEÇİŞ:</b> Şarkı bittiğinde sıradaki parçaya otomatik geçer." \
+             -F caption="🎵 <b>MüzikCepte v1.6.6 (v19) - Target SDK 35 & Billing 7.1.1</b>%0A%0A✅ <b>GOOGLE PLAY ONAYLI:</b> Hedeflenen API düzeyi 35 (Android 15) yapıldı ve Play Faturalandırma Kitaplığı v7.1.1'e yükseltildi.%0A📻 <b>CANLI RADYOLAR:</b> PowerTürk, Kral Pop, Süper FM, JoyTürk, Best FM, Show Radyo, TRT FM yerel C++ motoruyla yayında.%0A🎬 <b>VİDEO SIZINTISI YOK:</b> Görünmez audio engine devrede.%0A🎧 <b>BÜYÜK BİLDİRİM PLAYER:</b> Aktif." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.5 (v18) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.6.6 (v19) Google Play AAB Paketi</b>%0A%0AGoogle Play Console API 35 & Billing 7.1.1 onaylı resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
