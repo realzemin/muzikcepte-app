@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.3 (v16) Güncellemesi</b>%0A%0A⏱️ <b>Geçiş Reklam Süresi Uzatıldı:</b> Reklam sıklığı azaltıldı; artık en az 6 şarkı dinlendikten ve en az 6 dakika geçtikten sonra nadiren çıkar.%0A🎧 <b>Büyük Bildirim Player'ı (MediaStyle):</b> Kilit ekranında büyük albüm kapağı, kaydırılabilir seekbar ve kontroller aktif.%0A🚀 <b>Kesintisiz Müzik:</b> Pürüzsüz ve akıcı ses motoru." \
+             -F caption="🎵 <b>MüzikCepte v1.6.4 (v17) - %100 Pürüzsüz & Sıfır Takılma</b>%0A%0A📻 <b>NATIVE ANDROID RADYO MOTORU:</b> Canlı radyolar artık WebView'den değil, doğrudan Android'in yerel C++ MediaPlayer motorundan çalar! Sıfır takılma, CD kalitesinde akış.%0A🚀 <b>SIFIR TAKILMA MOTORU:</b> WebView render kilitleri (dispatch loop) ve User-Agent kısıtlamaları kaldırıldı, DOM repainting temizlendi; şarkılar yağ gibi akar.%0A🎧 <b>Büyük Bildirim Player'ı:</b> Kilit ekranında büyük albüm kapağı, kaydırılabilir seekbar ve medya kontrolleri aktif." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.3 (v16) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.6.4 (v17) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

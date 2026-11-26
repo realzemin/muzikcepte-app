@@ -1275,19 +1275,19 @@
 
             // Stop YouTube player if running
             if (ytPlayer && ytReady && ytPlayer.pauseVideo) {
-                ytPlayer.pauseVideo();
+                try { ytPlayer.pauseVideo(); } catch(e){}
             }
 
-            // Load and Play Live Stream
-            radioAudio.src = r.url;
-            radioAudio.play().then(() => {
-                isPlaying = true;
-                isUserPaused = false;
-                updatePlayButtons();
-                notifyAndroidBackground();
-            }).catch(e => {
-                console.log("Radio play error:", e);
-            });
+            isPlaying = true;
+            isUserPaused = false;
+
+            // Stream live radio via Native Android MediaPlayer (Zero stutter!)
+            if (window.AndroidBridge && window.AndroidBridge.playNativeRadio) {
+                window.AndroidBridge.playNativeRadio(r.url, r.name, r.genre, r.logo);
+            } else {
+                radioAudio.src = r.url;
+                radioAudio.play().catch(e => console.log(e));
+            }
 
             // Update UI elements for Radio
             document.getElementById('miniTitle').innerText = r.name;
@@ -1303,8 +1303,8 @@
             document.getElementById('radioLiveBar').style.display = 'block';
             document.getElementById('modalActionsRow').style.display = 'none';
 
+            updatePlayButtons();
             renderRadios();
-            renderTracks(CURRENT_PLAYLIST);
         }
 
         // Play Song in place (without full-screen jump)
@@ -1315,9 +1315,10 @@
             if (!t) return;
 
             // Stop radio if playing
-            if (!radioAudio.paused) {
+            if (radioAudio && !radioAudio.paused) {
                 radioAudio.pause();
-                radioAudio.src = "";
+                radioAudio.removeAttribute('src');
+                radioAudio.load();
             }
 
             // Restore song UI
@@ -1371,20 +1372,20 @@
 
         function togglePlay() {
             if (isRadioMode) {
-                if (isPlaying) {
-                    radioAudio.pause();
-                    isPlaying = false;
-                    isUserPaused = true;
-                    if (window.AndroidBridge && window.AndroidBridge.updatePlaybackState) {
-                        const r = RADIOS[currentRadioIndex] || { name: "Canlı Radyo", genre: "Müzik" };
-                        window.AndroidBridge.updatePlaybackState(r.name, "🔴 Canlı Radyo", false);
-                    }
-                } else {
-                    radioAudio.play().then(() => {
+                if (window.AndroidBridge && window.AndroidBridge.toggleNativePlayback) {
+                    window.AndroidBridge.toggleNativePlayback();
+                    isPlaying = !isPlaying;
+                    isUserPaused = !isPlaying;
+                } else if (radioAudio) {
+                    if (isPlaying) {
+                        radioAudio.pause();
+                        isPlaying = false;
+                        isUserPaused = true;
+                    } else {
+                        radioAudio.play().catch(e => console.error(e));
                         isPlaying = true;
                         isUserPaused = false;
-                        notifyAndroidBackground(true);
-                    }).catch(e => console.error(e));
+                    }
                 }
             } else {
                 if (!ytPlayer || !ytReady) return;
@@ -1420,7 +1421,6 @@
                 vinyl.classList.remove('playing');
                 bigVinyl.classList.remove('playing');
             }
-            renderTracks(CURRENT_PLAYLIST);
         }
 
         function nextTrack() {
@@ -1723,6 +1723,12 @@
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
                 ytPlayer.seekTo(sec, true);
             }
+        };
+
+        window.onNativeRadioState = function(playingState) {
+            isPlaying = playingState;
+            updatePlayButtons();
+            renderRadios();
         };
 
         // Global exports for Android Notification controls & Bridge

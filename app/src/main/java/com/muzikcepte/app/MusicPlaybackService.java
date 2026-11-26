@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -36,6 +38,7 @@ public class MusicPlaybackService extends Service {
     public static final String ACTION_TOGGLE_PLAY = "com.muzikcepte.app.TOGGLE_PLAY";
     public static final String ACTION_NEXT = "com.muzikcepte.app.NEXT";
     public static final String ACTION_PREV = "com.muzikcepte.app.PREV";
+    public static final String ACTION_PLAY_RADIO = "com.muzikcepte.app.PLAY_RADIO";
 
     public static final String EXTRA_TITLE = "extra_title";
     public static final String EXTRA_ARTIST = "extra_artist";
@@ -49,8 +52,12 @@ public class MusicPlaybackService extends Service {
     private String currentArtUrl = "";
     private Bitmap currentArtBitmap = null;
     private boolean isPlaying = true;
+    private boolean isRadioMode = false;
     private long currentDurationMs = 210000;
     private long currentPositionMs = 0;
+
+    // Native C++ Android MediaPlayer for 100% stutter-free live radio streams
+    private MediaPlayer nativeRadioPlayer;
 
     @Override
     public void onCreate() {
@@ -71,22 +78,12 @@ public class MusicPlaybackService extends Service {
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onPlay() {
-                if (MainActivity.instance != null) {
-                    MainActivity.instance.togglePlayPause();
-                }
-                isPlaying = true;
-                updateMediaSession();
-                updateNotification();
+                toggleNativeOrJsPlay();
             }
 
             @Override
             public void onPause() {
-                if (MainActivity.instance != null) {
-                    MainActivity.instance.togglePlayPause();
-                }
-                isPlaying = false;
-                updateMediaSession();
-                updateNotification();
+                toggleNativeOrJsPlay();
             }
 
             @Override
@@ -111,11 +108,13 @@ public class MusicPlaybackService extends Service {
 
             @Override
             public void onSeekTo(long pos) {
-                currentPositionMs = pos;
-                if (MainActivity.instance != null) {
-                    MainActivity.instance.seekToPosition(pos);
+                if (!isRadioMode) {
+                    currentPositionMs = pos;
+                    if (MainActivity.instance != null) {
+                        MainActivity.instance.seekToPosition(pos);
+                    }
+                    updateMediaSession();
                 }
-                updateMediaSession();
             }
 
             @Override
@@ -126,6 +125,30 @@ public class MusicPlaybackService extends Service {
         });
 
         mediaSession.setActive(true);
+    }
+
+    private void toggleNativeOrJsPlay() {
+        if (isRadioMode && nativeRadioPlayer != null) {
+            if (nativeRadioPlayer.isPlaying()) {
+                nativeRadioPlayer.pause();
+                isPlaying = false;
+            } else {
+                nativeRadioPlayer.start();
+                isPlaying = true;
+            }
+            updateMediaSession();
+            updateNotification();
+            if (MainActivity.instance != null) {
+                MainActivity.instance.updateJsRadioState(isPlaying);
+            }
+        } else {
+            if (MainActivity.instance != null) {
+                MainActivity.instance.togglePlayPause();
+            }
+            isPlaying = !isPlaying;
+            updateMediaSession();
+            updateNotification();
+        }
     }
 
     private void createNotificationChannel() {
@@ -161,12 +184,7 @@ public class MusicPlaybackService extends Service {
         }
 
         if (ACTION_TOGGLE_PLAY.equals(action)) {
-            if (MainActivity.instance != null) {
-                MainActivity.instance.togglePlayPause();
-            }
-            isPlaying = !isPlaying;
-            updateMediaSession();
-            updateNotification();
+            toggleNativeOrJsPlay();
             return START_STICKY;
         }
 
@@ -190,7 +208,31 @@ public class MusicPlaybackService extends Service {
             return START_STICKY;
         }
 
-        // Start / Update playback info
+        if (ACTION_PLAY_RADIO.equals(action)) {
+            isRadioMode = true;
+            String radioUrl = intent.getStringExtra("radio_url");
+            String t = intent.getStringExtra(EXTRA_TITLE);
+            String a = intent.getStringExtra(EXTRA_ARTIST);
+            String art = intent.getStringExtra(EXTRA_ART_URL);
+
+            if (t != null && !t.isEmpty()) currentTitle = t;
+            if (a != null && !a.isEmpty()) currentArtist = a;
+            isPlaying = true;
+
+            if (art != null && !art.isEmpty() && !art.equals(currentArtUrl)) {
+                currentArtUrl = art;
+                fetchArtBitmap(currentArtUrl);
+            }
+
+            playNativeRadio(radioUrl);
+            startOrUpdateNotification();
+            return START_STICKY;
+        }
+
+        // Standard Track Playback
+        stopNativeRadio();
+        isRadioMode = false;
+
         String t = intent.getStringExtra(EXTRA_TITLE);
         String a = intent.getStringExtra(EXTRA_ARTIST);
         String art = intent.getStringExtra(EXTRA_ART_URL);
@@ -217,6 +259,46 @@ public class MusicPlaybackService extends Service {
 
         startOrUpdateNotification();
         return START_STICKY;
+    }
+
+    private void playNativeRadio(String url) {
+        stopNativeRadio();
+        if (url == null || url.isEmpty()) return;
+        try {
+            nativeRadioPlayer = new MediaPlayer();
+            nativeRadioPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .build());
+            nativeRadioPlayer.setDataSource(url);
+            nativeRadioPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
+            nativeRadioPlayer.setOnPreparedListener(mp -> {
+                mp.start();
+                isPlaying = true;
+                updateMediaSession();
+                updateNotification();
+            });
+            nativeRadioPlayer.setOnErrorListener((mp, what, extra) -> {
+                stopNativeRadio();
+                return true;
+            });
+            nativeRadioPlayer.prepareAsync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopNativeRadio() {
+        if (nativeRadioPlayer != null) {
+            try {
+                if (nativeRadioPlayer.isPlaying()) {
+                    nativeRadioPlayer.stop();
+                }
+                nativeRadioPlayer.reset();
+                nativeRadioPlayer.release();
+            } catch (Exception ignored) {}
+            nativeRadioPlayer = null;
+        }
     }
 
     private void fetchArtBitmap(String urlStr) {
@@ -255,8 +337,11 @@ public class MusicPlaybackService extends Service {
                 PlaybackStateCompat.ACTION_PLAY_PAUSE |
                 PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
                 PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                PlaybackStateCompat.ACTION_SEEK_TO |
                 PlaybackStateCompat.ACTION_STOP;
+
+        if (!isRadioMode) {
+            actions |= PlaybackStateCompat.ACTION_SEEK_TO;
+        }
 
         int state = isPlaying ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
         PlaybackStateCompat playbackState = new PlaybackStateCompat.Builder()
@@ -268,8 +353,8 @@ public class MusicPlaybackService extends Service {
         MediaMetadataCompat.Builder metaBuilder = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentTitle)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentArtist)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "MüzikCepte")
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentDurationMs);
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, isRadioMode ? "Canlı Radyo" : "MüzikCepte")
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, isRadioMode ? -1 : currentDurationMs);
 
         if (currentArtBitmap != null) {
             metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, currentArtBitmap);
@@ -318,7 +403,7 @@ public class MusicPlaybackService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(currentTitle)
                 .setContentText(currentArtist)
-                .setSubText("MüzikCepte")
+                .setSubText(isRadioMode ? "Canlı Radyo" : "MüzikCepte")
                 .setContentIntent(pendingIntent)
                 .setOngoing(isPlaying)
                 .setSilent(true)
@@ -355,6 +440,7 @@ public class MusicPlaybackService extends Service {
     }
 
     private void stopPlayback() {
+        stopNativeRadio();
         if (wakeLock != null && wakeLock.isHeld()) {
             try {
                 wakeLock.release();

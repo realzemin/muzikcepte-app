@@ -219,6 +219,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void updateJsRadioState(boolean isPlaying) {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.onNativeRadioState) window.onNativeRadioState(" + isPlaying + ");", null);
+            }
+        });
+    }
+
     // ==========================================
     // AdMob Banner, Interstitial, Rewarded
     // ==========================================
@@ -500,8 +508,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        // Keep pristine standard Android Chrome user agent so YouTube never throttles media packets
-        // settings.setUserAgentString(...)
+        // Pure genuine Chrome Mobile User-Agent to completely eliminate Google/YouTube throttling
+        settings.setUserAgentString("Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -516,6 +524,40 @@ public class MainActivity extends AppCompatActivity {
             @JavascriptInterface
             public void onTrackChanged() {
                 triggerTrackChangeAd();
+            }
+
+            @JavascriptInterface
+            public void playNativeRadio(String url, String name, String genre, String logo) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_PLAY_RADIO);
+                        serviceIntent.putExtra("radio_url", url);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, name);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, "🔴 Canlı Yayın • " + genre);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_ART_URL, logo);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(serviceIntent);
+                        } else {
+                            startService(serviceIntent);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void toggleNativePlayback() {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_TOGGLE_PLAY);
+                        startService(serviceIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
 
             @JavascriptInterface
