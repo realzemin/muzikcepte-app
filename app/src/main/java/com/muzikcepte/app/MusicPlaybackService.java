@@ -78,6 +78,9 @@ public class MusicPlaybackService extends Service {
         }
 
         initMediaSession();
+
+        // Android 14+ crash prevention: ensure startForeground is called immediately
+        startOrUpdateNotification();
     }
 
     private void initMediaSession() {

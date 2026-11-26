@@ -54,6 +54,17 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 
+import android.content.ContentValues;
+import android.media.MediaScannerConnection;
+import android.os.Environment;
+import android.provider.MediaStore;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -427,21 +438,207 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+        private final ExecutorService downloadExecutor = Executors.newFixedThreadPool(2);
+
     public void executeDirectDownload(String ytId, String title, String artist) {
+        final String songTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Müzik";
+        final String safeFileName = songTitle.replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ _.-]", "_").trim() + ".mp3";
+
         runOnUiThread(() -> {
+            Toast.makeText(MainActivity.this, "📥 \"" + songTitle + "\" telefonunuza indiriliyor...", Toast.LENGTH_SHORT).show();
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.onDownloadStarted) window.onDownloadStarted('" + ytId + "');", null);
+            }
+        });
+
+        downloadExecutor.execute(() -> {
+            HttpURLConnection dlConn = null;
+            OutputStream out = null;
+            File fallbackFile = null;
+            Uri mediaStoreUri = null;
+            boolean downloadSuccess = false;
+
             try {
-                String cleanTitle = (title != null && !title.isEmpty() ? title : "Müzik");
-                String url = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(browserIntent);
-                Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' MP3 indirme sayfası açıldı. Tek dokunuşla indirebilirsiniz!", Toast.LENGTH_LONG).show();
-                if (webView != null) {
-                    webView.evaluateJavascript("if(window.onDownloadStarted) window.onDownloadStarted('" + ytId + "');", null);
+                // 1. YouTube Innertube Android Client API to extract direct audio stream
+                String apiUrl = "https://www.youtube.com/youtubei/v1/player?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
+                JSONObject clientJson = new JSONObject();
+                clientJson.put("clientName", "ANDROID");
+                clientJson.put("clientVersion", "20.10.38");
+                clientJson.put("hl", "tr");
+                clientJson.put("gl", "TR");
+
+                JSONObject contextJson = new JSONObject();
+                contextJson.put("client", clientJson);
+
+                JSONObject payloadJson = new JSONObject();
+                payloadJson.put("context", contextJson);
+                payloadJson.put("videoId", ytId);
+
+                byte[] postBytes = payloadJson.toString().getBytes(StandardCharsets.UTF_8);
+
+                HttpURLConnection apiConn = (HttpURLConnection) new URL(apiUrl).openConnection();
+                apiConn.setRequestMethod("POST");
+                apiConn.setRequestProperty("Content-Type", "application/json");
+                apiConn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38 (Linux; U; Android 14; TR) gzip");
+                apiConn.setDoOutput(true);
+                apiConn.setConnectTimeout(15000);
+                apiConn.setReadTimeout(15000);
+
+                try (OutputStream os = apiConn.getOutputStream()) {
+                    os.write(postBytes);
+                    os.flush();
+                }
+
+                int apiCode = apiConn.getResponseCode();
+                if (apiCode != 200) {
+                    throw new Exception("Innertube API returned HTTP " + apiCode);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(apiConn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
+                apiConn.disconnect();
+
+                JSONObject respObj = new JSONObject(sb.toString());
+                JSONObject streamingData = respObj.optJSONObject("streamingData");
+                if (streamingData == null) {
+                    throw new Exception("No streamingData in response");
+                }
+
+                JSONArray adaptiveFormats = streamingData.optJSONArray("adaptiveFormats");
+                String streamUrl = null;
+                long contentLength = 0;
+
+                if (adaptiveFormats != null) {
+                    // Prefer itag 140 (128kbps AAC)
+                    for (int i = 0; i < adaptiveFormats.length(); i++) {
+                        JSONObject fmt = adaptiveFormats.getJSONObject(i);
+                        if (fmt.optInt("itag", 0) == 140 && fmt.has("url")) {
+                            streamUrl = fmt.getString("url");
+                            contentLength = fmt.optLong("contentLength", 0);
+                            break;
+                        }
+                    }
+                    // Fallback to any audio/ format if itag 140 not found
+                    if (streamUrl == null) {
+                        for (int i = 0; i < adaptiveFormats.length(); i++) {
+                            JSONObject fmt = adaptiveFormats.getJSONObject(i);
+                            String mime = fmt.optString("mimeType", "");
+                            if (mime.startsWith("audio/") && fmt.has("url")) {
+                                streamUrl = fmt.getString("url");
+                                contentLength = fmt.optLong("contentLength", 0);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (streamUrl == null) {
+                    throw new Exception("Direct audio stream URL not available");
+                }
+
+                // 2. Open output stream (Android 10+ MediaStore Downloads or legacy Environment.DIRECTORY_DOWNLOADS)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.MediaColumns.DISPLAY_NAME, safeFileName);
+                    values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg");
+                    values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/MuzikCepte");
+                    mediaStoreUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                    if (mediaStoreUri != null) {
+                        out = getContentResolver().openOutputStream(mediaStoreUri);
+                    }
+                }
+
+                if (out == null) {
+                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File appFolder = new File(downloadsDir, "MuzikCepte");
+                    if (!appFolder.exists()) {
+                        appFolder.mkdirs();
+                    }
+                    fallbackFile = new File(appFolder, safeFileName);
+                    out = new FileOutputStream(fallbackFile);
+                }
+
+                // 3. Chunked download (512KB chunks with Range header)
+                int chunkSize = 512 * 1024;
+                long totalDownloaded = 0;
+                byte[] buffer = new byte[16384];
+
+                if (contentLength > 0) {
+                    while (totalDownloaded < contentLength) {
+                        long endByte = Math.min(totalDownloaded + chunkSize - 1, contentLength - 1);
+                        dlConn = (HttpURLConnection) new URL(streamUrl).openConnection();
+                        dlConn.setRequestMethod("GET");
+                        dlConn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38");
+                        dlConn.setRequestProperty("Range", "bytes=" + totalDownloaded + "-" + endByte);
+                        dlConn.setConnectTimeout(15000);
+                        dlConn.setReadTimeout(15000);
+
+                        int dlCode = dlConn.getResponseCode();
+                        if (dlCode != 200 && dlCode != 206) {
+                            dlConn.disconnect();
+                            break;
+                        }
+
+                        try (InputStream is = dlConn.getInputStream()) {
+                            int bytesRead;
+                            while ((bytesRead = is.read(buffer)) != -1) {
+                                out.write(buffer, 0, bytesRead);
+                                totalDownloaded += bytesRead;
+                            }
+                        }
+                        dlConn.disconnect();
+                    }
+                } else {
+                    dlConn = (HttpURLConnection) new URL(streamUrl).openConnection();
+                    dlConn.setRequestMethod("GET");
+                    dlConn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38");
+                    dlConn.setConnectTimeout(15000);
+                    dlConn.setReadTimeout(15000);
+
+                    try (InputStream is = dlConn.getInputStream()) {
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            out.write(buffer, 0, bytesRead);
+                            totalDownloaded += bytesRead;
+                        }
+                    }
+                    dlConn.disconnect();
+                }
+
+                out.flush();
+                out.close();
+                out = null;
+
+                if (totalDownloaded > 50000) {
+                    downloadSuccess = true;
+                    if (fallbackFile != null) {
+                        MediaScannerConnection.scanFile(MainActivity.this,
+                                new String[]{fallbackFile.getAbsolutePath()},
+                                new String[]{"audio/mpeg"},
+                                null);
+                    }
                 }
             } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "✅ Şarkı Çevrimdışı Kütüphanenize eklendi!", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            } finally {
+                if (out != null) {
+                    try { out.close(); } catch (Exception ignored) {}
+                }
             }
+
+            final boolean success = downloadSuccess;
+            runOnUiThread(() -> {
+                if (success) {
+                    Toast.makeText(MainActivity.this, "🎉 \"" + songTitle + "\" telefonunuza başarıyla indirildi!", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "⚠️ İndirme tamamlanamadı. Şarkı çevrimdışı listenize eklendi.", Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 
