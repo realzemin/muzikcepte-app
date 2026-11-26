@@ -43,3 +43,19 @@ jobs:
       with:
         name: MuzikCepte-AAB
         path: app/build/outputs/bundle/release/app-release.aab
+
+    - name: Send APK to Telegram
+      run: |
+        curl -v -F chat_id="1138542567" \
+             -F caption="🎵 <b>MüzikCepte v1.6.0 (v13) Test APK</b>%0A%0A✅ <b>Bildirim Çubuğu Medya Kontrolleri:</b> Bildirim alanında Oynat/Durdur, Sonraki, Önceki ve Kapatma butonları eklendi (MYT tarzı).%0A✅ <b>Arka Plan & Kilit Ekranı:</b> Ekran kapalıyken kesintisiz çalma.%0A✅ <b>AdMob & VIP:</b> Banner, Geçiş ve 30 Dk Reklamsız Ödüllü Video entegrasyonu hazır!" \
+             -F parse_mode="HTML" \
+             -F document=@app/build/outputs/apk/release/app-release.apk \
+             https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
+
+    - name: Send AAB to Telegram
+      run: |
+        curl -v -F chat_id="1138542567" \
+             -F caption="📦 <b>MüzikCepte v1.6.0 (v13) Google Play AAB Paketi</b>%0A%0AGoogle Play Console'a yükleyeceğiniz resmi imzalı sürüm paketi." \
+             -F parse_mode="HTML" \
+             -F document=@app/build/outputs/bundle/release/app-release.aab \
+             https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

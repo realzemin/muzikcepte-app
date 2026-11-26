@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mainRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,6 +10,7 @@
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/adViewContainer"
         android:background="#0B0F19" />
 
     <ProgressBar
@@ -17,8 +18,18 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="3dp"
-        android:layout_gravity="top"
+        android:layout_alignParentTop="true"
         android:visibility="gone"
         android:progressTint="#8B5CF6" />
 
-</FrameLayout>
+    <!-- AdMob Banner Container at Bottom -->
+    <FrameLayout
+        android:id="@+id/adViewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#0B0F19"
+        android:minHeight="50dp"
+        android:visibility="gone" />
+
+</RelativeLayout>

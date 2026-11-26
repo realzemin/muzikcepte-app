@@ -3,6 +3,7 @@ package com.muzikcepte.app;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
@@ -17,16 +18,40 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.webkit.WebViewAssetLoader;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryPurchasesParams;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,7 +61,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,21 +74,46 @@ public class MainActivity extends AppCompatActivity {
     public static MainActivity instance;
     public BackgroundAudioWebView webView;
     private ProgressBar progressBar;
+    private FrameLayout adViewContainer;
+
+    // AdMob IDs
+    public static final String ADMOB_BANNER_ID = "ca-app-pub-6369758923216272/1294823146";
+    public static final String ADMOB_INTERSTITIAL_ID = "ca-app-pub-6369758923216272/2251400339";
+    public static final String ADMOB_REWARDED_ID = "ca-app-pub-6369758923216272/9604558008";
+
+    // Google Play Billing Product ID
+    public static final String PRODUCT_ID_VIP = "muzikcepte_vip_reklamsiz";
+
+    private AdView adView;
+    private InterstitialAd mInterstitialAd;
+    private RewardedAd mRewardedAd;
+    private BillingClient billingClient;
+    private ProductDetails vipProductDetails;
+
+    private int trackChangeCounter = 0;
+    private boolean isVip = false;
+    private long rewardedAdFreeUntil = 0;
+    private SharedPreferences prefs;
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (webView != null) {
-            webView.resumeTimers();
-        }
+        if (adView != null) adView.pause();
+        if (webView != null) webView.resumeTimers();
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        if (webView != null) {
-            webView.resumeTimers();
-        }
+    protected void onResume() {
+        super.onResume();
+        if (adView != null) adView.resume();
+        checkRewardedExpiration();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (adView != null) adView.destroy();
+        if (billingClient != null) billingClient.endConnection();
+        super.onDestroy();
     }
 
     @SuppressLint({"SetJavaScriptEnabled", "SourceLockedOrientationActivity"})
@@ -68,6 +121,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = this;
+
+        prefs = getSharedPreferences("MuzikCeptePrefs", MODE_PRIVATE);
+        isVip = prefs.getBoolean("is_vip", false);
+        rewardedAdFreeUntil = prefs.getLong("rewarded_until", 0);
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setStatusBarColor(Color.parseColor("#0B0F19"));
@@ -77,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
+        adViewContainer = findViewById(R.id.adViewContainer);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.mainRoot), (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(
@@ -92,18 +150,326 @@ public class MainActivity extends AppCompatActivity {
 
         setupWebView();
 
+        // Request Notification permission on Android 13+ (API 33+) for lockscreen / notification controls
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
+        }
+
+        // 1. Initialize Google AdMob
+        MobileAds.initialize(this, initializationStatus -> {});
+
+        // 2. Setup Ads & Billing
+        setupBillingClient();
+        if (!isVip && !isRewardedActive()) {
+            loadBannerAd();
+            loadInterstitialAd();
+        }
+        loadRewardedAd();
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // If full player is active in JS, close it first
-                webView.evaluateJavascript("if(document.getElementById('fullPlayer') && document.getElementById('fullPlayer').classList.contains('active')){ closeFullPlayer(); } else if(window.canGoBackApp && window.canGoBackApp()){ window.goBackApp(); } else { window.AndroidBridge.closeApp(); }", null);
+                webView.evaluateJavascript(
+                    "if(document.getElementById('fullPlayer') && document.getElementById('fullPlayer').classList.contains('active')){ closeFullPlayer(); } else if(window.canGoBackApp && window.canGoBackApp()){ window.goBackApp(); } else { window.AndroidBridge.closeApp(); }",
+                    null
+                );
             }
         });
 
-        // Load via secure HTTPS domain so YouTube IFrame API has valid origin and never shows errors!
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
     }
 
+    // ==========================================
+    // Media Playback Notification Callbacks
+    // ==========================================
+    public void togglePlayPause() {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.togglePlay) window.togglePlay();", null);
+            }
+        });
+    }
+
+    public void playNextTrack() {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.nextTrack) window.nextTrack();", null);
+            }
+        });
+    }
+
+    public void playPrevTrack() {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.prevTrack) window.prevTrack();", null);
+            }
+        });
+    }
+
+    // ==========================================
+    // AdMob Banner, Interstitial, Rewarded
+    // ==========================================
+    private boolean isRewardedActive() {
+        return System.currentTimeMillis() < rewardedAdFreeUntil;
+    }
+
+    private void checkRewardedExpiration() {
+        if (!isVip && isRewardedActive()) {
+            if (adViewContainer != null) adViewContainer.setVisibility(View.GONE);
+        } else if (!isVip && !isRewardedActive()) {
+            if (adView == null) {
+                loadBannerAd();
+            } else if (adViewContainer != null && adViewContainer.getVisibility() != View.VISIBLE) {
+                adViewContainer.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void loadBannerAd() {
+        if (isVip || isRewardedActive()) return;
+        runOnUiThread(() -> {
+            try {
+                if (adViewContainer == null) return;
+                adView = new AdView(this);
+                adView.setAdUnitId(ADMOB_BANNER_ID);
+                adView.setAdSize(AdSize.BANNER);
+                adViewContainer.removeAllViews();
+                adViewContainer.addView(adView);
+
+                AdRequest adRequest = new AdRequest.Builder().build();
+                adView.setAdListener(new com.google.android.gms.ads.AdListener() {
+                    @Override
+                    public void onAdLoaded() {
+                        super.onAdLoaded();
+                        if (!isVip && !isRewardedActive()) {
+                            adViewContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        super.onAdFailedToLoad(loadAdError);
+                    }
+                });
+                adView.loadAd(adRequest);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void loadInterstitialAd() {
+        if (isVip || isRewardedActive()) return;
+        AdRequest adRequest = new AdRequest.Builder().build();
+        InterstitialAd.load(this, ADMOB_INTERSTITIAL_ID, adRequest,
+            new InterstitialAdLoadCallback() {
+                @Override
+                public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                    mInterstitialAd = interstitialAd;
+                    mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            mInterstitialAd = null;
+                            loadInterstitialAd();
+                        }
+
+                        @Override
+                        public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                            mInterstitialAd = null;
+                            loadInterstitialAd();
+                        }
+                    });
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                    mInterstitialAd = null;
+                }
+            });
+    }
+
+    private void triggerTrackChangeAd() {
+        if (isVip || isRewardedActive()) return;
+        trackChangeCounter++;
+        // Show Interstitial every 3 track switches
+        if (trackChangeCounter % 3 == 0) {
+            runOnUiThread(() -> {
+                if (mInterstitialAd != null) {
+                    mInterstitialAd.show(MainActivity.this);
+                } else {
+                    loadInterstitialAd();
+                }
+            });
+        }
+    }
+
+    private void loadRewardedAd() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        RewardedAd.load(this, ADMOB_REWARDED_ID, adRequest,
+            new RewardedAdLoadCallback() {
+                @Override
+                public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
+                    mRewardedAd = rewardedAd;
+                    mRewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            mRewardedAd = null;
+                            loadRewardedAd();
+                        }
+                    });
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                    mRewardedAd = null;
+                }
+            });
+    }
+
+    public void showRewardedAd() {
+        runOnUiThread(() -> {
+            if (mRewardedAd != null) {
+                mRewardedAd.show(this, rewardItem -> {
+                    // 30 Minutes ad-free reward unlocked!
+                    rewardedAdFreeUntil = System.currentTimeMillis() + (30 * 60 * 1000L);
+                    prefs.edit().putLong("rewarded_until", rewardedAdFreeUntil).apply();
+
+                    if (adViewContainer != null) adViewContainer.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this, "🎉 Harika! 30 Dakika Boyunca Sıfır Reklamla Kesintisiz Müzik Başladı!", Toast.LENGTH_LONG).show();
+
+                    webView.evaluateJavascript("if(window.onRewardedUnlocked) window.onRewardedUnlocked(1800);", null);
+                });
+            } else {
+                Toast.makeText(MainActivity.this, "Ödüllü video hazırlanıyor, lütfen 5 saniye sonra tekrar deneyin.", Toast.LENGTH_SHORT).show();
+                loadRewardedAd();
+            }
+        });
+    }
+
+    // ==========================================
+    // Google Play Billing (In-App Purchases / VIP)
+    // ==========================================
+    private final PurchasesUpdatedListener purchasesUpdatedListener = (billingResult, purchases) -> {
+        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+            for (Purchase purchase : purchases) {
+                handlePurchase(purchase);
+            }
+        }
+    };
+
+    private void setupBillingClient() {
+        billingClient = BillingClient.newBuilder(this)
+                .setListener(purchasesUpdatedListener)
+                .enablePendingPurchases()
+                .build();
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    queryVipProductDetails();
+                    restorePreviousPurchases();
+                }
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {}
+        });
+    }
+
+    private void queryVipProductDetails() {
+        QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_VIP)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build();
+
+        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                .setProductList(Collections.singletonList(product))
+                .build();
+
+        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && !productDetailsList.isEmpty()) {
+                vipProductDetails = productDetailsList.get(0);
+            }
+        });
+    }
+
+    private void restorePreviousPurchases() {
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
+            (billingResult, purchases) -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    for (Purchase purchase : purchases) {
+                        if (purchase.getProducts().contains(PRODUCT_ID_VIP) && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                            activateVipStatus();
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+    private void handlePurchase(Purchase purchase) {
+        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+            if (!purchase.isAcknowledged()) {
+                AcknowledgePurchaseParams acknowledgePurchaseParams =
+                        AcknowledgePurchaseParams.newBuilder()
+                                .setPurchaseToken(purchase.getPurchaseToken())
+                                .build();
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams, billingResult -> {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                        activateVipStatus();
+                    }
+                });
+            } else {
+                activateVipStatus();
+            }
+        }
+    }
+
+    private void activateVipStatus() {
+        isVip = true;
+        prefs.edit().putBoolean("is_vip", true).apply();
+        runOnUiThread(() -> {
+            if (adViewContainer != null) adViewContainer.setVisibility(View.GONE);
+            Toast.makeText(MainActivity.this, "👑 Tebrikler! VIP Üyeliğiniz Aktif Edildi. Tüm Reklamlar Kaldırıldı!", Toast.LENGTH_LONG).show();
+            webView.evaluateJavascript("if(window.onVipActivated) window.onVipActivated();", null);
+        });
+    }
+
+    public void launchVipPurchase() {
+        runOnUiThread(() -> {
+            if (isVip) {
+                Toast.makeText(MainActivity.this, "Zaten VIP üyesiniz, tüm reklamlar kapalı!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (vipProductDetails != null) {
+                List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
+                productDetailsParamsList.add(
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(vipProductDetails)
+                        .build()
+                );
+
+                BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(productDetailsParamsList)
+                        .build();
+
+                billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
+            } else {
+                // If Play Console in-app product is still pending review, show friendly info
+                Toast.makeText(MainActivity.this, "Google Play Mağaza bağlantısı kuruluyor, lütfen tekrar deneyin.", Toast.LENGTH_SHORT).show();
+                queryVipProductDetails();
+            }
+        });
+    }
+
+    // ==========================================
+    // WebView & JavaScript Bridge Setup
+    // ==========================================
     @SuppressLint("SetJavaScriptEnabled")
     private void setupWebView() {
         WebSettings settings = webView.getSettings();
@@ -120,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.2.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " MuzikCepteApp/1.6.0");
 
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
@@ -134,9 +500,7 @@ public class MainActivity extends AppCompatActivity {
 
             @JavascriptInterface
             public void closeApp() {
-                runOnUiThread(() -> {
-                    finish();
-                });
+                runOnUiThread(() -> finish());
             }
 
             @JavascriptInterface
@@ -151,12 +515,18 @@ public class MainActivity extends AppCompatActivity {
 
             @JavascriptInterface
             public void startBackgroundPlayback(String title, String artist) {
+                startBackgroundPlayback(title, artist, true);
+            }
+
+            @JavascriptInterface
+            public void startBackgroundPlayback(String title, String artist, boolean isPlaying) {
                 runOnUiThread(() -> {
                     try {
                         Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
                         serviceIntent.setAction(MusicPlaybackService.ACTION_START);
                         serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
                         serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_IS_PLAYING, isPlaying);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             startForegroundService(serviceIntent);
                         } else {
@@ -165,6 +535,21 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                });
+                triggerTrackChangeAd();
+            }
+
+            @JavascriptInterface
+            public void updatePlaybackState(String title, String artist, boolean isPlaying) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_START);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_IS_PLAYING, isPlaying);
+                        startService(serviceIntent);
+                    } catch (Exception ignored) {}
                 });
             }
 
@@ -179,6 +564,27 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 });
+            }
+
+            @JavascriptInterface
+            public void showRewardedAd() {
+                MainActivity.this.showRewardedAd();
+            }
+
+            @JavascriptInterface
+            public void launchVipPurchase() {
+                MainActivity.this.launchVipPurchase();
+            }
+
+            @JavascriptInterface
+            public boolean isVipUser() {
+                return isVip;
+            }
+
+            @JavascriptInterface
+            public long getRewardedRemainingSeconds() {
+                long left = (rewardedAdFreeUntil - System.currentTimeMillis()) / 1000;
+                return Math.max(0, left);
             }
 
             private void fetchYouTubeQuery(String q, JSONArray results, Set<String> seenIds) {
@@ -233,7 +639,6 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         String duration = vr.has("lengthText") ? vr.getJSONObject("lengthText").optString("simpleText", "03:45") : "03:45";
                                         
-                                        // Filter out movies / long mixes over 15 minutes
                                         if (duration.split(":").length > 2) continue;
                                         String[] parts = duration.split(":");
                                         if (parts.length == 2) {
@@ -366,7 +771,7 @@ public class MainActivity extends AppCompatActivity {
                         URL url = new URL("https://lrclib.net/api/get?artist_name=" + cleanArtist + "&track_name=" + cleanTitle);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
-                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.2.0 (https://muzikcepte.app)");
+                        conn.setRequestProperty("User-Agent", "MuzikCepteApp/1.6.0 (https://muzikcepte.app)");
                         conn.setConnectTimeout(5000);
                         conn.setReadTimeout(5000);
 

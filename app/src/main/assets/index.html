@@ -1094,7 +1094,8 @@
             <p style="font-size:13px; color:var(--text-sub); line-height:1.5; margin-bottom:20px;">
                 Reklamsız deneyim, sınırsız yüksek hızda indirme ve stüdyo kalitesinde ses desteği!
             </p>
-            <button class="action-button-main" style="width:100%; margin-bottom:10px;" onclick="buyVip()">Hemen Başla (Ömür Boyu)</button>
+            <button class="action-button-main" style="width:100%; margin-bottom:10px; background:linear-gradient(135deg, #10B981, #059669);" onclick="watchRewardedAd()">🎁 30 Dk Reklamsız Dinle (Video İzle)</button>
+            <button class="action-button-main" style="width:100%; margin-bottom:10px;" onclick="buyVip()">👑 Ömür Boyu Reklamsız VIP Ol</button>
             <button class="action-button-secondary" style="width:100%;" onclick="closeVipModal()">Kapat</button>
         </div>
     </div>
@@ -1184,7 +1185,7 @@
         }
 
         // Android Foreground Service Notification Dispatcher
-        function notifyAndroidBackground() {
+        function notifyAndroidBackground(isPlayingState = true) {
             let title = "Müzik Çalıyor";
             let artist = "MüzikCepte";
             if (isRadioMode && currentRadioIndex >= 0) {
@@ -1199,7 +1200,7 @@
 
             if (window.AndroidBridge) {
                 if (window.AndroidBridge.requestAudioFocus) window.AndroidBridge.requestAudioFocus();
-                if (window.AndroidBridge.startBackgroundPlayback) window.AndroidBridge.startBackgroundPlayback(title, artist);
+                if (window.AndroidBridge.startBackgroundPlayback) window.AndroidBridge.startBackgroundPlayback(title, artist, isPlayingState);
             }
         }
 
@@ -1356,15 +1357,16 @@
                     radioAudio.pause();
                     isPlaying = false;
                     isUserPaused = true;
-                    if (window.AndroidBridge && window.AndroidBridge.stopBackgroundPlayback) {
-                        window.AndroidBridge.stopBackgroundPlayback();
+                    if (window.AndroidBridge && window.AndroidBridge.updatePlaybackState) {
+                        const r = RADIOS[currentRadioIndex] || { name: "Canlı Radyo", genre: "Müzik" };
+                        window.AndroidBridge.updatePlaybackState(r.name, "🔴 Canlı Radyo", false);
                     }
                 } else {
                     radioAudio.play().then(() => {
                         isPlaying = true;
                         isUserPaused = false;
-                        notifyAndroidBackground();
-                    });
+                        notifyAndroidBackground(true);
+                    }).catch(e => console.error(e));
                 }
             } else {
                 if (!ytPlayer || !ytReady) return;
@@ -1372,14 +1374,15 @@
                     isUserPaused = true;
                     ytPlayer.pauseVideo();
                     isPlaying = false;
-                    if (window.AndroidBridge && window.AndroidBridge.stopBackgroundPlayback) {
-                        window.AndroidBridge.stopBackgroundPlayback();
+                    if (window.AndroidBridge && window.AndroidBridge.updatePlaybackState) {
+                        const t = CURRENT_PLAYLIST[currentIndex] || { title: "Müzik", artist: "MüzikCepte" };
+                        window.AndroidBridge.updatePlaybackState(t.title, t.artist, false);
                     }
                 } else {
                     isUserPaused = false;
                     ytPlayer.playVideo();
                     isPlaying = true;
-                    notifyAndroidBackground();
+                    notifyAndroidBackground(true);
                 }
             }
             updatePlayButtons();
@@ -1681,9 +1684,31 @@
         function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
         function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
         function buyVip() {
-            alert('🎉 Tebrikler! MüzikCepte VIP aktif edildi.');
+            if (window.AndroidBridge && window.AndroidBridge.launchVipPurchase) {
+                window.AndroidBridge.launchVipPurchase();
+            } else {
+                alert('👑 VIP üyelik için Google Play Store bağlantısı başlatılıyor...');
+            }
             closeVipModal();
         }
+
+        function watchRewardedAd() {
+            if (window.AndroidBridge && window.AndroidBridge.showRewardedAd) {
+                window.AndroidBridge.showRewardedAd();
+            } else {
+                alert('Ödüllü video hazırlanıyor, lütfen birkaç saniye sonra tekrar deneyin.');
+            }
+            closeVipModal();
+        }
+
+        // Global exports for Android Notification controls & Bridge
+        window.togglePlay = togglePlay;
+        window.nextTrack = nextTrack;
+        window.prevTrack = prevTrack;
+        window.playTrack = playTrack;
+        window.playRadio = playRadio;
+        window.buyVip = buyVip;
+        window.watchRewardedAd = watchRewardedAd;
 
         // Initial Renders
         renderTracks(CURRENT_PLAYLIST);
