@@ -200,6 +200,14 @@ public class MainActivity extends AppCompatActivity {
     // ==========================================
     // Media Playback Notification Callbacks
     // ==========================================
+        public void stopAudioEngine() {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.stopAudio) window.stopAudio();", null);
+            }
+        });
+    }
+
     public void togglePlayPause() {
         runOnUiThread(() -> {
             if (webView != null) {

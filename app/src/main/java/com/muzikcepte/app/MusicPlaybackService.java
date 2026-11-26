@@ -426,7 +426,8 @@ public class MusicPlaybackService extends Service {
                 .setContentText(currentArtist)
                 .setSubText(isRadioMode ? "Canlı Radyo" : "MüzikCepte")
                 .setContentIntent(pendingIntent)
-                .setOngoing(isPlaying)
+                .setDeleteIntent(stopPending)
+                .setOngoing(false)
                 .setSilent(true)
                 .setShowWhen(false)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -461,6 +462,7 @@ public class MusicPlaybackService extends Service {
     }
 
     private void stopPlayback() {
+        isPlaying = false;
         stopNativeRadio();
         if (wakeLock != null && wakeLock.isHeld()) {
             try {
@@ -475,7 +477,23 @@ public class MusicPlaybackService extends Service {
         if (mediaSession != null) {
             mediaSession.setActive(false);
         }
-        stopForeground(true);
+        if (MainActivity.instance != null) {
+            MainActivity.instance.stopAudioEngine();
+        }
+        try {
+            stopForeground(true);
+            android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.cancel(NOTIFICATION_ID);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopPlayback();
+        stopSelf();
     }
 
     @Override

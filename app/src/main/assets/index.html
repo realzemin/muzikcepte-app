@@ -1834,6 +1834,19 @@
 
         // Global exports for Android Notification controls & Bridge
         window.togglePlay = togglePlay;
+        window.stopAudio = function() {
+            if (ytPlayer && ytReady && ytPlayer.pauseVideo) {
+                try { ytPlayer.pauseVideo(); } catch(e){}
+            }
+            if (radioAudio) {
+                try { radioAudio.pause(); } catch(e){}
+            }
+            isPlaying = false;
+            isUserPaused = true;
+            updatePlayButtons();
+            notifyAndroidBackground(false);
+        };
+
         window.nextTrack = nextTrack;
         window.prevTrack = prevTrack;
         window.playTrack = playTrack;
