@@ -42,6 +42,18 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryPurchasesParams;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -76,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     private AdView adView;
     private InterstitialAd mInterstitialAd;
     private RewardedAd mRewardedAd;
+    private BillingClient billingClient;
+    private ProductDetails vipProductDetails;
 
     private int trackChangeCounter = 0;
     private long lastInterstitialShowTime = System.currentTimeMillis();
@@ -106,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (adView != null) adView.destroy();
+        if (billingClient != null) {
+            try { billingClient.endConnection(); } catch (Exception ignored) {}
+        }
         super.onDestroy();
     }
 
@@ -153,7 +170,8 @@ public class MainActivity extends AppCompatActivity {
         // 1. Initialize Google AdMob
         MobileAds.initialize(this, initializationStatus -> {});
 
-        // 2. Setup Ads
+        // 2. Setup Ads & Billing
+        setupBillingClient();
         if (!isVip && !isRewardedActive()) {
             loadBannerAd();
             loadInterstitialAd();
@@ -361,9 +379,121 @@ public class MainActivity extends AppCompatActivity {
     // ==========================================
     // Google Play Billing (In-App Purchases / VIP)
     // ==========================================
+    private final PurchasesUpdatedListener purchasesUpdatedListener = (billingResult, purchases) -> {
+        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+            for (Purchase purchase : purchases) {
+                handlePurchase(purchase);
+            }
+        }
+    };
+
+    private void setupBillingClient() {
+        PendingPurchasesParams pendingPurchasesParams = PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build();
+        billingClient = BillingClient.newBuilder(this)
+                .setListener(purchasesUpdatedListener)
+                .enablePendingPurchases(pendingPurchasesParams)
+                .build();
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    queryVipProductDetails();
+                    restorePreviousPurchases();
+                }
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {}
+        });
+    }
+
+    private void queryVipProductDetails() {
+        QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(PRODUCT_ID_VIP)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build();
+
+        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                .setProductList(Collections.singletonList(product))
+                .build();
+
+        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && !productDetailsList.isEmpty()) {
+                vipProductDetails = productDetailsList.get(0);
+            }
+        });
+    }
+
+    private void restorePreviousPurchases() {
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
+            (billingResult, purchases) -> {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    for (Purchase purchase : purchases) {
+                        if (purchase.getProducts().contains(PRODUCT_ID_VIP) && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                            activateVipStatus();
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+    private void handlePurchase(Purchase purchase) {
+        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+            if (!purchase.isAcknowledged()) {
+                AcknowledgePurchaseParams acknowledgePurchaseParams =
+                        AcknowledgePurchaseParams.newBuilder()
+                                .setPurchaseToken(purchase.getPurchaseToken())
+                                .build();
+                billingClient.acknowledgePurchase(acknowledgePurchaseParams, billingResult -> {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                        activateVipStatus();
+                    }
+                });
+            } else {
+                activateVipStatus();
+            }
+        }
+    }
+
+    private void activateVipStatus() {
+        isVip = true;
+        prefs.edit().putBoolean("is_vip", true).apply();
+        runOnUiThread(() -> {
+            if (adViewContainer != null) adViewContainer.setVisibility(View.GONE);
+            Toast.makeText(MainActivity.this, "👑 Tebrikler! VIP Üyeliğiniz Aktif Edildi. Tüm Reklamlar Kaldırıldı!", Toast.LENGTH_LONG).show();
+            webView.evaluateJavascript("if(window.onVipActivated) window.onVipActivated();", null);
+        });
+    }
+
     public void launchVipPurchase() {
         runOnUiThread(() -> {
-            Toast.makeText(MainActivity.this, "👑 VIP Üyelik çok yakında mağazada! Şu anda '30 Dk Reklamsız' video izleyerek reklamsız dinleyebilirsiniz.", Toast.LENGTH_LONG).show();
+            if (isVip) {
+                Toast.makeText(MainActivity.this, "Zaten VIP üyesiniz, tüm reklamlar kapalı!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (vipProductDetails != null) {
+                List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList = new ArrayList<>();
+                productDetailsParamsList.add(
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(vipProductDetails)
+                        .build()
+                );
+
+                BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(productDetailsParamsList)
+                        .build();
+
+                billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
+            } else {
+                Toast.makeText(MainActivity.this, "Google Play Mağaza bağlantısı kuruluyor, lütfen tekrar deneyin.", Toast.LENGTH_SHORT).show();
+                queryVipProductDetails();
+            }
         });
     }
 
