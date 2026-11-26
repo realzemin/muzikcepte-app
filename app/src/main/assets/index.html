@@ -848,13 +848,12 @@
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 200px;
-            height: 200px;
-            opacity: 0.001;
+            width: 320px;
+            height: 180px;
+            opacity: 0.01;
             pointer-events: none;
-            z-index: -99999;
+            z-index: 0;
             overflow: hidden;
-            clip-path: inset(50%);
         }
     
         .download-badge-btn {
@@ -1235,7 +1234,7 @@
             {"name": "Power Pop", "url": "https://listen.powerapp.com.tr/powerpop/mpeg/icecast.audio", "genre": "Pop Hit", "logo": "https://images.powerapp.com.tr/powerapp/stations/powerpop.png"},
             {"name": "Power Love", "url": "https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio", "genre": "Romantik Slow", "logo": "https://images.powerapp.com.tr/powerapp/stations/powerlove.png"},
             {"name": "Pal FM", "url": "http://shoutcast.radyogrup.com:1020/;", "genre": "Türkçe Pop", "logo": "https://cdn-radiotime-logos.b-cdn.net/s106198q.png"},
-            {"name": "Pal Nostalji", "url": "http://shoutcast.radyogrup.com:2020/;", "genre": "Türkçe 80ler 90lar", "logo": "https://cdn-radiotime-logos.b-cdn.net/s276632q.png"},
+            {"name": "Pal Nostalji", "url": "http://shoutcast.radyogrup.com:1010/;", "genre": "Türkçe 80ler 90lar", "logo": "https://cdn-radiotime-logos.b-cdn.net/s276632q.png"},
             {"name": "90'lar Pop", "url": "http://37.247.98.8/stream/166/", "genre": "90'lar Nostalji", "logo": "https://cdn-radiotime-logos.b-cdn.net/s305608q.png"},
             {"name": "Türkülerle Türkiye", "url": "http://37.247.98.8/stream/22/;", "genre": "Türkü & Özgün", "logo": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150"},
             {"name": "Altın Şarkılar", "url": "http://37.247.98.8/stream/25/;", "genre": "Klasik Nostalji", "logo": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150"},
@@ -1307,13 +1306,7 @@
                     isPlaying = false;
                     updatePlayButtons();
                     stopProgress();
-                } else {
-                    // Unintended background throttling or buffering pause -> auto-resume!
-                    setTimeout(() => {
-                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
-                            try { ytPlayer.playVideo(); } catch(e){}
-                        }
-                    }, 250);
+                    notifyAndroidBackground(false);
                 }
             } else if (event.data === YT.PlayerState.ENDED) {
                 nextTrack();
@@ -1415,13 +1408,24 @@
             isPlaying = true;
             isUserPaused = false;
 
-            // Stream live radio via Native Android MediaPlayer (Zero stutter!)
-            if (window.AndroidBridge && window.AndroidBridge.playNativeRadio) {
-                window.AndroidBridge.playNativeRadio(r.url, r.name, r.genre, r.logo);
-            } else {
+            // Stream live radio via high-performance HTML5 Audio (Supports AAC+, MP3, Icecast & Shoutcast)
+            try {
+                radioAudio.pause();
                 radioAudio.src = r.url;
-                radioAudio.play().catch(e => console.log(e));
+                radioAudio.load();
+                const p = radioAudio.play();
+                if (p !== undefined) {
+                    p.catch(err => {
+                        console.warn("HTML5 audio fallback to AndroidBridge:", err);
+                        if (window.AndroidBridge && window.AndroidBridge.playNativeRadio) {
+                            window.AndroidBridge.playNativeRadio(r.url, r.name, r.genre, r.logo);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Radio play error:", err);
             }
+            notifyAndroidBackground(true);
 
             // Update UI elements for Radio
             document.getElementById('miniTitle').innerText = r.name;

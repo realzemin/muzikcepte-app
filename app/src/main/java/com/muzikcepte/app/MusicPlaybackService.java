@@ -277,9 +277,7 @@ public class MusicPlaybackService extends Service {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build());
-            java.util.Map<String, String> headers = new java.util.HashMap<>();
-            headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36");
-            nativeRadioPlayer.setDataSource(this, android.net.Uri.parse(url), headers);
+            nativeRadioPlayer.setDataSource(url);
             nativeRadioPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
             nativeRadioPlayer.setOnPreparedListener(mp -> {
                 mp.start();
