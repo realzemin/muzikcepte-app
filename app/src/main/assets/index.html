@@ -1751,7 +1751,23 @@
             renderRadios();
         };
 
+                // Tatlı bir rahatsızlık: Uygulamaya ilk gelip tıklama yaptığında geçiş reklamı ve VIP/Ödüllü uyarısı
+        let firstClickSent = false;
+        function reportFirstUserClick() {
+            if (firstClickSent) return;
+            firstClickSent = true;
+            if (window.AndroidBridge && window.AndroidBridge.onFirstClick) {
+                window.AndroidBridge.onFirstClick();
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.closest && e.target.closest('#vipModal')) return;
+            reportFirstUserClick();
+        }, { passive: true, once: true });
+
         window.showAdFreeNudge = function() {
+
             openVipModal();
         };
 

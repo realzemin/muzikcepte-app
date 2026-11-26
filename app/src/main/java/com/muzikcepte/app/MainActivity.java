@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private ProductDetails vipProductDetails;
 
     private int trackChangeCounter = 0;
+    private boolean isFirstInteractionDone = false;
     private long lastInterstitialShowTime = System.currentTimeMillis();
     private boolean isVip = false;
     private long rewardedAdFreeUntil = 0;
@@ -322,10 +323,31 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
+    private void handleFirstClickAd() {
+        if (isVip || isRewardedActive()) return;
+        if (!isFirstInteractionDone) {
+            isFirstInteractionDone = true;
+            runOnUiThread(() -> {
+                if (mInterstitialAd != null) {
+                    mInterstitialAd.show(MainActivity.this);
+                } else {
+                    loadInterstitialAd();
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.showAdFreeNudge) window.showAdFreeNudge();", null);
+                    }
+                }
+            });
+        }
+    }
+
     private void triggerTrackChangeAd() {
         if (isVip || isRewardedActive()) return;
+        if (!isFirstInteractionDone) {
+            handleFirstClickAd();
+            return;
+        }
         trackChangeCounter++;
-        // Her 3 şarkı değişiminde 1 geçiş reklamı göster
+        // Tatlı bir rahatsızlık: İlk tıklamadan sonra her 3 şarkıda bir geçiş reklamı
         if (trackChangeCounter >= 3) {
             trackChangeCounter = 0;
             runOnUiThread(() -> {
@@ -536,6 +558,11 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         webView.addJavascriptInterface(new Object() {
+
+            @JavascriptInterface
+            public void onFirstClick() {
+                handleFirstClickAd();
+            }
 
             @JavascriptInterface
             public void onTrackChanged() {
