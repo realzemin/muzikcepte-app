@@ -643,7 +643,7 @@ public class MainActivity extends AppCompatActivity {
 
             @JavascriptInterface
             public void buyVipPlan(String plan) {
-                launchVipPurchase(plan);
+                MainActivity.this.launchVipPurchase(plan);
             }
 
             @JavascriptInterface
