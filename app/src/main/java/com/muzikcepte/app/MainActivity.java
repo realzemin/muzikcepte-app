@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                     request.setTitle("🎵 " + cleanTitle);
                     request.setDescription("MüzikCepte ile telefona indiriliyor...");
                     request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".mp3");
+                    request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".mp3");
                     request.setMimeType("audio/mpeg");
                     dm.enqueue(request);
 
