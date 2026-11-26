@@ -1092,13 +1092,13 @@
     <div class="vip-modal" id="vipModal">
         <div class="vip-card">
             <div style="font-size:36px; margin-bottom:12px;">👑</div>
-            <h2 style="font-size:20px; font-weight:800; margin-bottom:8px;">MüzikCepte VIP</h2>
+            <h2 style="font-size:20px; font-weight:800; margin-bottom:8px;">Reklamlardan Sıkıldın mı?</h2>
             <p style="font-size:13px; color:var(--text-sub); line-height:1.5; margin-bottom:20px;">
-                Reklamsız deneyim, sınırsız yüksek hızda indirme ve stüdyo kalitesinde ses desteği!
+                1 kısa video izleyerek 30 dakika boyunca sıfır reklamla dinleyebilir veya tek seferlik VIP üye olarak reklamları sonsuza dek kapatabilirsin!
             </p>
-            <button class="action-button-main" style="width:100%; margin-bottom:10px; background:linear-gradient(135deg, #10B981, #059669);" onclick="watchRewardedAd()">🎁 30 Dk Reklamsız Dinle (Video İzle)</button>
-            <button class="action-button-main" style="width:100%; margin-bottom:10px;" onclick="buyVip()">👑 Ömür Boyu Reklamsız VIP Ol</button>
-            <button class="action-button-secondary" style="width:100%;" onclick="closeVipModal()">Kapat</button>
+            <button class="action-button-main" style="width:100%; margin-bottom:12px; background:linear-gradient(135deg, #10B981, #059669); font-size:14px; padding:14px;" onclick="watchRewardedAd()">🎁 1 Video İzle (30 Dk Reklamsız)</button>
+            <button class="action-button-main" style="width:100%; margin-bottom:12px; font-size:14px; padding:14px;" onclick="buyVip()">👑 Ömür Boyu Reklamsız VIP Ol</button>
+            <button class="action-button-secondary" style="width:100%; padding:12px;" onclick="closeVipModal()">Şimdilik Devam Et</button>
         </div>
     </div>
 
@@ -1749,6 +1749,10 @@
             isPlaying = playingState;
             updatePlayButtons();
             renderRadios();
+        };
+
+        window.showAdFreeNudge = function() {
+            openVipModal();
         };
 
         // Global exports for Android Notification controls & Bridge

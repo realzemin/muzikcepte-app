@@ -300,6 +300,11 @@ public class MainActivity extends AppCompatActivity {
                         public void onAdDismissedFullScreenContent() {
                             mInterstitialAd = null;
                             loadInterstitialAd();
+                            runOnUiThread(() -> {
+                                if (webView != null) {
+                                    webView.evaluateJavascript("if(window.showAdFreeNudge) window.showAdFreeNudge();", null);
+                                }
+                            });
                         }
 
                         @Override

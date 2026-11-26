@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.6.7 (v20) - Target SDK 36 & Kesintisiz Arka Plan</b>%0A%0A✅ <b>GOOGLE PLAY HATALARI BİTTİ:</b> API 36 hedefi yapıldı ve gereksiz Billing kütüphanesi kaldırılarak mağaza hatası sıfırlandı!%0A⚡ <b>SIFIR TAKILMA MOTORU:</b> Yüksek performanslı WifiLock + Partial WakeLock eklendi; ekran kapandığında ve başka uygulamaya geçildiğinde müzik sıfır takılmayla akmaya devam eder.%0A📻 <b>CANLI RADYOLAR:</b> Tamamı aktif ve stabil.%0A🎬 <b>VİDEO SIZINTISI YOK:</b> Görünmez audio motoru.%0A🎯 <b>GEÇİŞ REKLAMI:</b> Her 3 şarkı değişiminde 1 tam ekran reklam." \
+             -F caption="🎵 <b>MüzikCepte v1.6.8 (v21) - Akıllı Reklam & VIP Satış Yönlendirmesi</b>%0A%0A🎯 <b>AKILLI VIP & ÖDÜLLÜ REKLAM NUDGE:</b> Her 3 şarkıda bir geçiş reklamı çıktığında, reklam kapanır kapanmaz ekrana '1 Video İzle (30 Dk Reklamsız) veya VIP Ol' teklifi gelir.%0A👑 <b>GOOGLE PLAY BILLING 8.2.1:</b> En son resmi faturalandırma motoru aktif.%0A⚡ <b>SIFIR TAKILMA MOTORU:</b> WifiLock + Partial WakeLock devrede." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.6.7 (v20) Google Play AAB Paketi</b>%0A%0AGoogle Play Console API 36 onaylı ve faturalandırma hatasından arındırılmış resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.6.8 (v21) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
