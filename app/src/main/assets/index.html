@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MüzikCepte - Müzik Dinle ve İndir</title>
+    <title>MüzikCepte - Müzik Dinle, İndir & Canlı Radyo</title>
     <style>
         :root {
             --bg-base: #0B0F19;
@@ -339,6 +339,108 @@
             font-size: 13px;
         }
 
+        /* Radio Card */
+        .radio-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .radio-card:active {
+            background: var(--bg-card-hover);
+            transform: scale(0.985);
+        }
+        .radio-card.playing {
+            border-color: #EC4899;
+            background: rgba(236, 72, 153, 0.15);
+        }
+
+        .radio-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .radio-logo-wrap {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1E273E;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .radio-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .radio-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .radio-name {
+            font-size: 14.5px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .radio-tags {
+            font-size: 11.5px;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-pulse {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #EF4444;
+            box-shadow: 0 0 8px #EF4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .radio-play-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFF;
+            font-size: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+        }
+
         /* Search Box */
         .search-box-wrap {
             display: flex;
@@ -400,10 +502,10 @@
         /* Sticky Mini Player */
         .mini-player {
             position: fixed;
-            bottom: 72px;
+            bottom: 68px;
             left: 12px;
             right: 12px;
-            background: rgba(22, 29, 47, 0.95);
+            background: rgba(22, 29, 47, 0.96);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
@@ -455,7 +557,7 @@
         }
 
         .mini-artist {
-            font-size: 11px;
+            font-size: 11.5px;
             color: var(--accent-purple);
             white-space: nowrap;
             overflow: hidden;
@@ -512,16 +614,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 11px;
+            gap: 3px;
+            font-size: 10.5px;
             font-weight: 600;
             cursor: pointer;
-            padding: 8px 16px;
+            padding: 6px 12px;
+            flex: 1;
         }
         .nav-item.active {
             color: #C084FC;
         }
-        .nav-icon { font-size: 20px; }
+        .nav-icon { font-size: 19px; }
 
         /* Full Screen Player Modal */
         .full-player-modal {
@@ -740,7 +843,7 @@
             padding: 15px 0;
         }
 
-        /* In-Viewport Background Audio Engine */
+        /* Background Audio Engines */
         #audioEngineContainer {
             position: fixed;
             bottom: 0;
@@ -754,6 +857,9 @@
     </style>
 </head>
 <body>
+
+    <!-- HTML5 Live Radio Audio Element -->
+    <audio id="liveRadioPlayer" preload="none"></audio>
 
     <!-- Top Header -->
     <header class="app-header">
@@ -795,7 +901,7 @@
 
             <div class="section-header">
                 <span class="section-title" id="sectionHeaderTitle">Popüler Şarkılar</span>
-                <span class="section-sub" id="trackCountBadge">18 Şarkı</span>
+                <span class="section-sub" id="trackCountBadge">Şarkılar</span>
             </div>
             <div id="track-list-container"></div>
         </section>
@@ -826,7 +932,24 @@
             </div>
         </section>
 
-        <!-- 3. TAB: KÜTÜPHANEM (LIBRARY) -->
+        <!-- 3. TAB: RADYOLAR (CANLI YAYINLAR) -->
+        <section id="tab-radios" class="tab-panel">
+            <div class="section-header" style="margin-bottom: 16px;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 800; display:flex; align-items:center; gap:8px;">
+                        <span>📻</span> Canlı Radyolar
+                    </h2>
+                    <span style="font-size: 12px; color: var(--text-sub);">Türkiye'nin en popüler canlı radyo kanalları</span>
+                </div>
+                <span class="logo-badge" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4);">
+                    <span class="live-pulse" style="margin-right:4px;"></span> CANLI
+                </span>
+            </div>
+
+            <div id="radios-container"></div>
+        </section>
+
+        <!-- 4. TAB: KÜTÜPHANEM (LIBRARY) -->
         <section id="tab-library" class="tab-panel">
             <div class="lib-grid">
                 <div class="lib-card" onclick="alert('Beğendiğiniz parçalar listelendi!')">
@@ -854,7 +977,11 @@
             <div id="offline-section" class="section-header">
                 <span class="section-title">💾 İndirilen & Çevrimdışı Müzikler</span>
             </div>
-            <div id="offline-tracks-container"></div>
+            <div id="offline-tracks-container">
+                <div style="text-align:center; padding:30px; color:var(--text-sub); font-size:13px;">
+                    İndirdiğiniz şarkılar telefonunuzun "İndirilenler" klasöründe otomatik saklanır.
+                </div>
+            </div>
         </section>
 
     </main>
@@ -862,21 +989,21 @@
     <!-- Sticky Mini Player (Tap expands full player) -->
     <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
         <div class="mini-left">
-            <img src="https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/300x300bb.jpg" id="miniThumb" class="mini-vinyl" alt="Art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
+            <img src="https://i.ytimg.com/vi/U66ixhdbxEI/hqdefault.jpg" id="miniThumb" class="mini-vinyl" alt="Art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
             <div class="mini-info">
                 <div class="mini-title" id="miniTitle">Yolla</div>
                 <div class="mini-artist" id="miniArtist">Tarkan</div>
             </div>
         </div>
         <div class="mini-controls" onclick="event.stopPropagation()">
-            <button class="mini-btn" onclick="prevTrack()">⏮</button>
+            <button class="mini-btn" id="miniPrevBtn" onclick="prevTrack()">⏮</button>
             <button class="mini-btn mini-play-btn" id="miniPlayBtn" onclick="togglePlay()">▶</button>
-            <button class="mini-btn" onclick="nextTrack()">⏭</button>
-            <button class="mini-btn" onclick="downloadCurrentSong()" style="color:#38BDF8;">⬇</button>
+            <button class="mini-btn" id="miniNextBtn" onclick="nextTrack()">⏭</button>
+            <button class="mini-btn" id="miniDownloadBtn" onclick="downloadCurrentSong()" style="color:#38BDF8;">⬇</button>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (4 TABS with Radyolar!) -->
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('tab-home', this)">
             <span class="nav-icon">🏠</span>
@@ -884,7 +1011,11 @@
         </button>
         <button class="nav-item" onclick="switchTab('tab-search', this)">
             <span class="nav-icon">🔍</span>
-            <span>Müzik Ara</span>
+            <span>Ara</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tab-radios', this)">
+            <span class="nav-icon">📻</span>
+            <span>Radyolar</span>
         </button>
         <button class="nav-item" onclick="switchTab('tab-library', this)">
             <span class="nav-icon">📚</span>
@@ -896,12 +1027,12 @@
     <div class="full-player-modal" id="fullPlayer">
         <div class="modal-top-bar">
             <button class="icon-btn" onclick="closeFullPlayer()">▼</button>
-            <span style="font-size:12px; font-weight:700; color:var(--text-sub); letter-spacing:1px;">MÜZİK OYNATILIYOR</span>
+            <span id="fullHeaderMode" style="font-size:12px; font-weight:700; color:var(--text-sub); letter-spacing:1px;">MÜZİK OYNATILIYOR</span>
             <button class="icon-btn" onclick="openLyrics()">🎤</button>
         </div>
 
         <div class="big-vinyl-wrap">
-            <img src="https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg" id="fullArt" class="big-vinyl" alt="Art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600'">
+            <img src="https://i.ytimg.com/vi/U66ixhdbxEI/hqdefault.jpg" id="fullArt" class="big-vinyl" alt="Art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600'">
         </div>
 
         <div class="modal-title-row">
@@ -912,7 +1043,7 @@
             <button class="icon-btn" id="likeBtn" onclick="toggleLike()">🤍</button>
         </div>
 
-        <div class="seekbar-container">
+        <div class="seekbar-container" id="seekbarContainer">
             <input type="range" class="seekbar" id="songSeeker" min="0" max="100" value="0" oninput="seekSong(this.value)">
             <div class="time-row">
                 <span id="currentTime">00:00</span>
@@ -920,16 +1051,22 @@
             </div>
         </div>
 
+        <!-- Live Radio Badge (shown when radio is playing instead of seekbar) -->
+        <div id="radioLiveBar" style="display:none; text-align:center; padding:12px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:12px; margin: 15px 0;">
+            <span class="live-pulse" style="margin-right:6px;"></span>
+            <span style="font-weight:700; color:#EF4444; font-size:13px; letter-spacing:1px;">CANLI RADYO YAYINI</span>
+        </div>
+
         <div class="modal-controls">
             <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Karışık">🔀</button>
-            <button class="ctrl-btn" onclick="prevTrack()">⏮</button>
+            <button class="ctrl-btn" onclick="prevTrack()" id="fullPrevBtn">⏮</button>
             <button class="ctrl-play-btn" id="fullPlayBtn" onclick="togglePlay()">▶</button>
-            <button class="ctrl-btn" onclick="nextTrack()">⏭</button>
+            <button class="ctrl-btn" onclick="nextTrack()" id="fullNextBtn">⏭</button>
             <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Tekrarla">🔁</button>
         </div>
 
-        <div class="modal-actions-row">
-            <button class="action-button-main" onclick="downloadCurrentSong()">
+        <div class="modal-actions-row" id="modalActionsRow">
+            <button class="action-button-main" id="modalDownloadBtn" onclick="downloadCurrentSong()">
                 <span>⬇ Telefona İndir</span>
             </button>
             <button class="action-button-secondary" onclick="saveCurrentOffline()">
@@ -962,7 +1099,7 @@
         </div>
     </div>
 
-    <!-- In-Viewport Audio Engine for Background Playback -->
+    <!-- Background YouTube Audio Engine -->
     <div id="audioEngineContainer">
         <div id="ytPlayerContainer"></div>
     </div>
@@ -971,7 +1108,7 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        // Override visibility to prevent YouTube audio from pausing on screen-off / app minimize
+        // Override visibility to keep playing audio in background / screen locked
         try {
             Object.defineProperty(document, 'hidden', { get: () => false });
             Object.defineProperty(document, 'visibilityState', { get: () => 'visible' });
@@ -979,101 +1116,17 @@
             document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
         } catch(e) {}
 
-        // Rich Curated Categories with 15+ verified full-length tracks each
-        const CATEGORIES = {
-            "all": [
-                { id: "eK_Uu5n0tJg", title: "Ateşe Düştüm", artist: "Mert Demir", duration: "03:41", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Mesafe", artist: "Semicenk", duration: "03:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Aşkın Olayım", artist: "Simge", duration: "04:12", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Kuzu Kuzu", artist: "Tarkan", duration: "03:54", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "5s7_SDC4cjw", title: "Düşer Aklıma", artist: "Semicenk", duration: "03:02", art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/0c/3a/4a0c3ae0-1e82-e3e8-5b43-7fdfa7b5d194/cover.jpg/600x600bb.jpg" },
-                { id: "dQw4w9WgXcQ", title: "Gülümse", artist: "Sezen Aksu", duration: "05:03", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c7/24/7e/c7247e92-36fb-8777-7489-08d179471f54/dj.wcvhshgq.jpg/600x600bb.jpg" },
-                { id: "8rL4P6h4N0A", title: "Okyanus", artist: "Derya Uluğ", duration: "03:38", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/44/d0/bd/44d0bd92-4299-fb82-d27e-8cff8463c0f8/cover.jpg/600x600bb.jpg" },
-                { id: "UuN43PZ9N4o", title: "Affetmem", artist: "Blok3", duration: "02:45", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/30/b3/ef/30b3efa1-46f3-1ee2-962f-fbe69efeafe1/cover.jpg/600x600bb.jpg" },
-                { id: "7r1UvP4x0nA", title: "Antidepresan", artist: "Mert Demir & Mabel Matiz", duration: "03:47", art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/09/b6/c8/09b6c867-b50a-f0ca-4cb6-69622d0d0eb3/cover.jpg/600x600bb.jpg" },
-                { id: "1440854495", title: "Yolla", artist: "Tarkan", duration: "04:46", art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg" },
-                { id: "4y2vK_9W0kA", title: "Belki", artist: "Dedublüman", duration: "03:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" },
-                { id: "OPf0YbXqDm0", title: "Uptown Funk", artist: "Mark Ronson ft. Bruno Mars", duration: "04:30", art: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/cd/6d/f4/cd6df456-0ea7-0d02-a4a3-7693d406a4b3/886444857413.jpg/600x600bb.jpg" }
-            ],
-            "haftanin-hitleri": [
-                { id: "eK_Uu5n0tJg", title: "Ateşe Düştüm", artist: "Mert Demir", duration: "03:41", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Mesafe", artist: "Semicenk", duration: "03:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "8rL4P6h4N0A", title: "Okyanus", artist: "Derya Uluğ", duration: "03:38", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/44/d0/bd/44d0bd92-4299-fb82-d27e-8cff8463c0f8/cover.jpg/600x600bb.jpg" },
-                { id: "UuN43PZ9N4o", title: "Affetmem", artist: "Blok3", duration: "02:45", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/30/b3/ef/30b3efa1-46f3-1ee2-962f-fbe69efeafe1/cover.jpg/600x600bb.jpg" },
-                { id: "7r1UvP4x0nA", title: "Antidepresan", artist: "Mert Demir & Mabel Matiz", duration: "03:47", art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/09/b6/c8/09b6c867-b50a-f0ca-4cb6-69622d0d0eb3/cover.jpg/600x600bb.jpg" },
-                { id: "5s7_SDC4cjw", title: "Canın Sağ Olsun", artist: "Semicenk & Doğu Swag", duration: "03:10", art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/0c/3a/4a0c3ae0-1e82-e3e8-5b43-7fdfa7b5d194/cover.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Aşkın Olayım", artist: "Simge", duration: "04:12", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" },
-                { id: "4y2vK_9W0kA", title: "Sen Olsan Bari", artist: "Aleyna Tilki", duration: "03:05", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Lan", artist: "Zeynep Bastık", duration: "03:22", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Bi' Tek Ben Anlarım", artist: "KÖFN", duration: "03:30", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" }
-            ],
-            "ayin-sarkilari": [
-                { id: "5s7_SDC4cjw", title: "Düşer Aklıma", artist: "Semicenk", duration: "03:02", art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/0c/3a/4a0c3ae0-1e82-e3e8-5b43-7fdfa7b5d194/cover.jpg/600x600bb.jpg" },
-                { id: "7r1UvP4x0nA", title: "Fırtınadayım", artist: "Mabel Matiz", duration: "04:20", art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/09/b6/c8/09b6c867-b50a-f0ca-4cb6-69622d0d0eb3/cover.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Öpücem", artist: "Simge", duration: "04:02", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Cehennemin Dibi", artist: "Mert Demir", duration: "03:22", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "UuN43PZ9N4o", title: "Güzel ve İddialı", artist: "Blok3", duration: "02:40", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/30/b3/ef/30b3efa1-46f3-1ee2-962f-fbe69efeafe1/cover.jpg/600x600bb.jpg" },
-                { id: "4y2vK_9W0kA", title: "Belki", artist: "Dedublüman", duration: "03:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" },
-                { id: "8rL4P6h4N0A", title: "Leila", artist: "Reynmen", duration: "03:30", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/44/d0/bd/44d0bd92-4299-fb82-d27e-8cff8463c0f8/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Diva Yorgun", artist: "Melike Şahin", duration: "03:45", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Arasan Da", artist: "UZI", duration: "02:50", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" }
-            ],
-            "nostalji": [
-                { id: "gXN_8x1F8sQ", title: "Kuzu Kuzu", artist: "Tarkan", duration: "03:54", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Şıkıdım (Hepsi Senin mi)", artist: "Tarkan", duration: "03:55", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "dQw4w9WgXcQ", title: "Gülümse", artist: "Sezen Aksu", duration: "05:03", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c7/24/7e/c7247e92-36fb-8777-7489-08d179471f54/dj.wcvhshgq.jpg/600x600bb.jpg" },
-                { id: "dQw4w9WgXcQ", title: "Seni Yerler", artist: "Sezen Aksu", duration: "03:52", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c7/24/7e/c7247e92-36fb-8777-7489-08d179471f54/dj.wcvhshgq.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Dönence", artist: "Barış Manço", duration: "06:05", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Gülpembe", artist: "Barış Manço", duration: "05:10", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Her Gece", artist: "Mirkelam", duration: "03:40", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Araba", artist: "Mustafa Sandal", duration: "04:41", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Medcezir", artist: "Levent Yüksel", duration: "04:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" },
-                { id: "8rL4P6h4N0A", title: "Yanarım", artist: "Sertab Erener", duration: "03:50", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/44/d0/bd/44d0bd92-4299-fb82-d27e-8cff8463c0f8/cover.jpg/600x600bb.jpg" }
-            ],
-            "turkce-pop": [
-                { id: "1440854495", title: "Yolla", artist: "Tarkan", duration: "04:46", art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Dudu", artist: "Tarkan", duration: "04:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Aşkın Olayım", artist: "Simge", duration: "04:12", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" },
-                { id: "8rL4P6h4N0A", title: "Nefes", artist: "Derya Uluğ", duration: "03:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/44/d0/bd/44d0bd92-4299-fb82-d27e-8cff8463c0f8/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Martılar", artist: "Edis", duration: "03:25", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "7r1UvP4x0nA", title: "Fırtınadayım", artist: "Mabel Matiz", duration: "04:20", art: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/09/b6/c8/09b6c867-b50a-f0ca-4cb6-69622d0d0eb3/cover.jpg/600x600bb.jpg" }
-            ],
-            "arabesk": [
-                { id: "gXN_8x1F8sQ", title: "Affet", artist: "Müslüm Gürses", duration: "04:25", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Nilüfer", artist: "Müslüm Gürses", duration: "04:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Duygularım", artist: "Azer Bülbül", duration: "04:50", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "5s7_SDC4cjw", title: "Huzurum Kalmadı", artist: "Ferdi Tayfur", duration: "04:40", art: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/4a/0c/3a/4a0c3ae0-1e82-e3e8-5b43-7fdfa7b5d194/cover.jpg/600x600bb.jpg" },
-                { id: "p1q_e4mF8J8", title: "Mavi Mavi", artist: "İbrahim Tatlıses", duration: "04:10", art: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/4c/ff/01/4cff0109-17d1-e945-8653-731ffae48154/cover.jpg/600x600bb.jpg" }
-            ],
-            "rap": [
-                { id: "UuN43PZ9N4o", title: "Vur", artist: "Blok3", duration: "02:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/30/b3/ef/30b3efa1-46f3-1ee2-962f-fbe69efeafe1/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Dua", artist: "UZI", duration: "02:40", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Suspus", artist: "Ceza", duration: "03:45", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Ateşten Gömlek", artist: "Sagopa Kajmer", duration: "04:22", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" }
-            ],
-            "rock": [
-                { id: "4y2vK_9W0kA", title: "Senden Daha Güzel", artist: "Duman", duration: "03:52", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Bir Derdim Var", artist: "mor ve ötesi", duration: "03:38", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Cevapsız Sorular", artist: "maNga", duration: "04:18", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" },
-                { id: "4y2vK_9W0kA", title: "Aman Aman", artist: "Duman", duration: "04:05", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" }
-            ],
-            "akustik": [
-                { id: "4y2vK_9W0kA", title: "Uzunlar (Akustik)", artist: "Evdeki Saat", duration: "04:05", art: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/eb/06/61/eb0661ff-1773-4f9e-ff9a-7c9eb92f2560/cover.jpg/600x600bb.jpg" },
-                { id: "eK_Uu5n0tJg", title: "Ele Göz Sağlık", artist: "Tuğkan", duration: "03:22", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4e/d8/56/4ed85633-8a9c-2bb2-d961-d7790b4bf729/cover.jpg/600x600bb.jpg" },
-                { id: "XwT2ikW1_9c", title: "Seni Dert Etmeler", artist: "Madrigal", duration: "03:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a4/09/78/a40978ce-f6e0-e1ca-c426-ba28fc8c2184/cover.jpg/600x600bb.jpg" }
-            ],
-            "tarkan": [
-                { id: "1440854495", title: "Yolla", artist: "Tarkan", duration: "04:46", art: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/f1/95/04/f1950424-2ae5-55ff-580d-d52e8300ec1b/dj.iedkotfi.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Kuzu Kuzu", artist: "Tarkan", duration: "03:54", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Dudu", artist: "Tarkan", duration: "04:35", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Şıkıdım", artist: "Tarkan", duration: "03:55", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" },
-                { id: "gXN_8x1F8sQ", title: "Kış Güneşi", artist: "Tarkan", duration: "04:15", art: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/35/8d/22/358d22cf-8b9c-1e7d-996d-85aad739a255/dj.nixigvoo.jpg/600x600bb.jpg" }
-            ]
-        };
+        // 100% Genuine Verified Songs Catalog (Each track has its real YouTube ID, title, artist & thumbnail)
+        const CATEGORIES = {"all": [{"id": "RQmXet6kZ-Y", "title": "Mert Demir - Ateşe Düştüm", "artist": "Mert Demir", "duration": "3:51", "art": "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg"}, {"id": "h5l8fIvFRP4", "title": "Semicenk - Mesafe", "artist": "Eva Records", "duration": "3:52", "art": "https://i.ytimg.com/vi/h5l8fIvFRP4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/h5l8fIvFRP4/hqdefault.jpg"}, {"id": "VREnTCTeS4k", "title": "Simge  - Aşkın Olayım (Onurr)", "artist": "netd müzik", "duration": "3:56", "art": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg"}, {"id": "fK-lp3C1_-w", "title": "BLOK3 - AFFETMEM", "artist": "Blok3", "duration": "2:50", "art": "https://i.ytimg.com/vi/fK-lp3C1_-w/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/fK-lp3C1_-w/hqdefault.jpg"}, {"id": "JObUEIRsuyQ", "title": "Derya Uluğ - Okyanus", "artist": "netd müzik", "duration": "3:44", "art": "https://i.ytimg.com/vi/JObUEIRsuyQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/JObUEIRsuyQ/hqdefault.jpg"}, {"id": "i6CSvLvSNZ4", "title": "Mert Demir feat. Mabel Matiz - Antidepresan", "artist": "Mert Demir", "duration": "4:01", "art": "https://i.ytimg.com/vi/i6CSvLvSNZ4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/i6CSvLvSNZ4/hqdefault.jpg"}, {"id": "7-_qRtGbCTE", "title": "Dedublüman - Belki - Akustik (Lyric Video)", "artist": "Dedublüman", "duration": "3:01", "art": "https://i.ytimg.com/vi/7-_qRtGbCTE/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/7-_qRtGbCTE/hqdefault.jpg"}, {"id": "-O22D3EV6G0", "title": "Lan - Zeynep Bastık | Lyric Video", "artist": "Zeynep Bastık", "duration": "3:20", "art": "https://i.ytimg.com/vi/-O22D3EV6G0/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/-O22D3EV6G0/hqdefault.jpg"}, {"id": "yJpJCZYTL74", "title": "Aleyna Tilki - Sen Olsan Bari", "artist": "netd müzik", "duration": "3:09", "art": "https://i.ytimg.com/vi/yJpJCZYTL74/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/yJpJCZYTL74/hqdefault.jpg"}], "haftanin-hitleri": [{"id": "RQmXet6kZ-Y", "title": "Mert Demir - Ateşe Düştüm", "artist": "Mert Demir", "duration": "3:51", "art": "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/RQmXet6kZ-Y/hqdefault.jpg"}, {"id": "KDV_-rXGy7A", "title": "Semicenk & Rast - Canın Sağ Olsun (prod. by Büken)", "artist": "Eva Records", "duration": "3:07", "art": "https://i.ytimg.com/vi/KDV_-rXGy7A/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/KDV_-rXGy7A/hqdefault.jpg"}, {"id": "2AOOIHLg6zI", "title": "BLOK3 - VUR (OFFICIAL VIDEO)", "artist": "Blok3", "duration": "3:06", "art": "https://i.ytimg.com/vi/2AOOIHLg6zI/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/2AOOIHLg6zI/hqdefault.jpg"}, {"id": "VREnTCTeS4k", "title": "Simge  - Aşkın Olayım (Onurr)", "artist": "netd müzik", "duration": "3:56", "art": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg"}, {"id": "yJVwNyVUOvc", "title": "Derya Uluğ - Nefes", "artist": "Derya Uluğ", "duration": "2:41", "art": "https://i.ytimg.com/vi/yJVwNyVUOvc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/yJVwNyVUOvc/hqdefault.jpg"}, {"id": "ip4GdaU634A", "title": "Eyvah - Zeynep Bastık | Music Video", "artist": "Zeynep Bastık", "duration": "2:30", "art": "https://i.ytimg.com/vi/ip4GdaU634A/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/ip4GdaU634A/hqdefault.jpg"}, {"id": "MJOw24mP4X8", "title": "Semicenk - Düşer Aklıma", "artist": "Eva Records", "duration": "2:37", "art": "https://i.ytimg.com/vi/MJOw24mP4X8/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/MJOw24mP4X8/hqdefault.jpg"}, {"id": "BokbpfhV8O8", "title": "Reynmen - Leila ( Official Video )", "artist": "Reynmen", "duration": "2:51", "art": "https://i.ytimg.com/vi/BokbpfhV8O8/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/BokbpfhV8O8/hqdefault.jpg"}, {"id": "ZYYKHXqGgZg", "title": "UZI - ARASAN DA", "artist": "UZI", "duration": "3:12", "art": "https://i.ytimg.com/vi/ZYYKHXqGgZg/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/ZYYKHXqGgZg/hqdefault.jpg"}, {"id": "2RAbPC9aKQ0", "title": "MOTIVE - 10 MG ︻デ═一", "artist": "Motive", "duration": "2:28", "art": "https://i.ytimg.com/vi/2RAbPC9aKQ0/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/2RAbPC9aKQ0/hqdefault.jpg"}], "ayin-sarkilari": [{"id": "h5l8fIvFRP4", "title": "Semicenk - Mesafe", "artist": "Eva Records", "duration": "3:52", "art": "https://i.ytimg.com/vi/h5l8fIvFRP4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/h5l8fIvFRP4/hqdefault.jpg"}, {"id": "0WW5iS11qLM", "title": "Cehennemin Dibi", "artist": "Mert Demir", "duration": "2:51", "art": "https://i.ytimg.com/vi/0WW5iS11qLM/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/0WW5iS11qLM/hqdefault.jpg"}, {"id": "oL7nN4gUnTc", "title": "Simge - Öpücem", "artist": "netd müzik", "duration": "4:16", "art": "https://i.ytimg.com/vi/oL7nN4gUnTc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/oL7nN4gUnTc/hqdefault.jpg"}, {"id": "fnD64yCKULI", "title": "Dedublüman / Çağrı Çelik - Gamzedeyim Deva Bulmam", "artist": "Dedublüman", "duration": "5:16", "art": "https://i.ytimg.com/vi/fnD64yCKULI/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/fnD64yCKULI/hqdefault.jpg"}, {"id": "1cdxsrRC9Qw", "title": "UZI - CINDY", "artist": "UZI", "duration": "2:00", "art": "https://i.ytimg.com/vi/1cdxsrRC9Qw/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/1cdxsrRC9Qw/hqdefault.jpg"}, {"id": "fLQp95sInZY", "title": "Bilal SONSES - İki Kelime", "artist": "Bilal Sonses", "duration": "3:56", "art": "https://i.ytimg.com/vi/fLQp95sInZY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/fLQp95sInZY/hqdefault.jpg"}, {"id": "rvdwMJDpeuY", "title": "Burak Bulut & Kurtuluş Kuş & Mustafa Ceceli feat. ", "artist": "Mahzen Fabrick", "duration": "2:20", "art": "https://i.ytimg.com/vi/rvdwMJDpeuY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/rvdwMJDpeuY/hqdefault.jpg"}, {"id": "-pU-g27IHMQ", "title": "Aleyna Tilki - Başıma Belasın", "artist": "Aleyna Tilki", "duration": "2:26", "art": "https://i.ytimg.com/vi/-pU-g27IHMQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/-pU-g27IHMQ/hqdefault.jpg"}, {"id": "aLRletzlJ-4", "title": "Emir Can İğrek - Ali Cabbar (Official Video)", "artist": "Emir Can İğrek", "duration": "3:14", "art": "https://i.ytimg.com/vi/aLRletzlJ-4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/aLRletzlJ-4/hqdefault.jpg"}, {"id": "o9oQOqe3vqc", "title": "Edis - Arıyorum (Official Video)", "artist": "Edis", "duration": "3:19", "art": "https://i.ytimg.com/vi/o9oQOqe3vqc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/o9oQOqe3vqc/hqdefault.jpg"}, {"id": "xKJFJKCYTY4", "title": "KÖFN X Simge - Yakışıklı (Official Video)", "artist": "KÖFN", "duration": "2:35", "art": "https://i.ytimg.com/vi/xKJFJKCYTY4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/xKJFJKCYTY4/hqdefault.jpg"}], "nostalji": [{"id": "NAHRpEqgcL4", "title": "TARKAN - Kuzu Kuzu (Official Music Video)", "artist": "Tarkan", "duration": "4:02", "art": "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg"}, {"id": "exRaVIumBO4", "title": "ℂ⋆Tarkan | Şıkıdım", "artist": "ℂ⋆Tarkanland", "duration": "3:16", "art": "https://i.ytimg.com/vi/exRaVIumBO4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/exRaVIumBO4/hqdefault.jpg"}, {"id": "qgfLk8Uksxo", "title": "Sezen Aksu - Gülümse (Official Video)", "artist": "Sezen Aksu", "duration": "5:00", "art": "https://i.ytimg.com/vi/qgfLk8Uksxo/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/qgfLk8Uksxo/hqdefault.jpg"}, {"id": "IVE00F-2ZCw", "title": "Sezen Aksu - Seni Yerler (Official Video)", "artist": "Sezen Aksu", "duration": "4:08", "art": "https://i.ytimg.com/vi/IVE00F-2ZCw/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/IVE00F-2ZCw/hqdefault.jpg"}, {"id": "n7qefZ86V6g", "title": "Barış Manço - Dönence", "artist": "Emre Müzik Official", "duration": "6:51", "art": "https://i.ytimg.com/vi/n7qefZ86V6g/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/n7qefZ86V6g/hqdefault.jpg"}, {"id": "zd8IFDgQCUc", "title": "Barış Manço - Gülpembe", "artist": "netd müzik", "duration": "5:12", "art": "https://i.ytimg.com/vi/zd8IFDgQCUc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/zd8IFDgQCUc/hqdefault.jpg"}, {"id": "7w9IDP_OR9M", "title": "Mirkelam - Her Gece", "artist": "İSTANBUL PLAK", "duration": "3:51", "art": "https://i.ytimg.com/vi/7w9IDP_OR9M/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/7w9IDP_OR9M/hqdefault.jpg"}, {"id": "-lcfABgHKfs", "title": "Mustafa Sandal - Araba", "artist": "netd müzik", "duration": "4:52", "art": "https://i.ytimg.com/vi/-lcfABgHKfs/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/-lcfABgHKfs/hqdefault.jpg"}, {"id": "69VJnj9k3N4", "title": "Medcezir", "artist": "Levent Yüksel", "duration": "4:34", "art": "https://i.ytimg.com/vi/69VJnj9k3N4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/69VJnj9k3N4/hqdefault.jpg"}, {"id": "qM63FjuY1ac", "title": "Sertab Erener - Yanarım", "artist": "Sertab Erener", "duration": "3:14", "art": "https://i.ytimg.com/vi/qM63FjuY1ac/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/qM63FjuY1ac/hqdefault.jpg"}, {"id": "4tnyQ8lYH_k", "title": "Çelik - Hercai (Official Video)", "artist": "Sony Music Columbia", "duration": "4:15", "art": "https://i.ytimg.com/vi/4tnyQ8lYH_k/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/4tnyQ8lYH_k/hqdefault.jpg"}], "turkce-pop": [{"id": "SCZgGVqVsbY", "title": "TARKAN - Dudu (Official Music Video)", "artist": "Tarkan", "duration": "4:24", "art": "https://i.ytimg.com/vi/SCZgGVqVsbY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/SCZgGVqVsbY/hqdefault.jpg"}, {"id": "VREnTCTeS4k", "title": "Simge  - Aşkın Olayım (Onurr)", "artist": "netd müzik", "duration": "3:56", "art": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/VREnTCTeS4k/hqdefault.jpg"}, {"id": "NPUTdqYUa9A", "title": "Edis - Martılar (Official Video)", "artist": "Edis", "duration": "2:46", "art": "https://i.ytimg.com/vi/NPUTdqYUa9A/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/NPUTdqYUa9A/hqdefault.jpg"}, {"id": "JObUEIRsuyQ", "title": "Derya Uluğ - Okyanus", "artist": "netd müzik", "duration": "3:44", "art": "https://i.ytimg.com/vi/JObUEIRsuyQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/JObUEIRsuyQ/hqdefault.jpg"}, {"id": "WFdLcr7oxEg", "title": "Zeynep Bastık - Uslanmıyor Bu (Official Video)", "artist": "Zeynep Bastık", "duration": "3:14", "art": "https://i.ytimg.com/vi/WFdLcr7oxEg/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/WFdLcr7oxEg/hqdefault.jpg"}, {"id": "mTZRQltuHRc", "title": "İrem Derici - Kalbimin Tek Sahibine", "artist": "netd müzik", "duration": "3:33", "art": "https://i.ytimg.com/vi/mTZRQltuHRc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/mTZRQltuHRc/hqdefault.jpg"}, {"id": "QjRYopBRUIc", "title": "Murat Boz - Janti", "artist": "netd müzik", "duration": "4:10", "art": "https://i.ytimg.com/vi/QjRYopBRUIc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/QjRYopBRUIc/hqdefault.jpg"}, {"id": "yQxJrRzvUcw", "title": "Hande Yener - Kırmızı", "artist": "netd müzik", "duration": "3:31", "art": "https://i.ytimg.com/vi/yQxJrRzvUcw/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/yQxJrRzvUcw/hqdefault.jpg"}, {"id": "DUcv3S-EwDs", "title": "Gülşen - Dan Dan", "artist": "netd müzik ve Gülşen", "duration": "3:16", "art": "https://i.ytimg.com/vi/DUcv3S-EwDs/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/DUcv3S-EwDs/hqdefault.jpg"}, {"id": "sui9MKrDnQk", "title": "Hadise - Sıfır Tolerans (Official Video)", "artist": "paga play", "duration": "3:45", "art": "https://i.ytimg.com/vi/sui9MKrDnQk/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/sui9MKrDnQk/hqdefault.jpg"}, {"id": "l_HAOSBGYKc", "title": "Buray - Sen Sevda Mısın", "artist": "Buray", "duration": "3:38", "art": "https://i.ytimg.com/vi/l_HAOSBGYKc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/l_HAOSBGYKc/hqdefault.jpg"}, {"id": "YiE0q47yuCs", "title": "Ravi İncigöz feat. Mustafa Ceceli - Şeker", "artist": "netd müzik", "duration": "3:49", "art": "https://i.ytimg.com/vi/YiE0q47yuCs/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/YiE0q47yuCs/hqdefault.jpg"}], "arabesk": [{"id": "2YYLr6yVruQ", "title": "Müslüm Gürses - Affet", "artist": "Yusuf Aydin", "duration": "4:36", "art": "https://i.ytimg.com/vi/2YYLr6yVruQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/2YYLr6yVruQ/hqdefault.jpg"}, {"id": "SQnglFtGjqs", "title": "Müslüm Gürses - Nilüfer", "artist": "Çakır Türk", "duration": "4:19", "art": "https://i.ytimg.com/vi/SQnglFtGjqs/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/SQnglFtGjqs/hqdefault.jpg"}, {"id": "TXtgqM73nYA", "title": "Müslüm Gürses - Sigara", "artist": "paga play", "duration": "5:08", "art": "https://i.ytimg.com/vi/TXtgqM73nYA/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/TXtgqM73nYA/hqdefault.jpg"}, {"id": "gvdS4THCoaQ", "title": "Azer Bülbül - Duygularım", "artist": "Barış Müzik", "duration": "4:53", "art": "https://i.ytimg.com/vi/gvdS4THCoaQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/gvdS4THCoaQ/hqdefault.jpg"}, {"id": "DpTD_i6KkVc", "title": "Azer Bülbül - Çoğu Gitti Azı Kaldı", "artist": "Barış Müzik", "duration": "3:49", "art": "https://i.ytimg.com/vi/DpTD_i6KkVc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/DpTD_i6KkVc/hqdefault.jpg"}, {"id": "D2xXMSwBZh4", "title": "Ferdi Tayfur - Huzurum Kalmadı", "artist": "Elenor Müzik", "duration": "3:53", "art": "https://i.ytimg.com/vi/D2xXMSwBZh4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/D2xXMSwBZh4/hqdefault.jpg"}, {"id": "iRLu3R048I4", "title": "Ferdi Tayfur - Bana Da Söyle", "artist": "Ferdifon Müzik", "duration": "5:32", "art": "https://i.ytimg.com/vi/iRLu3R048I4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/iRLu3R048I4/hqdefault.jpg"}, {"id": "uOGTROc4TQ4", "title": "Ebru Gündeş - Çingenem (Official Video)", "artist": "MuzikPlay", "duration": "3:23", "art": "https://i.ytimg.com/vi/uOGTROc4TQ4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/uOGTROc4TQ4/hqdefault.jpg"}, {"id": "KYRYvl-CbBg", "title": "Cengiz Kurtoğlu & Hakan Altun - Duyanlara Duymayan", "artist": "Poll Production", "duration": "5:32", "art": "https://i.ytimg.com/vi/KYRYvl-CbBg/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/KYRYvl-CbBg/hqdefault.jpg"}, {"id": "Kxw2ir3fpg0", "title": "Güllü-Sabah olmadan", "artist": "thebaho90", "duration": "4:54", "art": "https://i.ytimg.com/vi/Kxw2ir3fpg0/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/Kxw2ir3fpg0/hqdefault.jpg"}, {"id": "Vw3HTfE-Gq4", "title": "Serkan Kaya - Kalakaldım ( Official Video )", "artist": "Poll Production", "duration": "5:06", "art": "https://i.ytimg.com/vi/Vw3HTfE-Gq4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/Vw3HTfE-Gq4/hqdefault.jpg"}], "rap": [{"id": "2AOOIHLg6zI", "title": "BLOK3 - VUR (OFFICIAL VIDEO)", "artist": "Blok3", "duration": "3:06", "art": "https://i.ytimg.com/vi/2AOOIHLg6zI/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/2AOOIHLg6zI/hqdefault.jpg"}, {"id": "fK-lp3C1_-w", "title": "BLOK3 - AFFETMEM", "artist": "Blok3", "duration": "2:50", "art": "https://i.ytimg.com/vi/fK-lp3C1_-w/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/fK-lp3C1_-w/hqdefault.jpg"}, {"id": "44G5iSzSNcE", "title": "BLOK3 - BAYBAY (OFFICIAL VIDEO)", "artist": "Blok3", "duration": "3:11", "art": "https://i.ytimg.com/vi/44G5iSzSNcE/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/44G5iSzSNcE/hqdefault.jpg"}, {"id": "1cdxsrRC9Qw", "title": "UZI - CINDY", "artist": "UZI", "duration": "2:00", "art": "https://i.ytimg.com/vi/1cdxsrRC9Qw/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/1cdxsrRC9Qw/hqdefault.jpg"}, {"id": "AUCt4Yy_vRE", "title": "Güneş Ft. Uzi - Dua (Official Music Video)", "artist": "MOB Entertainment", "duration": "3:05", "art": "https://i.ytimg.com/vi/AUCt4Yy_vRE/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/AUCt4Yy_vRE/hqdefault.jpg"}, {"id": "mY--4-vzY6E", "title": "Ceza - Suspus (Official Music Video)", "artist": "Esen Müzik", "duration": "4:22", "art": "https://i.ytimg.com/vi/mY--4-vzY6E/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/mY--4-vzY6E/hqdefault.jpg"}, {"id": "Kg8KNyixj8o", "title": "Ateşten Gömlek", "artist": "Sagopa Kajmer", "duration": "4:46", "art": "https://i.ytimg.com/vi/Kg8KNyixj8o/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/Kg8KNyixj8o/hqdefault.jpg"}, {"id": "EF38XQ5o4EM", "title": "LVBEL C5 - BABA", "artist": "LVBELC5", "duration": "2:31", "art": "https://i.ytimg.com/vi/EF38XQ5o4EM/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/EF38XQ5o4EM/hqdefault.jpg"}, {"id": "Ynlfvw2QgE4", "title": "Cakal - İmdat ( Official Music Video )", "artist": "PERROS BLANCOS", "duration": "2:16", "art": "https://i.ytimg.com/vi/Ynlfvw2QgE4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/Ynlfvw2QgE4/hqdefault.jpg"}, {"id": "XokJGO8ALVs", "title": "Ezhel - Geceler", "artist": "Ezhel", "duration": "3:44", "art": "https://i.ytimg.com/vi/XokJGO8ALVs/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/XokJGO8ALVs/hqdefault.jpg"}, {"id": "89HcjCHnk7g", "title": "MOTIVE - RANDEVU (Official Music Video)", "artist": "Motive", "duration": "2:33", "art": "https://i.ytimg.com/vi/89HcjCHnk7g/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/89HcjCHnk7g/hqdefault.jpg"}, {"id": "eFutYdmi2gc", "title": "Sefo - Bilmem Mi? (prod.by Aerro)", "artist": "Sefo", "duration": "3:07", "art": "https://i.ytimg.com/vi/eFutYdmi2gc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/eFutYdmi2gc/hqdefault.jpg"}], "rock": [{"id": "3bfkyXtuIXk", "title": "Duman - Senden Daha Guzel", "artist": "Duman", "duration": "3:59", "art": "https://i.ytimg.com/vi/3bfkyXtuIXk/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/3bfkyXtuIXk/hqdefault.jpg"}, {"id": "XGWQXjyUip8", "title": "Duman - Aman Aman", "artist": "Duman", "duration": "4:07", "art": "https://i.ytimg.com/vi/XGWQXjyUip8/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/XGWQXjyUip8/hqdefault.jpg"}, {"id": "7RW8n4iXZbA", "title": "mor ve ötesi - Bir Derdim Var (Official Video)", "artist": "mor ve ötesi", "duration": "3:22", "art": "https://i.ytimg.com/vi/7RW8n4iXZbA/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/7RW8n4iXZbA/hqdefault.jpg"}, {"id": "fZYZPANBF6g", "title": "maNga - Cevapsiz Sorular", "artist": "maNga", "duration": "5:25", "art": "https://i.ytimg.com/vi/fZYZPANBF6g/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/fZYZPANBF6g/hqdefault.jpg"}, {"id": "RExyuxsd-rY", "title": "Sil Baştan", "artist": "Şebnem Ferah", "duration": "5:13", "art": "https://i.ytimg.com/vi/RExyuxsd-rY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/RExyuxsd-rY/hqdefault.jpg"}, {"id": "xm4t3pa_iTo", "title": "HALUK LEVENT - ELFİDA", "artist": "Mod Müzik", "duration": "5:34", "art": "https://i.ytimg.com/vi/xm4t3pa_iTo/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/xm4t3pa_iTo/hqdefault.jpg"}, {"id": "lh4lMzVcM8A", "title": "Teoman - Paramparça", "artist": "TeomanVEVO", "duration": "3:52", "art": "https://i.ytimg.com/vi/lh4lMzVcM8A/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/lh4lMzVcM8A/hqdefault.jpg"}, {"id": "ah-K6UMjIHA", "title": "Hayko Cepkin - Fırtınam", "artist": "Hayko Cepkin", "duration": "3:58", "art": "https://i.ytimg.com/vi/ah-K6UMjIHA/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/ah-K6UMjIHA/hqdefault.jpg"}, {"id": "DpJcNGRYjgY", "title": "Barış Akarsu - Islak Islak", "artist": "Seyhan Müzik", "duration": "4:43", "art": "https://i.ytimg.com/vi/DpJcNGRYjgY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/DpJcNGRYjgY/hqdefault.jpg"}, {"id": "3YL4Btzcf2Q", "title": "Ogün Sanlisoy - Saydim", "artist": "OGÜN SANLISOY", "duration": "4:13", "art": "https://i.ytimg.com/vi/3YL4Btzcf2Q/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/3YL4Btzcf2Q/hqdefault.jpg"}, {"id": "72nGwgu3JDg", "title": "Yüksek Sadakat - Belki Üstümüzden Bir Kuş Geçer", "artist": "netd müzik", "duration": "4:31", "art": "https://i.ytimg.com/vi/72nGwgu3JDg/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/72nGwgu3JDg/hqdefault.jpg"}, {"id": "odoK04z8exU", "title": "Model - Değmesin Ellerimiz", "artist": "netd müzik", "duration": "4:19", "art": "https://i.ytimg.com/vi/odoK04z8exU/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/odoK04z8exU/hqdefault.jpg"}], "akustik": [{"id": "TaUuYrpvMS0", "title": "Evdeki Saat - Uzunlar V1 (Official Video)", "artist": "MuzikPlay", "duration": "4:43", "art": "https://i.ytimg.com/vi/TaUuYrpvMS0/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/TaUuYrpvMS0/hqdefault.jpg"}, {"id": "i8e01paBYzg", "title": "Tugkan - Ele Layık", "artist": "Tuğkan", "duration": "3:45", "art": "https://i.ytimg.com/vi/i8e01paBYzg/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/i8e01paBYzg/hqdefault.jpg"}, {"id": "h5oHhGlWKf0", "title": "Madrigal - Seni Dert Etmeler (Official Audio)", "artist": "MuzikPlay", "duration": "3:09", "art": "https://i.ytimg.com/vi/h5oHhGlWKf0/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/h5oHhGlWKf0/hqdefault.jpg"}, {"id": "eMINio3Z480", "title": "🎤Kaan Boşnak - Tutunamayız (Video Klip)", "artist": "TRT Nostalji", "duration": "2:20", "art": "https://i.ytimg.com/vi/eMINio3Z480/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/eMINio3Z480/hqdefault.jpg"}, {"id": "sMAnwI_J8iI", "title": "Yüzyüzeyken Konuşuruz - Dinle Beni Bi' (Lyric Vide", "artist": "Sony Music Türkiye", "duration": "2:25", "art": "https://i.ytimg.com/vi/sMAnwI_J8iI/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/sMAnwI_J8iI/hqdefault.jpg"}, {"id": "QIIj6_IP6dA", "title": "Emir Can İğrek - Beyaz Skandalım (Official Audio)", "artist": "Emir Can İğrek", "duration": "3:36", "art": "https://i.ytimg.com/vi/QIIj6_IP6dA/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/QIIj6_IP6dA/hqdefault.jpg"}, {"id": "ad2CJHBhh6s", "title": "Nova Norda - Varım (Official Video)", "artist": "Nova Norda", "duration": "3:22", "art": "https://i.ytimg.com/vi/ad2CJHBhh6s/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/ad2CJHBhh6s/hqdefault.jpg"}, {"id": "Y3RXd7EasIU", "title": "Dolu Kadehi Ters Tut - Madem (Official Audio)", "artist": "Dolu Kadehi Ters Tut", "duration": "4:09", "art": "https://i.ytimg.com/vi/Y3RXd7EasIU/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/Y3RXd7EasIU/hqdefault.jpg"}, {"id": "cKLzfnf6Y_Y", "title": "Pinhâni - Dünyadan Uzak", "artist": "Pinhani", "duration": "4:08", "art": "https://i.ytimg.com/vi/cKLzfnf6Y_Y/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/cKLzfnf6Y_Y/hqdefault.jpg"}, {"id": "ehanblxZeA4", "title": "Adamlar -  Koca Yaşlı Şişko Dünya", "artist": "LG Türkiye", "duration": "4:13", "art": "https://i.ytimg.com/vi/ehanblxZeA4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/ehanblxZeA4/hqdefault.jpg"}], "tarkan": [{"id": "U66ixhdbxEI", "title": "Tarkan - Yolla", "artist": "netd müzik", "duration": "4:46", "art": "https://i.ytimg.com/vi/U66ixhdbxEI/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/U66ixhdbxEI/hqdefault.jpg"}, {"id": "NAHRpEqgcL4", "title": "TARKAN - Kuzu Kuzu (Official Music Video)", "artist": "Tarkan", "duration": "4:02", "art": "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/NAHRpEqgcL4/hqdefault.jpg"}, {"id": "SCZgGVqVsbY", "title": "TARKAN - Dudu (Official Music Video)", "artist": "Tarkan", "duration": "4:24", "art": "https://i.ytimg.com/vi/SCZgGVqVsbY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/SCZgGVqVsbY/hqdefault.jpg"}, {"id": "exRaVIumBO4", "title": "ℂ⋆Tarkan | Şıkıdım", "artist": "ℂ⋆Tarkanland", "duration": "3:16", "art": "https://i.ytimg.com/vi/exRaVIumBO4/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/exRaVIumBO4/hqdefault.jpg"}, {"id": "-CxauCeQ_SQ", "title": "TARKAN - Kış Güneşi (Official Music Video)", "artist": "Tarkan", "duration": "3:36", "art": "https://i.ytimg.com/vi/-CxauCeQ_SQ/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/-CxauCeQ_SQ/hqdefault.jpg"}, {"id": "LJ9FpMXJmwY", "title": "TARKAN - Ölürüm Sana (Official Music Video)", "artist": "Tarkan", "duration": "4:15", "art": "https://i.ytimg.com/vi/LJ9FpMXJmwY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/LJ9FpMXJmwY/hqdefault.jpg"}, {"id": "4tLOG4us6zc", "title": "TARKAN - Hüp (Official Music Video)", "artist": "Tarkan", "duration": "4:03", "art": "https://i.ytimg.com/vi/4tLOG4us6zc/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/4tLOG4us6zc/hqdefault.jpg"}, {"id": "cpp69ghR1IM", "title": "TARKAN - Şımarık (Official Music Video)", "artist": "Tarkan", "duration": "3:12", "art": "https://i.ytimg.com/vi/cpp69ghR1IM/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/cpp69ghR1IM/hqdefault.jpg"}, {"id": "NoV-_VupGHU", "title": "TARKAN - Beni Çok Sev (Official Music Video)", "artist": "Tarkan", "duration": "4:18", "art": "https://i.ytimg.com/vi/NoV-_VupGHU/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/NoV-_VupGHU/hqdefault.jpg"}, {"id": "R6gSMSYKhKU", "title": "TARKAN – Geççek (Official Music Video)", "artist": "Tarkan", "duration": "4:01", "art": "https://i.ytimg.com/vi/R6gSMSYKhKU/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/R6gSMSYKhKU/hqdefault.jpg"}, {"id": "wkJXTQXmIbY", "title": "İSKENDER PAYDAŞ FEAT. TARKAN - Hop De (Official Mu", "artist": "Tarkan", "duration": "4:27", "art": "https://i.ytimg.com/vi/wkJXTQXmIbY/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/wkJXTQXmIbY/hqdefault.jpg"}, {"id": "eFRlKvi4Scw", "title": "Gül Döktüm Yollarına", "artist": "Tarkan", "duration": "4:10", "art": "https://i.ytimg.com/vi/eFRlKvi4Scw/hqdefault.jpg", "thumb": "https://i.ytimg.com/vi/eFRlKvi4Scw/hqdefault.jpg"}]};
+
+        // Verified Top Turkish Live Radios
+        const RADIOS = [{"name": "Power Türk", "url": "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", "genre": "Türkçe Pop", "logo": "https://images.powerapp.com.tr/powerapp/stations/powerturk.png"}, {"name": "Süper FM", "url": "http://28993.live.streamtheworld.com:3690/SUPER_FMAAC_SC", "genre": "Türkçe Pop", "logo": "https://assets.carnaval.com/images/radios/superfm.png"}, {"name": "Metro FM", "url": "http://29083.live.streamtheworld.com:3690/METRO_FMAAC_SC", "genre": "Yabancı Hit", "logo": "https://assets.carnaval.com/images/radios/metrofm.png"}, {"name": "Virgin Radio TR", "url": "http://22593.live.streamtheworld.com/VIRGIN_RADIO_SC", "genre": "Pop & Hip-Hop", "logo": "https://assets.carnaval.com/images/radios/virginradio.png"}, {"name": "Joy Türk", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK_SC?/", "genre": "Türkçe Slow", "logo": "https://assets.carnaval.com/images/radios/joyturk.png"}, {"name": "Joy FM", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC?/", "genre": "Yabancı Slow & Jazz", "logo": "https://assets.carnaval.com/images/radios/joyfm.png"}, {"name": "TRT FM", "url": "https://trt.radyotvonline.net/trtfm", "genre": "Karma Türkçe", "logo": "https://cdn-radiotime-logos.b-cdn.net/s17508q.png"}, {"name": "Alem FM", "url": "https://turkmedya.radyotvonline.net/alemfmaac", "genre": "Türkçe Pop", "logo": "https://cdn-radiotime-logos.b-cdn.net/s11352q.png"}, {"name": "DamarTürk FM", "url": "https://live.radyositesihazir.com:10997/stream?type=http&nocache=99881", "genre": "Arabesk & Damar", "logo": "https://cdn-radiotime-logos.b-cdn.net/s276632q.png"}, {"name": "90'lar Pop", "url": "http://37.247.98.8/stream/166/", "genre": "90'lar Nostalji", "logo": "https://cdn-radiotime-logos.b-cdn.net/s305608q.png"}, {"name": "Radyo 7", "url": "http://46.20.3.250/;stream", "genre": "Halk & Sanat Müziği", "logo": "https://cdn-radiotime-logos.b-cdn.net/s11370q.png"}, {"name": "Pal Station", "url": "http://shoutcast.radyogrup.com:1020/", "genre": "Yabancı Dance", "logo": "https://cdn-radiotime-logos.b-cdn.net/s106198q.png"}, {"name": "Best FM", "url": "http://46.20.7.125/listen.pls", "genre": "Türkçe Pop", "logo": "https://cdn-radiotime-logos.b-cdn.net/s11364q.png"}, {"name": "Show Radyo", "url": "http://46.20.7.126/listen.pls", "genre": "Türkçe Pop", "logo": "https://cdn-radiotime-logos.b-cdn.net/s11365q.png"}, {"name": "Power Love", "url": "https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio", "genre": "Romantik Slow", "logo": "https://images.powerapp.com.tr/powerapp/stations/powerlove.png"}, {"name": "Kral World", "url": "http://kralwmp.radyotvonline.com:80/;stream.mp3", "genre": "Yabancı Hit", "logo": "https://cdn-radiotime-logos.b-cdn.net/s11358q.png"}];
 
         let CURRENT_PLAYLIST = [...CATEGORIES["all"]];
         let currentIndex = 0;
         let isPlaying = false;
+        let isRadioMode = false;
+        let currentRadioIndex = -1;
         let ytPlayer = null;
         let ytReady = false;
         let progressTimer = null;
@@ -1082,7 +1135,9 @@
         let searchPage = 1;
         let isUserPaused = false;
 
-        // YouTube IFrame API Ready
+        const radioAudio = document.getElementById('liveRadioPlayer');
+
+        // YouTube IFrame API Ready Callback
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('ytPlayerContainer', {
                 height: '70',
@@ -1104,6 +1159,7 @@
         }
 
         function onPlayerStateChange(event) {
+            if (isRadioMode) return;
             if (event.data === YT.PlayerState.PLAYING) {
                 isPlaying = true;
                 isUserPaused = false;
@@ -1112,7 +1168,6 @@
                 notifyAndroidBackground();
             } else if (event.data === YT.PlayerState.PAUSED) {
                 if (!isUserPaused) {
-                    // If system or Chromium paused it because screen turned off, auto-resume!
                     setTimeout(() => {
                         if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
                             ytPlayer.playVideo();
@@ -1128,21 +1183,34 @@
             }
         }
 
+        // Android Foreground Service Notification Dispatcher
         function notifyAndroidBackground() {
-            const t = CURRENT_PLAYLIST[currentIndex];
-            if (t && window.AndroidBridge) {
+            let title = "Müzik Çalıyor";
+            let artist = "MüzikCepte";
+            if (isRadioMode && currentRadioIndex >= 0) {
+                const r = RADIOS[currentRadioIndex];
+                title = r.name;
+                artist = "🔴 Canlı Radyo • " + r.genre;
+            } else if (CURRENT_PLAYLIST[currentIndex]) {
+                const t = CURRENT_PLAYLIST[currentIndex];
+                title = t.title;
+                artist = t.artist;
+            }
+
+            if (window.AndroidBridge) {
                 if (window.AndroidBridge.requestAudioFocus) window.AndroidBridge.requestAudioFocus();
-                if (window.AndroidBridge.startBackgroundPlayback) window.AndroidBridge.startBackgroundPlayback(t.title, t.artist);
+                if (window.AndroidBridge.startBackgroundPlayback) window.AndroidBridge.startBackgroundPlayback(title, artist);
             }
         }
 
+        // Render Songs
         function renderTracks(list) {
             const container = document.getElementById('track-list-container');
             document.getElementById('trackCountBadge').innerText = `${list.length} Şarkı`;
             container.innerHTML = list.map((t, i) => `
-                <div class="track-card ${i === currentIndex && isPlaying ? 'playing' : ''}" onclick="playTrack(${i})">
+                <div class="track-card ${!isRadioMode && i === currentIndex && isPlaying ? 'playing' : ''}" onclick="playTrack(${i})">
                     <div class="track-left">
-                        <img src="${t.art}" class="track-thumb" alt="art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
+                        <img src="${t.art || t.thumb || 'https://i.ytimg.com/vi/' + t.id + '/hqdefault.jpg'}" class="track-thumb" alt="art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
                         <div class="track-info">
                             <div class="track-name">${escapeHtml(t.title)}</div>
                             <div class="track-artist">${escapeHtml(t.artist)}</div>
@@ -1151,17 +1219,336 @@
                     <div class="track-right">
                         <span class="track-duration">${t.duration || 'Full'}</span>
                         <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload(${i}, false)">⬇</button>
-                        <div class="play-btn-circle">${i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
+                        <div class="play-btn-circle">${!isRadioMode && i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
                 </div>
             `).join('');
         }
 
+        // Render Live Radios
+        function renderRadios() {
+            const container = document.getElementById('radios-container');
+            container.innerHTML = RADIOS.map((r, i) => `
+                <div class="radio-card ${isRadioMode && i === currentRadioIndex && isPlaying ? 'playing' : ''}" onclick="playRadio(${i})">
+                    <div class="radio-left">
+                        <div class="radio-logo-wrap">
+                            <img src="${r.logo}" class="radio-logo" alt="${r.name}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=150'">
+                        </div>
+                        <div class="radio-info">
+                            <div class="radio-name">${r.name}</div>
+                            <div class="radio-tags">
+                                <span class="live-pulse"></span>
+                                <span>${r.genre}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="radio-play-btn">
+                        ${isRadioMode && i === currentRadioIndex && isPlaying ? '⏸' : '▶'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Play Radio Station Live
+        function playRadio(idx) {
+            if (idx < 0 || idx >= RADIOS.length) return;
+            isRadioMode = true;
+            currentRadioIndex = idx;
+            const r = RADIOS[idx];
+
+            // Stop YouTube player if running
+            if (ytPlayer && ytReady && ytPlayer.pauseVideo) {
+                ytPlayer.pauseVideo();
+            }
+
+            // Load and Play Live Stream
+            radioAudio.src = r.url;
+            radioAudio.play().then(() => {
+                isPlaying = true;
+                isUserPaused = false;
+                updatePlayButtons();
+                notifyAndroidBackground();
+            }).catch(e => {
+                console.log("Radio play error:", e);
+                // Fallback direct open
+            });
+
+            // Update UI elements for Radio
+            document.getElementById('miniTitle').innerText = r.name;
+            document.getElementById('miniArtist').innerText = "🔴 Canlı • " + r.genre;
+            document.getElementById('miniThumb').src = r.logo;
+            document.getElementById('miniDownloadBtn').style.display = 'none';
+
+            document.getElementById('fullTitle').innerText = r.name;
+            document.getElementById('fullArtist').innerText = "🔴 Canlı Yayın • " + r.genre;
+            document.getElementById('fullArt').src = r.logo;
+            document.getElementById('fullHeaderMode').innerText = "CANLI RADYO";
+            document.getElementById('seekbarContainer').style.display = 'none';
+            document.getElementById('radioLiveBar').style.display = 'block';
+            document.getElementById('modalActionsRow').style.display = 'none';
+
+            renderRadios();
+            renderTracks(CURRENT_PLAYLIST);
+        }
+
+        // Play Song in place (without full-screen jump)
+        function loadTrack(index, autoPlay = true) {
+            isRadioMode = false;
+            currentIndex = index;
+            const t = CURRENT_PLAYLIST[index];
+            if (!t) return;
+
+            // Stop radio if playing
+            if (!radioAudio.paused) {
+                radioAudio.pause();
+                radioAudio.src = "";
+            }
+
+            // Restore song UI
+            document.getElementById('miniTitle').innerText = t.title;
+            document.getElementById('miniArtist').innerText = t.artist;
+            document.getElementById('miniThumb').src = t.art || t.thumb;
+            document.getElementById('miniDownloadBtn').style.display = 'block';
+
+            document.getElementById('fullTitle').innerText = t.title;
+            document.getElementById('fullArtist').innerText = t.artist;
+            document.getElementById('fullArt').src = t.art || t.thumb;
+            document.getElementById('totalDuration').innerText = t.duration || '03:45';
+            document.getElementById('fullHeaderMode').innerText = "MÜZİK OYNATILIYOR";
+            document.getElementById('seekbarContainer').style.display = 'block';
+            document.getElementById('radioLiveBar').style.display = 'none';
+            document.getElementById('modalActionsRow').style.display = 'flex';
+
+            // Audio Play via YouTube IFrame (Full-length 3-5m studio recordings)
+            if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
+                ytPlayer.loadVideoById({
+                    videoId: t.id,
+                    suggestedQuality: 'small'
+                });
+                isPlaying = true;
+                isUserPaused = false;
+                updatePlayButtons();
+            }
+
+            notifyAndroidBackground();
+            renderTracks(CURRENT_PLAYLIST);
+            renderRadios();
+        }
+
+        function playTrack(index) {
+            loadTrack(index, true);
+        }
+
+        function playOnlineTrack(idx) {
+            const item = SEARCH_RESULTS[idx];
+            CURRENT_PLAYLIST.unshift({
+                id: item.id,
+                title: item.title,
+                artist: item.artist,
+                duration: item.duration || "03:30",
+                art: item.art || item.thumb || 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'
+            });
+            loadTrack(0, true);
+        }
+
+        function togglePlay() {
+            if (isRadioMode) {
+                if (isPlaying) {
+                    radioAudio.pause();
+                    isPlaying = false;
+                    isUserPaused = true;
+                    if (window.AndroidBridge && window.AndroidBridge.stopBackgroundPlayback) {
+                        window.AndroidBridge.stopBackgroundPlayback();
+                    }
+                } else {
+                    radioAudio.play().then(() => {
+                        isPlaying = true;
+                        isUserPaused = false;
+                        notifyAndroidBackground();
+                    });
+                }
+            } else {
+                if (!ytPlayer || !ytReady) return;
+                if (isPlaying) {
+                    isUserPaused = true;
+                    ytPlayer.pauseVideo();
+                    isPlaying = false;
+                    if (window.AndroidBridge && window.AndroidBridge.stopBackgroundPlayback) {
+                        window.AndroidBridge.stopBackgroundPlayback();
+                    }
+                } else {
+                    isUserPaused = false;
+                    ytPlayer.playVideo();
+                    isPlaying = true;
+                    notifyAndroidBackground();
+                }
+            }
+            updatePlayButtons();
+            renderRadios();
+        }
+
+        function updatePlayButtons() {
+            const playIcon = isPlaying ? '⏸' : '▶';
+            document.getElementById('miniPlayBtn').innerText = playIcon;
+            document.getElementById('fullPlayBtn').innerText = playIcon;
+            const vinyl = document.getElementById('miniThumb');
+            const bigVinyl = document.getElementById('fullArt');
+            if (isPlaying) {
+                vinyl.classList.add('playing');
+                bigVinyl.classList.add('playing');
+            } else {
+                vinyl.classList.remove('playing');
+                bigVinyl.classList.remove('playing');
+            }
+            renderTracks(CURRENT_PLAYLIST);
+        }
+
+        function nextTrack() {
+            if (isRadioMode) {
+                const nextIdx = (currentRadioIndex + 1) % RADIOS.length;
+                playRadio(nextIdx);
+            } else {
+                if (currentIndex + 1 < CURRENT_PLAYLIST.length) {
+                    playTrack(currentIndex + 1);
+                } else {
+                    playTrack(0);
+                }
+            }
+        }
+
+        function prevTrack() {
+            if (isRadioMode) {
+                const prevIdx = (currentRadioIndex - 1 + RADIOS.length) % RADIOS.length;
+                playRadio(prevIdx);
+            } else {
+                if (currentIndex - 1 >= 0) {
+                    playTrack(currentIndex - 1);
+                } else {
+                    playTrack(CURRENT_PLAYLIST.length - 1);
+                }
+            }
+        }
+
+        function seekSong(val) {
+            if (!isRadioMode && ytPlayer && ytReady) {
+                const dur = ytPlayer.getDuration() || 210;
+                const seekTo = (val / 100) * dur;
+                ytPlayer.seekTo(seekTo, true);
+            }
+        }
+
+        function startProgress() {
+            stopProgress();
+            progressTimer = setInterval(() => {
+                if (!isRadioMode && ytPlayer && ytReady && isPlaying && ytPlayer.getCurrentTime) {
+                    const current = ytPlayer.getCurrentTime() || 0;
+                    const duration = ytPlayer.getDuration() || 210;
+                    document.getElementById('currentTime').innerText = formatTime(current);
+                    if (duration > 0) {
+                        document.getElementById('totalDuration').innerText = formatTime(duration);
+                        document.getElementById('songSeeker').value = (current / duration) * 100;
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopProgress() {
+            if (progressTimer) clearInterval(progressTimer);
+        }
+
+        function formatTime(secs) {
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function toggleShuffle() {
+            if (isRadioMode) return;
+            CURRENT_PLAYLIST.sort(() => Math.random() - 0.5);
+            renderTracks(CURRENT_PLAYLIST);
+            alert("Çalma listesi karıştırıldı!");
+        }
+
+        function toggleRepeat() {
+            alert("Şarkı tekrarlama modu aktif!");
+        }
+
+        function toggleLike() {
+            const btn = document.getElementById('likeBtn');
+            if (btn.innerText === '🤍') {
+                btn.innerText = '❤️';
+                alert('Favorilerinize eklendi!');
+            } else {
+                btn.innerText = '🤍';
+            }
+        }
+
+        // Category Pills Handler
+        document.querySelectorAll('.pill-item').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.pill-item').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                const cat = pill.getAttribute('data-cat');
+                if (CATEGORIES[cat]) {
+                    CURRENT_PLAYLIST = [...CATEGORIES[cat]];
+                    document.getElementById('sectionHeaderTitle').innerText = pill.innerText;
+                    renderTracks(CURRENT_PLAYLIST);
+                }
+            });
+        });
+
+        // Search Handlers
+        function executeSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            currentSearchQuery = query;
+            searchPage = 1;
+            document.getElementById('searchLoader').style.display = 'block';
+            document.getElementById('search-header-title').innerText = `"${query}" Arama Sonuçları`;
+
+            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
+                window.AndroidBridge.searchOnlineMusic(query, 1);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('searchLoader').style.display = 'none';
+                    SEARCH_RESULTS = CATEGORIES['all'];
+                    renderSearchResults(SEARCH_RESULTS, false);
+                }, 500);
+            }
+        }
+
+        function loadMoreSearchResults() {
+            if (!currentSearchQuery) return;
+            searchPage++;
+            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
+                window.AndroidBridge.searchOnlineMusic(currentSearchQuery, searchPage);
+            }
+        }
+
+        // Bridge Callbacks for Online Search
+        window.onMusicSearchResults = function(resultsJson, page) {
+            document.getElementById('searchLoader').style.display = 'none';
+            try {
+                const results = typeof resultsJson === 'string' ? JSON.parse(resultsJson) : resultsJson;
+                if (page === 1) {
+                    SEARCH_RESULTS = results;
+                    renderSearchResults(SEARCH_RESULTS, false);
+                } else {
+                    SEARCH_RESULTS = SEARCH_RESULTS.concat(results);
+                    renderSearchResults(results, true);
+                }
+                document.getElementById('searchLoadMore').style.display = results.length > 0 ? 'block' : 'none';
+            } catch(e) {
+                console.error("Results parse error:", e);
+            }
+        };
+        window.onOnlineSearchResults = window.onMusicSearchResults;
+
         function renderSearchResults(list, append = false) {
             const container = document.getElementById('search-results-container');
             if (!append) container.innerHTML = '';
             if (!list || list.length === 0) {
-                if (!append) container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-sub);">Aradığınız kriterde şarkı bulunamadı.</div>';
+                if (!append) container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-sub);">Aradığınız şarkı bulunamadı.</div>';
                 return;
             }
 
@@ -1198,237 +1585,30 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Play in place without full screen jumping
-        function loadTrack(index, autoPlay = true) {
-            currentIndex = index;
-            const t = CURRENT_PLAYLIST[index];
-            if (!t) return;
-
-            // Update UI elements
-            document.getElementById('miniTitle').innerText = t.title;
-            document.getElementById('miniArtist').innerText = t.artist;
-            document.getElementById('miniThumb').src = t.art;
-            document.getElementById('fullTitle').innerText = t.title;
-            document.getElementById('fullArtist').innerText = t.artist;
-            document.getElementById('fullArt').src = t.art;
-            document.getElementById('totalDuration').innerText = t.duration || '03:45';
-
-            // Audio Play via YouTube IFrame (Full-length 3-5m studio recordings)
-            if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
-                ytPlayer.loadVideoById({
-                    videoId: t.id,
-                    suggestedQuality: 'small'
-                });
-                isPlaying = true;
-                isUserPaused = false;
-                updatePlayButtons();
-            }
-
-            notifyAndroidBackground();
-            renderTracks(CURRENT_PLAYLIST);
-        }
-
-        function playTrack(index) {
-            loadTrack(index, true);
-        }
-
-        function playOnlineTrack(idx) {
-            const item = SEARCH_RESULTS[idx];
-            CURRENT_PLAYLIST.unshift({
-                id: item.id,
-                title: item.title,
-                artist: item.artist,
-                duration: item.duration || "03:30",
-                art: item.art || item.thumb || 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'
-            });
-            loadTrack(0, true);
-        }
-
-        function togglePlay() {
-            if (!ytPlayer || !ytReady) return;
-            if (isPlaying) {
-                isUserPaused = true;
-                ytPlayer.pauseVideo();
-                isPlaying = false;
-                if (window.AndroidBridge && window.AndroidBridge.stopBackgroundPlayback) {
-                    window.AndroidBridge.stopBackgroundPlayback();
-                }
-            } else {
-                isUserPaused = false;
-                ytPlayer.playVideo();
-                isPlaying = true;
-                notifyAndroidBackground();
-            }
-            updatePlayButtons();
-        }
-
-        function updatePlayButtons() {
-            const playIcon = isPlaying ? '⏸' : '▶';
-            document.getElementById('miniPlayBtn').innerText = playIcon;
-            document.getElementById('fullPlayBtn').innerText = playIcon;
-            const vinyl = document.getElementById('miniThumb');
-            const bigVinyl = document.getElementById('fullArt');
-            if (isPlaying) {
-                vinyl.classList.add('playing');
-                bigVinyl.classList.add('playing');
-            } else {
-                vinyl.classList.remove('playing');
-                bigVinyl.classList.remove('playing');
-            }
-            // Update in list
-            renderTracks(CURRENT_PLAYLIST);
-        }
-
-        function nextTrack() {
-            if (currentIndex + 1 < CURRENT_PLAYLIST.length) {
-                playTrack(currentIndex + 1);
-            } else {
-                playTrack(0);
-            }
-        }
-
-        function prevTrack() {
-            if (currentIndex - 1 >= 0) {
-                playTrack(currentIndex - 1);
-            } else {
-                playTrack(CURRENT_PLAYLIST.length - 1);
-            }
-        }
-
-        function seekSong(val) {
-            if (ytPlayer && ytReady) {
-                const dur = ytPlayer.getDuration() || 210;
-                const seekTo = (val / 100) * dur;
-                ytPlayer.seekTo(seekTo, true);
-            }
-        }
-
-        function startProgress() {
-            stopProgress();
-            progressTimer = setInterval(() => {
-                if (ytPlayer && ytReady && isPlaying && ytPlayer.getCurrentTime) {
-                    const current = ytPlayer.getCurrentTime() || 0;
-                    const duration = ytPlayer.getDuration() || 210;
-                    document.getElementById('currentTime').innerText = formatTime(current);
-                    if (duration > 0) {
-                        document.getElementById('totalDuration').innerText = formatTime(duration);
-                        document.getElementById('songSeeker').value = (current / duration) * 100;
-                    }
-                }
-            }, 1000);
-        }
-
-        function stopProgress() {
-            if (progressTimer) clearInterval(progressTimer);
-        }
-
-        function formatTime(secs) {
-            const m = Math.floor(secs / 60);
-            const s = Math.floor(secs % 60);
-            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-        }
-
-        function toggleShuffle() {
-            CURRENT_PLAYLIST.sort(() => Math.random() - 0.5);
-            renderTracks(CURRENT_PLAYLIST);
-            alert("Çalma listesi karıştırıldı!");
-        }
-
-        function toggleRepeat() {
-            alert("Şarkı tekrarlama modu aktif!");
-        }
-
-        function toggleLike() {
-            const btn = document.getElementById('likeBtn');
-            if (btn.innerText === '🤍') {
-                btn.innerText = '❤️';
-                alert('Şarkı favorilerinize eklendi!');
-            } else {
-                btn.innerText = '🤍';
-            }
-        }
-
-        // Category Pills Handler
-        document.querySelectorAll('.pill-item').forEach(pill => {
-            pill.addEventListener('click', () => {
-                document.querySelectorAll('.pill-item').forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                const cat = pill.getAttribute('data-cat');
-                if (CATEGORIES[cat]) {
-                    CURRENT_PLAYLIST = [...CATEGORIES[cat]];
-                    document.getElementById('sectionHeaderTitle').innerText = pill.innerText;
-                    renderTracks(CURRENT_PLAYLIST);
-                } else {
-                    quickSearch(pill.innerText.replace(/[^a-zA-Z0-9çşğüöıÇŞĞÜÖİ ]/g, '').trim());
-                }
-            });
-        });
-
-        // Search Handlers
-        function executeSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) return;
-            currentSearchQuery = query;
-            searchPage = 1;
-            document.getElementById('searchLoader').style.display = 'block';
-            document.getElementById('search-header-title').innerText = `"${query}" Arama Sonuçları`;
-
-            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
-                window.AndroidBridge.searchOnlineMusic(query, 1);
-            } else {
-                setTimeout(() => {
-                    document.getElementById('searchLoader').style.display = 'none';
-                    SEARCH_RESULTS = CATEGORIES['all'];
-                    renderSearchResults(SEARCH_RESULTS, false);
-                }, 500);
-            }
-        }
-
-        function loadMoreSearchResults() {
-            if (!currentSearchQuery) return;
-            searchPage++;
-            if (window.AndroidBridge && window.AndroidBridge.searchOnlineMusic) {
-                window.AndroidBridge.searchOnlineMusic(currentSearchQuery, searchPage);
-            }
-        }
-
-        window.onOnlineSearchResults = function(resultsJson, page) {
-            document.getElementById('searchLoader').style.display = 'none';
-            try {
-                const results = JSON.parse(resultsJson);
-                if (page === 1) {
-                    SEARCH_RESULTS = results;
-                    renderSearchResults(SEARCH_RESULTS, false);
-                } else {
-                    SEARCH_RESULTS = SEARCH_RESULTS.concat(results);
-                    renderSearchResults(results, true);
-                }
-                document.getElementById('searchLoadMore').style.display = results.length > 0 ? 'block' : 'none';
-            } catch(e) {}
-        };
-
-        function quickSearch(keyword) {
-            switchTab('tab-search');
-            document.getElementById('searchInput').value = keyword;
-            executeSearch();
-        }
-
         // Downloads
         function triggerDownload(index, isFromSearch) {
             const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
             if (!track) return;
             if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
-                window.AndroidBridge.downloadMusicFile(track.id, track.title);
+                window.AndroidBridge.downloadMusicFile(track.id, track.title, track.artist);
             } else {
                 window.open(`https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=${track.id}`, '_blank');
             }
         }
 
         function downloadCurrentSong() {
+            if (isRadioMode) {
+                alert("Canlı radyo yayınları indirilemez.");
+                return;
+            }
             triggerDownload(currentIndex, false);
         }
 
         function saveCurrentOffline() {
+            if (isRadioMode) {
+                alert("Canlı radyo yayını çevrimdışı kaydedilemez.");
+                return;
+            }
             const t = CURRENT_PLAYLIST[currentIndex];
             alert(`"${t.title}" çevrimdışı kitaplığınıza kaydedildi!`);
         }
@@ -1452,6 +1632,10 @@
 
         // Lyrics
         function openLyrics() {
+            if (isRadioMode) {
+                alert("Canlı radyo yayınları için şarkı sözü bulunmamaktadır.");
+                return;
+            }
             const sheet = document.getElementById('lyricsSheet');
             const content = document.getElementById('lyricsContent');
             sheet.classList.add('active');
@@ -1498,12 +1682,13 @@
         function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
         function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
         function buyVip() {
-            alert('🎉 Tebrikler! MüzikCepte VIP üyeliğiniz aktif edildi. Tüm reklamlar kaldırıldı ve sınırsız indirme açıldı.');
+            alert('🎉 Tebrikler! MüzikCepte VIP aktif edildi.');
             closeVipModal();
         }
 
-        // Initial Load
+        // Initial Renders
         renderTracks(CURRENT_PLAYLIST);
+        renderRadios();
     </script>
 </body>
 </html>

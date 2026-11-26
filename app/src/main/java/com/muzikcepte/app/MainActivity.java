@@ -286,6 +286,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void downloadMusicFile(String ytId, String title) {
+                downloadMusicFile(ytId, title, "");
+            }
+
+            @JavascriptInterface
             public void downloadMusicFile(String ytId, String title, String artist) {
                 runOnUiThread(() -> {
                     try {
