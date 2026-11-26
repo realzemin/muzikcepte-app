@@ -420,9 +420,12 @@ public class MainActivity extends AppCompatActivity {
                 .setProductList(Collections.singletonList(product))
                 .build();
 
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && !productDetailsList.isEmpty()) {
-                vipProductDetails = productDetailsList.get(0);
+        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsResult) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                    && productDetailsResult != null
+                    && productDetailsResult.getProductDetailsList() != null
+                    && !productDetailsResult.getProductDetailsList().isEmpty()) {
+                vipProductDetails = productDetailsResult.getProductDetailsList().get(0);
             }
         });
     }
