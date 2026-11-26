@@ -718,20 +718,15 @@ public class MainActivity extends AppCompatActivity {
                         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this);
                         builder.setTitle("⬇️ " + title);
                         String[] options = {
-                            "🎵 1. Hızlı MP3 İndir (Snapsave - Önerilen)",
-                            "⚡ 2. Alternatif MP3 İndir (OnlyMP3)",
-                            "🎬 3. HD Video İndir (MP4)",
-                            "💾 4. Çevrimdışı Kitaplığıma Kaydet"
+                            "⚡ Alternatif MP3 İndir (OnlyMP3)",
+                            "💾 Çevrimdışı Kitaplığıma Kaydet"
                         };
                         builder.setItems(options, (dialog, which) -> {
                             try {
-                                if (which == 0 || which == 2) {
-                                    String url = "https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=" + ytId;
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                                } else if (which == 1) {
+                                if (which == 0) {
                                     String url = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
                                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                                } else if (which == 3) {
+                                } else if (which == 1) {
                                     webView.evaluateJavascript("if(window.saveOfflineTrackById) window.saveOfflineTrackById('" + ytId + "');", null);
                                     Toast.makeText(MainActivity.this, "✅ '" + title + "' Çevrimdışı Listenize Eklendi!", Toast.LENGTH_SHORT).show();
                                 }

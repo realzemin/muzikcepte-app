@@ -846,20 +846,21 @@
         /* Viewport Audio Engine */
         #audioEngineContainer {
             position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 200px;
-            height: 120px;
-            opacity: 0.05;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 2px;
+            opacity: 0.01;
             pointer-events: none;
-            z-index: -10;
+            z-index: 0;
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
 
     <!-- HTML5 Live Radio Audio Element -->
-    <audio id="liveRadioPlayer" preload="none"></audio>
+    <audio id="liveRadioPlayer" preload="auto"></audio>
 
     <!-- Top Header -->
     <header class="app-header">
@@ -1141,15 +1142,17 @@
         // YouTube IFrame API Ready Callback
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('ytPlayerContainer', {
-                height: '120',
-                width: '200',
+                height: '100%',
+                width: '100%',
                 playerVars: {
                     'autoplay': 1,
                     'controls': 0,
                     'disablekb': 1,
                     'fs': 0,
                     'rel': 0,
-                    'origin': window.location.origin
+                    'playsinline': 1,
+                    'enablejsapi': 1,
+                    'iv_load_policy': 3
                 },
                 events: {
                     'onReady': () => { ytReady = true; },
@@ -1166,15 +1169,11 @@
                 isUserPaused = false;
                 updatePlayButtons();
                 startProgress();
-                notifyAndroidBackground();
+                notifyAndroidBackground(true);
+            } else if (event.data === YT.PlayerState.BUFFERING) {
+                // Buffer audio smoothly without 100ms forced interrupt
             } else if (event.data === YT.PlayerState.PAUSED) {
-                if (!isUserPaused) {
-                    setTimeout(() => {
-                        if (!isUserPaused && ytPlayer && ytPlayer.playVideo) {
-                            ytPlayer.playVideo();
-                        }
-                    }, 100);
-                } else {
+                if (isUserPaused) {
                     isPlaying = false;
                     updatePlayButtons();
                     stopProgress();
@@ -1319,18 +1318,17 @@
             document.getElementById('radioLiveBar').style.display = 'none';
             document.getElementById('modalActionsRow').style.display = 'flex';
 
-            // Audio Play via YouTube IFrame (Full-length 3-5m studio recordings)
+            // Audio Play via YouTube IFrame (Full-length studio recordings)
             if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
                 ytPlayer.loadVideoById({
-                    videoId: t.id,
-                    suggestedQuality: 'small'
+                    videoId: t.id
                 });
                 isPlaying = true;
                 isUserPaused = false;
                 updatePlayButtons();
             }
 
-            notifyAndroidBackground();
+            notifyAndroidBackground(true);
             renderTracks(CURRENT_PLAYLIST);
             renderRadios();
         }
