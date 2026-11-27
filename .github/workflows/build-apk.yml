@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.7.7 (v30) - 28 Canlı Radyo & 15 Dakika Reklamsız Ödül Sürümü</b>%0A%0A📻 <b>28 CANLI TÜRK RADYOSU:</b> Radyo sayısı 28'e çıkarıldı! Pal Nostalji, Power Türk, Süper FM, Kral Pop, DamarTürk, Joy Türk ve 28 popüler istasyon kesintisiz yayında.%0A🎁 <b>15 DAKİKA REKLAMSIZ ÖDÜLÜ:</b> 1 video izleyerek 15 dakika boyunca sıfır reklamla kesintisiz müzik deneyimi.%0A⚡ <b>SIFIR TAKILMA & AKICI İLERİ/GERİ:</b> Şarkıyı ileri veya geri alınca şarkı asla durmaz, 10s butonları ile pürüzsüz geçiş.%0A📥 <b>HIZLI MP3 İNDİRME:</b> Şarkıları tek tıkla MP3 dönüştürücüyle doğrudan telefona indirme." \
+             -F caption="🎵 <b>MüzikCepte v1.7.8 (v31) - Sabit Vitrin, Renkli Çevrimdışı Kaydet & Kusursuz Akıcı Ses</b>%0A%0A🎯 <b>SABİT VİTRİN KARTI:</b> Ana sayfadaki Popüler & Trend Şarkılar kartı sabit ve tıklanamaz hale getirildi.%0A📶 <b>RENKLİ ÇEVRİMDİŞİ KAYDET BUTONLARI:</b> Hem şarkı listelerine hem de indirme penceresine mor renkli tek tıkla internetsiz kaydetme butonu eklendi.%0A⚡ <b>SIFIR TAKILMA & GÜVENLİ SARMA:</b> Sarma kilit mekanizması ve Chromium render optimizasyonuyla şarkıyı ileri/geri alırken donma tamamen giderildi.%0A📻 <b>28 CANLI RADYO:</b> Pal Nostalji dahil tüm canlı radyolar kesintisiz yayında." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.7.7 (v30) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.7.8 (v31) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
