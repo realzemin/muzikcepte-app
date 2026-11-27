@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.8.0 (v33) - İndir Üstüne Dikey Çevrimdışı Kaydet, Doğrudan Native Radyo & Kusursuz Sarma</b>%0A%0A📶 <b>İNDİR ÜSTÜNE ÇEVRİMDİŞİ KAYDET:</b> Kullanıcının görsel talebine göre her şarkı kartında [📥 İndir] butonunun tam üstüne mor renkli [📶 Kaydet] butonu eklendi.%0A📻 <b>DOĞRUDAN NATIVE RADYO MOTORU:</b> Canlı radyolar HTML5 beklemesi olmadan direkt Android C++ MediaPlayer ile anında ve kesintisiz başlatılıyor.%0A⚡ <b>KUSURSUZ İLERİ/GERİ SARMA:</b> Çift tetik korumalı ve tampon kilitli sarma motoruyla şarkıyı ileri geri alınca donma ve durma tamamen ortadan kaldırıldı.%0A🚀 <b>SIFIR OCCLUSION & AKICI SES:</b> Chromium arkaplan ses motoru tam öncelikli render katmanına taşınarak şarkı kasması ve takılması sıfırlandı." \
+             -F caption="🎵 <b>MüzikCepte v1.8.1 (v34) - Saf Ses (Audio-Only) C++ Yerel Motor, Doğrudan Telefona İndirme & Sıfır Takılma</b>%0A%0A🚀 <b>SAF SES (AUDIO-ONLY) C++ MOTORU:</b> Ağır video oynatıcı devreden çıkarıldı; şarkılar doğrudan 128kbps saf ses akışı olarak Android C++ MediaPlayer ile sıfır takılma ve sıfır gecikmeyle çalıyor.%0A📥 <b>GERÇEK TELEFONA İNDİRME:</b> Şarkılar Android DownloadManager ile doğrudan telefonun İndirilenler klasörüne gerçek .m4a/.mp3 ses dosyası olarak iniyor.%0A⚡ <b>ANINDA SARMA & SIFIR DONMA:</b> Donanımsal MediaPlayer ile ileri/geri sarma milisaniyede gerçekleşiyor, buffer beklemesi ve takılma sıfırlandı.%0A📻 <b>28 CANLI RADYO:</b> Kesintisiz arka plan ve kilit ekranı desteğiyle yayında." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.0 (v33) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.8.1 (v34) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

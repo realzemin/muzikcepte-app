@@ -1,6 +1,7 @@
 package com.muzikcepte.app;
 
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -256,6 +257,22 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             if (webView != null) {
                 webView.evaluateJavascript("if(window.onNativeRadioState) window.onNativeRadioState(" + isPlaying + ");", null);
+            }
+        });
+    }
+
+    public void updatePlaybackProgress(long currentSec, long durationSec) {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.onNativeProgress) window.onNativeProgress(" + currentSec + ", " + durationSec + ");", null);
+            }
+        });
+    }
+
+    public void updateJsTrackState(boolean isPlaying, long durationMs) {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.evaluateJavascript("if(window.onNativeTrackState) window.onNativeTrackState(" + isPlaying + ", " + durationMs + ");", null);
             }
         });
     }
@@ -764,6 +781,103 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void playTrackNative(String ytId, String title, String artist, String artUrl) {
+                executor.execute(() -> {
+                    try {
+                        String streamUrl = resolveDirectAudioStream(ytId);
+                        if (streamUrl != null && !streamUrl.isEmpty()) {
+                            runOnUiThread(() -> {
+                                try {
+                                    Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                                    serviceIntent.setAction(MusicPlaybackService.ACTION_PLAY_TRACK);
+                                    serviceIntent.putExtra("stream_url", streamUrl);
+                                    serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
+                                    serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
+                                    serviceIntent.putExtra(MusicPlaybackService.EXTRA_ART_URL, artUrl);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        startForegroundService(serviceIntent);
+                                    } else {
+                                        startService(serviceIntent);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(MainActivity.this, "Ses akışı alınamadı, parça atlanıyor...", Toast.LENGTH_SHORT).show();
+                                playNextTrack();
+                            });
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void seekTo(long seconds) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_SEEK_TO);
+                        serviceIntent.putExtra(MusicPlaybackService.EXTRA_POSITION, seconds * 1000L);
+                        startService(serviceIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void skipSeconds(long seconds) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
+                        serviceIntent.setAction(MusicPlaybackService.ACTION_SKIP_SECONDS);
+                        serviceIntent.putExtra("extra_seconds", seconds);
+                        startService(serviceIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void downloadMusicFileDirect(String ytId, String title, String artist) {
+                executor.execute(() -> {
+                    try {
+                        String streamUrl = resolveDirectAudioStream(ytId);
+                        if (streamUrl != null && !streamUrl.isEmpty()) {
+                            runOnUiThread(() -> {
+                                try {
+                                    String cleanTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Muzik";
+                                    cleanTitle = cleanTitle.replaceAll("[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ\\s\\-_]", "").trim();
+                                    DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                                    DownloadManager.Request request = new DownloadManager.Request(Uri.parse(streamUrl));
+                                    request.setTitle(cleanTitle);
+                                    request.setDescription("MüzikCepte internetsiz dinleme dosyası");
+                                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".m4a");
+                                    if (dm != null) {
+                                        dm.enqueue(request);
+                                        Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' telefonunuza indiriliyor! İndirilenler klasöründe yer alacaktır.", Toast.LENGTH_LONG).show();
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    Toast.makeText(MainActivity.this, "İndirme başlatılamadı: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "İndirme bağlantısı alınamadı.", Toast.LENGTH_SHORT).show());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
             public void showToast(String message) {
                 if (message != null && !message.isEmpty()) {
                     runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show());
@@ -862,7 +976,93 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            private void fetchYouTubeInnertubeSearch(String q, JSONArray results, Set<String> seenIds) {
+                public static String resolveDirectAudioStream(String ytId) {
+        if (ytId == null || ytId.trim().isEmpty()) return null;
+        try {
+            String apiUrl = "https://www.youtube.com/youtubei/v1/player?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
+            JSONObject clientJson = new JSONObject();
+            clientJson.put("clientName", "ANDROID");
+            clientJson.put("clientVersion", "20.10.38");
+            clientJson.put("hl", "tr");
+            clientJson.put("gl", "TR");
+
+            JSONObject contextJson = new JSONObject();
+            contextJson.put("client", clientJson);
+
+            JSONObject payloadJson = new JSONObject();
+            payloadJson.put("context", contextJson);
+            payloadJson.put("videoId", ytId.trim());
+
+            byte[] postBytes = payloadJson.toString().getBytes(StandardCharsets.UTF_8);
+
+            HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38 (Linux; U; Android 14; TR) gzip");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(7000);
+            conn.setReadTimeout(7000);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(postBytes);
+                os.flush();
+            }
+
+            if (conn.getResponseCode() != 200) {
+                conn.disconnect();
+                return null;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            conn.disconnect();
+
+            JSONObject root = new JSONObject(sb.toString());
+            JSONObject streamingData = root.optJSONObject("streamingData");
+            if (streamingData == null) return null;
+            JSONArray formats = streamingData.optJSONArray("adaptiveFormats");
+            if (formats == null) return null;
+
+            String bestAudioUrl = null;
+            int maxBitrate = 0;
+            for (int i = 0; i < formats.length(); i++) {
+                JSONObject f = formats.getJSONObject(i);
+                String mime = f.optString("mimeType", "");
+                if (mime.contains("audio/mp4")) {
+                    int bitrate = f.optInt("bitrate", 0);
+                    String u = f.optString("url", "");
+                    if (!u.isEmpty() && bitrate >= maxBitrate) {
+                        maxBitrate = bitrate;
+                        bestAudioUrl = u;
+                    }
+                }
+            }
+            if (bestAudioUrl == null) {
+                for (int i = 0; i < formats.length(); i++) {
+                    JSONObject f = formats.getJSONObject(i);
+                    String mime = f.optString("mimeType", "");
+                    if (mime.contains("audio")) {
+                        String u = f.optString("url", "");
+                        if (!u.isEmpty()) {
+                            bestAudioUrl = u;
+                            break;
+                        }
+                    }
+                }
+            }
+            return bestAudioUrl;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void fetchYouTubeInnertubeSearch(String q, JSONArray results, Set<String> seenIds) {
                 try {
                     String apiUrl = "https://www.youtube.com/youtubei/v1/search?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
                     JSONObject clientJson = new JSONObject();

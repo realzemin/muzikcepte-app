@@ -1516,25 +1516,17 @@
             document.getElementById('radioLiveBar').style.display = 'none';
             document.getElementById('modalActionsRow').style.display = 'flex';
 
-            // Audio Play via YouTube IFrame (Full-length studio recordings)
-            if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
-                ytPlayer.loadVideoById({
-                    videoId: t.id
-                });
-                isPlaying = true;
-                isUserPaused = false;
-                updatePlayButtons();
-            } else {
-                pendingTrackToPlay = t.id;
-                isPlaying = true;
-                isUserPaused = false;
-                updatePlayButtons();
+            isPlaying = true;
+            isUserPaused = false;
+            updatePlayButtons();
+
+            // Direct Native Pure Audio Streaming (Hardware C++ MediaPlayer)
+            if (window.AndroidBridge && window.AndroidBridge.playTrackNative) {
+                window.AndroidBridge.playTrackNative(t.id, t.title, t.artist, t.art || t.thumb || '');
+            } else if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
+                ytPlayer.loadVideoById({ videoId: t.id });
             }
 
-            notifyAndroidBackground(true);
-            if (window.AndroidBridge && window.AndroidBridge.onTrackChanged) {
-                window.AndroidBridge.onTrackChanged();
-            }
             renderTracks(CURRENT_PLAYLIST);
             updateFavBadges();
             updateOfflineBadges();
@@ -2123,86 +2115,89 @@
         }
 
         // ==========================================
-        // Kusursuz İleri/Geri Sarma (Sıfır Donma, Çift Tetik Engelleyici & Kesintisiz Oynatma)
+        // Kusursuz İleri/Geri Sarma (Doğrudan Yerel Android MediaPlayer)
         // ==========================================
         let seekLockTimer = null;
         let lastSeekTimestamp = 0;
+        let currentTrackDurationSec = 210;
+
+        window.onNativeProgress = function(currentSec, totalSec) {
+            if (isRadioMode || isSeeking) return;
+            const curEl = document.getElementById('currentTime');
+            const totEl = document.getElementById('totalDuration');
+            const seeker = document.getElementById('songSeeker');
+            if (curEl) curEl.innerText = formatTime(currentSec);
+            if (totalSec > 0) {
+                currentTrackDurationSec = totalSec;
+                if (totEl) totEl.innerText = formatTime(totalSec);
+                if (seeker) seeker.value = (currentSec / totalSec) * 100;
+            }
+        };
+
+        window.onNativeTrackState = function(playingState, durationMs) {
+            isPlaying = playingState;
+            updatePlayButtons();
+            if (durationMs > 0) {
+                currentTrackDurationSec = Math.floor(durationMs / 1000);
+                const totEl = document.getElementById('totalDuration');
+                if (totEl) totEl.innerText = formatTime(currentTrackDurationSec);
+            }
+            renderTracks(CURRENT_PLAYLIST);
+        };
 
         function onSeekInput(val) {
             isSeeking = true;
-            if (!isRadioMode && ytPlayer && ytReady) {
-                const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                const targetSec = (parseFloat(val) / 100) * dur;
-                const curTimeEl = document.getElementById('currentTime');
-                if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
-            }
+            const dur = currentTrackDurationSec || 210;
+            const targetSec = (parseFloat(val) / 100) * dur;
+            const curTimeEl = document.getElementById('currentTime');
+            if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
         }
 
         function onSeekComplete(val) {
             const now = Date.now();
-            if (now - lastSeekTimestamp < 250) {
-                return; // Ignore duplicate touchend + change events
-            }
+            if (now - lastSeekTimestamp < 250) return;
             lastSeekTimestamp = now;
 
-            if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
-                try {
-                    const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                    const targetSec = (parseFloat(val) / 100) * dur;
-                    isSeeking = true;
-                    ytPlayer.seekTo(targetSec, true);
-                    if (!isUserPaused && ytPlayer.playVideo) {
-                        ytPlayer.playVideo();
-                    }
-                } catch (e) {
-                    console.error("Seek error:", e);
-                }
+            const dur = currentTrackDurationSec || 210;
+            const targetSec = (parseFloat(val) / 100) * dur;
+            const curTimeEl = document.getElementById('currentTime');
+            if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
+
+            if (window.AndroidBridge && window.AndroidBridge.seekTo) {
+                window.AndroidBridge.seekTo(Math.floor(targetSec));
+            } else if (ytPlayer && ytReady && ytPlayer.seekTo) {
+                ytPlayer.seekTo(targetSec, true);
             }
+
             if (seekLockTimer) clearTimeout(seekLockTimer);
-            seekLockTimer = setTimeout(() => {
-                isSeeking = false;
-                if (!isUserPaused && ytPlayer && ytPlayer.getPlayerState) {
-                    const st = ytPlayer.getPlayerState();
-                    if (st === YT.PlayerState.PAUSED || st === YT.PlayerState.BUFFERING) {
-                        ytPlayer.playVideo();
-                    }
-                }
-            }, 700);
+            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
         }
 
         function skipBackward(sec = 10) {
             if (isRadioMode) return;
-            if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
+            isSeeking = true;
+            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
+                window.AndroidBridge.skipSeconds(-sec);
+            } else if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
-                const target = Math.max(cur - sec, 0);
-                isSeeking = true;
-                ytPlayer.seekTo(target, true);
-                if (!isUserPaused && ytPlayer.playVideo) {
-                    ytPlayer.playVideo();
-                }
-                const curTimeEl = document.getElementById('currentTime');
-                if (curTimeEl) curTimeEl.innerText = formatTime(target);
-                if (seekLockTimer) clearTimeout(seekLockTimer);
-                seekLockTimer = setTimeout(() => { isSeeking = false; }, 700);
+                ytPlayer.seekTo(Math.max(cur - sec, 0), true);
             }
+            if (seekLockTimer) clearTimeout(seekLockTimer);
+            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
         }
 
         function skipForward(sec = 10) {
             if (isRadioMode) return;
-            if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
+            isSeeking = true;
+            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
+                window.AndroidBridge.skipSeconds(sec);
+            } else if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
                 const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                const target = Math.min(cur + sec, dur - 1);
-                isSeeking = true;
-                ytPlayer.seekTo(target, true);
-                if (!isUserPaused && ytPlayer.playVideo) {
-                    ytPlayer.playVideo();
-                }
-                const curTimeEl = document.getElementById('currentTime');
-                if (curTimeEl) curTimeEl.innerText = formatTime(target);
-                if (seekLockTimer) clearTimeout(seekLockTimer);
-                seekLockTimer = setTimeout(() => { isSeeking = false; }, 700);
+                ytPlayer.seekTo(Math.min(cur + sec, dur - 1), true);
             }
+            if (seekLockTimer) clearTimeout(seekLockTimer);
+            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
         }
 
         // ==========================================
@@ -2258,7 +2253,10 @@
             if (!track) return;
             saveCurrentOfflineDirect(track);
             updateOfflineBadges();
-            showToast("✅ '" + track.title + "' çevrimdışı kütüphanenize kaydedildi!");
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
+                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
+            }
+            showToast("✅ '" + track.title + "' hem kütüphanenize eklendi hem de telefonunuza indiriliyor!");
         }
 
         function confirmOfflineFromModal() {
@@ -2271,18 +2269,20 @@
         function confirmDownloadWithReward() {
             if (!pendingDownloadTrack) return;
             closeDownloadModal();
-
-            // Çevrimdışı listesine de kaydet
             saveCurrentOfflineDirect(pendingDownloadTrack);
 
-            if (window.AndroidBridge && window.AndroidBridge.requestDownloadWithReward) {
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
+                window.AndroidBridge.downloadMusicFileDirect(
+                    pendingDownloadTrack.id,
+                    pendingDownloadTrack.title,
+                    pendingDownloadTrack.artist
+                );
+            } else if (window.AndroidBridge && window.AndroidBridge.requestDownloadWithReward) {
                 window.AndroidBridge.requestDownloadWithReward(
                     pendingDownloadTrack.id,
                     pendingDownloadTrack.title,
                     pendingDownloadTrack.artist
                 );
-            } else {
-                alert("📥 '" + pendingDownloadTrack.title + "' şarkısı arka planda telefonunuza indiriliyor!");
             }
         }
 
