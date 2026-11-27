@@ -859,7 +859,8 @@ public class MainActivity extends AppCompatActivity {
                                     request.setTitle(cleanTitle);
                                     request.setDescription("MüzikCepte internetsiz dinleme dosyası");
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".m4a");
+                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanTitle + ".mp3");
+                                    request.setMimeType("audio/mpeg");
                                     if (dm != null) {
                                         dm.enqueue(request);
                                         Toast.makeText(MainActivity.this, "📥 '" + cleanTitle + "' telefonunuza indiriliyor! İndirilenler klasöründe yer alacaktır.", Toast.LENGTH_LONG).show();
@@ -977,90 +978,51 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-                public String resolveDirectAudioStream(String ytId) {
+                private final java.util.concurrent.ConcurrentHashMap<String, String> rapidAudioCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public String resolveDirectAudioStream(String ytId) {
         if (ytId == null || ytId.trim().isEmpty()) return null;
+        String cleanId = ytId.trim();
+        if (rapidAudioCache.containsKey(cleanId)) {
+            String cached = rapidAudioCache.get(cleanId);
+            if (cached != null && !cached.isEmpty()) return cached;
+        }
         try {
-            String apiUrl = "https://www.youtube.com/youtubei/v1/player?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
-            JSONObject clientJson = new JSONObject();
-            clientJson.put("clientName", "ANDROID");
-            clientJson.put("clientVersion", "20.10.38");
-            clientJson.put("hl", "tr");
-            clientJson.put("gl", "TR");
-
-            JSONObject contextJson = new JSONObject();
-            contextJson.put("client", clientJson);
-
-            JSONObject payloadJson = new JSONObject();
-            payloadJson.put("context", contextJson);
-            payloadJson.put("videoId", ytId.trim());
-
-            byte[] postBytes = payloadJson.toString().getBytes(StandardCharsets.UTF_8);
-
+            String apiUrl = "https://youtube-mp36.p.rapidapi.com/dl?id=" + cleanId;
             HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("User-Agent", "com.google.android.youtube/20.10.38 (Linux; U; Android 14; TR) gzip");
-            conn.setDoOutput(true);
-            conn.setConnectTimeout(7000);
-            conn.setReadTimeout(7000);
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("X-RapidAPI-Key", "b679f59925mshde76e681de5fc13p1f973ejsn08126948d58f");
+            conn.setRequestProperty("X-RapidAPI-Host", "youtube-mp36.p.rapidapi.com");
+            conn.setRequestProperty("User-Agent", "MuzikCepte/1.8.5");
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(10000);
 
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(postBytes);
-                os.flush();
-            }
-
-            if (conn.getResponseCode() != 200) {
+            int code = conn.getResponseCode();
+            if (code == 200) {
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
                 conn.disconnect();
-                return null;
-            }
 
-            StringBuilder sb = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-            }
-            conn.disconnect();
-
-            JSONObject root = new JSONObject(sb.toString());
-            JSONObject streamingData = root.optJSONObject("streamingData");
-            if (streamingData == null) return null;
-            JSONArray formats = streamingData.optJSONArray("adaptiveFormats");
-            if (formats == null) return null;
-
-            String bestAudioUrl = null;
-            int maxBitrate = 0;
-            for (int i = 0; i < formats.length(); i++) {
-                JSONObject f = formats.getJSONObject(i);
-                String mime = f.optString("mimeType", "");
-                if (mime.contains("audio/mp4")) {
-                    int bitrate = f.optInt("bitrate", 0);
-                    String u = f.optString("url", "");
-                    if (!u.isEmpty() && bitrate >= maxBitrate) {
-                        maxBitrate = bitrate;
-                        bestAudioUrl = u;
+                JSONObject json = new JSONObject(sb.toString());
+                if ("ok".equalsIgnoreCase(json.optString("status")) && json.has("link")) {
+                    String link = json.getString("link");
+                    if (link != null && !link.isEmpty()) {
+                        rapidAudioCache.put(cleanId, link);
+                        return link;
                     }
                 }
+            } else {
+                conn.disconnect();
             }
-            if (bestAudioUrl == null) {
-                for (int i = 0; i < formats.length(); i++) {
-                    JSONObject f = formats.getJSONObject(i);
-                    String mime = f.optString("mimeType", "");
-                    if (mime.contains("audio")) {
-                        String u = f.optString("url", "");
-                        if (!u.isEmpty()) {
-                            bestAudioUrl = u;
-                            break;
-                        }
-                    }
-                }
-            }
-            return bestAudioUrl;
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
+        return null;
     }
 
     private void fetchYouTubeInnertubeSearch(String q, JSONArray results, Set<String> seenIds) {

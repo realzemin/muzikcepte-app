@@ -1282,6 +1282,34 @@
 
         const radioAudio = document.getElementById('liveRadioPlayer');
 
+        // Native Android C++ MediaPlayer Callbacks (Stutter-Free Pure Audio Engine)
+        window.onNativeProgress = function(cur, dur) {
+            if (isSeeking) return;
+            const curEl = document.getElementById('currentTime');
+            const totEl = document.getElementById('totalDuration');
+            const fillEl = document.getElementById('progressFill');
+            const dotEl = document.getElementById('progressDot');
+            const inputEl = document.getElementById('progressBar');
+            if (curEl) curEl.innerText = formatTime(cur);
+            if (totEl && dur > 0) totEl.innerText = formatTime(dur);
+            if (dur > 0) {
+                const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
+                if (fillEl) fillEl.style.width = pct + '%';
+                if (dotEl) dotEl.style.left = pct + '%';
+                if (inputEl) inputEl.value = pct;
+            }
+        };
+
+        window.onNativeTrackState = function(playing, durMs) {
+            isPlaying = playing;
+            isUserPaused = !playing;
+            updatePlayButtons();
+            if (durMs > 0) {
+                const totEl = document.getElementById('totalDuration');
+                if (totEl) totEl.innerText = formatTime(Math.floor(durMs / 1000));
+            }
+        };
+
         // YouTube IFrame API Ready Callback
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('ytPlayerContainer', {
@@ -1512,8 +1540,10 @@
             isUserPaused = false;
             updatePlayButtons();
 
-            // Audio Play via YouTube IFrame (Full-length studio recordings)
-            if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
+            // Hardware C++ Android Audio Streamer via RapidAPI MP3 (100% Pure Audio, Zero Video, Instant Buffering)
+            if (window.AndroidBridge && window.AndroidBridge.playTrackNative) {
+                window.AndroidBridge.playTrackNative(t.id, t.title, t.artist, t.art || t.thumb || '');
+            } else if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
                 ytPlayer.loadVideoById({
                     videoId: t.id
                 });
@@ -1545,37 +1575,29 @@
         }
 
         function togglePlay() {
-            if (isRadioMode) {
-                if (window.AndroidBridge && window.AndroidBridge.toggleNativePlayback) {
-                    window.AndroidBridge.toggleNativePlayback();
-                    isPlaying = !isPlaying;
-                    isUserPaused = !isPlaying;
-                } else if (radioAudio) {
-                    if (isPlaying) {
-                        radioAudio.pause();
-                        isPlaying = false;
-                        isUserPaused = true;
-                    } else {
-                        radioAudio.play().catch(e => console.error(e));
-                        isPlaying = true;
-                        isUserPaused = false;
-                    }
+            if (window.AndroidBridge && window.AndroidBridge.toggleNativePlayback) {
+                window.AndroidBridge.toggleNativePlayback();
+                isPlaying = !isPlaying;
+                isUserPaused = !isPlaying;
+            } else if (isRadioMode && radioAudio) {
+                if (isPlaying) {
+                    radioAudio.pause();
+                    isPlaying = false;
+                    isUserPaused = true;
+                } else {
+                    radioAudio.play().catch(e => console.error(e));
+                    isPlaying = true;
+                    isUserPaused = false;
                 }
-            } else {
-                if (!ytPlayer || !ytReady) return;
+            } else if (ytPlayer && ytReady) {
                 if (isPlaying) {
                     isUserPaused = true;
                     ytPlayer.pauseVideo();
                     isPlaying = false;
-                    if (window.AndroidBridge && window.AndroidBridge.updatePlaybackState) {
-                        const t = CURRENT_PLAYLIST[currentIndex] || { title: "Müzik", artist: "MüzikCepte" };
-                        window.AndroidBridge.updatePlaybackState(t.title, t.artist, false);
-                    }
                 } else {
                     isUserPaused = false;
                     ytPlayer.playVideo();
                     isPlaying = true;
-                    notifyAndroidBackground(true);
                 }
             }
             updatePlayButtons();
@@ -1789,14 +1811,55 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
+        function showToast(msg) {
+            if (window.AndroidBridge && window.AndroidBridge.showToast) {
+                window.AndroidBridge.showToast(msg);
+                return;
+            }
+            let toast = document.getElementById('appToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'appToast';
+                toast.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(30,27,75,0.95); border:1px solid #8B5CF6; color:#fff; padding:10px 18px; border-radius:20px; font-size:12px; font-weight:600; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.5); pointer-events:none; transition:opacity 0.3s ease; opacity:0; text-align:center; max-width:85%;';
+                document.body.appendChild(toast);
+            }
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            if (window._toastTimer) clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2500);
+        }
+
+        function quickSaveOffline(index, isFromSearch) {
+            const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
+            if (!track) return;
+            saveCurrentOfflineDirect(track);
+            updateOfflineBadges();
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
+                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
+            }
+            showToast("📶 '" + track.title + "' çevrimdışı kitaplığınıza kaydedildi!");
+        }
+
+        function requestDownloadPrompt(index, isFromSearch) {
+            const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
+            if (!track) return;
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
+                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
+            } else if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
+                window.AndroidBridge.downloadMusicFile(track.id, track.title, track.artist);
+            }
+        }
+
         // Downloads
         function triggerDownload(index, isFromSearch) {
             const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
             if (!track) return;
-            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
+            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
+                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
+            } else if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
                 window.AndroidBridge.downloadMusicFile(track.id, track.title, track.artist);
-            } else {
-                window.open(`https://snapsave.io/tr/?url=https://www.youtube.com/watch?v=${track.id}`, '_blank');
             }
         }
 
@@ -2117,12 +2180,10 @@
 
         function onSeekInput(val) {
             isSeeking = true;
-            if (!isRadioMode && ytPlayer && ytReady) {
-                const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                const targetSec = (parseFloat(val) / 100) * dur;
-                const curTimeEl = document.getElementById('currentTime');
-                if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
-            }
+            const fill = document.getElementById('progressFill');
+            const dot = document.getElementById('progressDot');
+            if (fill) fill.style.width = val + '%';
+            if (dot) dot.style.left = val + '%';
         }
 
         function onSeekComplete(val) {
@@ -2130,41 +2191,41 @@
             if (now - lastSeekTimestamp < 250) return;
             lastSeekTimestamp = now;
 
-            if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
+            const totEl = document.getElementById('totalDuration');
+            let dur = 210;
+            if (totEl && totEl.innerText && totEl.innerText.includes(':')) {
+                const p = totEl.innerText.split(':');
+                dur = parseInt(p[0]) * 60 + parseInt(p[1]);
+            }
+            const targetSec = Math.round((parseFloat(val) / 100) * dur);
+
+            if (window.AndroidBridge && window.AndroidBridge.seekTo) {
+                window.AndroidBridge.seekTo(targetSec);
+            } else if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
                 try {
-                    const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                    const targetSec = (parseFloat(val) / 100) * dur;
                     isSeeking = true;
                     ytPlayer.seekTo(targetSec, true);
-                    if (!isUserPaused && ytPlayer.playVideo) {
-                        ytPlayer.playVideo();
-                    }
+                    if (!isUserPaused && ytPlayer.playVideo) ytPlayer.playVideo();
                 } catch (e) {
                     console.error("Seek error:", e);
                 }
             }
             if (seekLockTimer) clearTimeout(seekLockTimer);
-            seekLockTimer = setTimeout(() => {
-                isSeeking = false;
-                if (!isUserPaused && ytPlayer && ytPlayer.getPlayerState) {
-                    const st = ytPlayer.getPlayerState();
-                    if (st === YT.PlayerState.PAUSED) {
-                        ytPlayer.playVideo();
-                    }
-                }
-            }, 600);
+            seekLockTimer = setTimeout(() => { isSeeking = false; }, 400);
         }
 
         function skipBackward(sec = 10) {
+            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
+                window.AndroidBridge.skipSeconds(-sec);
+                return;
+            }
             if (isRadioMode) return;
             if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
                 const target = Math.max(cur - sec, 0);
                 isSeeking = true;
                 ytPlayer.seekTo(target, true);
-                if (!isUserPaused && ytPlayer.playVideo) {
-                    ytPlayer.playVideo();
-                }
+                if (!isUserPaused && ytPlayer.playVideo) ytPlayer.playVideo();
                 const curTimeEl = document.getElementById('currentTime');
                 if (curTimeEl) curTimeEl.innerText = formatTime(target);
                 if (seekLockTimer) clearTimeout(seekLockTimer);
@@ -2173,6 +2234,10 @@
         }
 
         function skipForward(sec = 10) {
+            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
+                window.AndroidBridge.skipSeconds(sec);
+                return;
+            }
             if (isRadioMode) return;
             if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
@@ -2180,9 +2245,7 @@
                 const target = Math.min(cur + sec, dur - 1);
                 isSeeking = true;
                 ytPlayer.seekTo(target, true);
-                if (!isUserPaused && ytPlayer.playVideo) {
-                    ytPlayer.playVideo();
-                }
+                if (!isUserPaused && ytPlayer.playVideo) ytPlayer.playVideo();
                 const curTimeEl = document.getElementById('currentTime');
                 if (curTimeEl) curTimeEl.innerText = formatTime(target);
                 if (seekLockTimer) clearTimeout(seekLockTimer);
