@@ -1549,6 +1549,7 @@
                     <div class="track-right">
                         <span class="track-duration">${t.duration || 'Full'}</span>
                         <div class="track-btn-stack">
+                            <button class="offline-badge-btn" style="background:rgba(239,68,68,0.18); border-color:rgba(239,68,68,0.5); color:#EF4444;" onclick="event.stopPropagation(); quickToggleFavorite(${i})"><span>${FAVORITES.some(f => f.id === t.id) ? '❤️' : '🤍'}</span><span>Favori</span></button>
                             <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${i}, false)"><span>📶</span><span>Kaydet</span></button>
                             <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${i}, false)"><span>📥</span><span>İndir</span></button>
                             <button class="offline-badge-btn" style="background:rgba(56,189,248,0.18); border-color:rgba(56,189,248,0.5); color:#38BDF8;" onclick="event.stopPropagation(); openAddToPlaylistModal(CURRENT_PLAYLIST[${i}])"><span>➕</span><span>Liste</span></button>
@@ -1671,6 +1672,7 @@
             isPlaying = true;
             isUserPaused = false;
             updatePlayButtons();
+            updateFavBadges();
 
             // Hardware C++ Android Audio Streamer via RapidAPI MP3 (100% Pure Audio, Zero Video, Instant Buffering)
             if (window.AndroidBridge && window.AndroidBridge.playTrackNative) {
@@ -1827,13 +1829,13 @@
         }
 
         function toggleLike() {
-            const btn = document.getElementById('likeBtn');
-            if (btn.innerText === '🤍') {
-                btn.innerText = '❤️';
-                alert('Favorilerinize eklendi!');
-            } else {
-                btn.innerText = '🤍';
-            }
+            toggleFavorite();
+        }
+
+        function quickToggleFavorite(idx) {
+            if (!CURRENT_PLAYLIST || !CURRENT_PLAYLIST[idx]) return;
+            toggleFavorite(CURRENT_PLAYLIST[idx]);
+            renderTracks(CURRENT_PLAYLIST);
         }
 
         // Category Pills Handler
@@ -2333,15 +2335,15 @@
         function updateFavBadges() {
             const countEl = document.getElementById('fav-count');
             if (countEl) countEl.innerText = `${FAVORITES.length} Parça`;
-            const fullFavBtn = document.getElementById('fullFavBtn');
-            if (fullFavBtn) {
+            const favBtn = document.getElementById('likeBtn') || document.getElementById('fullFavBtn');
+            if (favBtn) {
                 const current = CURRENT_PLAYLIST[currentIndex];
                 if (current && FAVORITES.some(f => f.id === current.id)) {
-                    fullFavBtn.innerText = '❤️';
-                    fullFavBtn.style.color = '#EF4444';
+                    favBtn.innerText = '❤️';
+                    favBtn.style.color = '#EF4444';
                 } else {
-                    fullFavBtn.innerText = '🤍';
-                    fullFavBtn.style.color = '#fff';
+                    favBtn.innerText = '🤍';
+                    favBtn.style.color = '#fff';
                 }
             }
         }
@@ -2351,13 +2353,13 @@
             if (countEl) countEl.innerText = `${OFFLINE_TRACKS.length} Parça`;
         }
 
-        function toggleFavorite() {
-            if (isRadioMode) {
+        function toggleFavorite(targetTrack = null) {
+            if (isRadioMode && !targetTrack) {
                 alert("Canlı radyolar favorilere eklenemez.");
                 return;
             }
-            const track = CURRENT_PLAYLIST[currentIndex];
-            if (!track) return;
+            const track = targetTrack || CURRENT_PLAYLIST[currentIndex];
+            if (!track || !track.id) return;
 
             const existingIdx = FAVORITES.findIndex(f => f.id === track.id);
             if (existingIdx >= 0) {
@@ -2374,6 +2376,12 @@
                 alert("❤️ '" + track.title + "' Favorilerinize eklendi!");
             }
             saveFavoritesToStorage();
+            updateFavBadges();
+            
+            const libTitle = document.getElementById('library-section-title');
+            if (libTitle && libTitle.innerText.includes('Beğenilen Şarkılar')) {
+                showFavoritesList();
+            }
         }
 
         function showFavoritesList() {
