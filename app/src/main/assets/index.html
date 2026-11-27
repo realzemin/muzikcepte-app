@@ -1278,6 +1278,7 @@
         let currentSearchQuery = "";
         let searchPage = 1;
         let isUserPaused = false;
+        let pendingTrackToPlay = null;
 
         const radioAudio = document.getElementById('liveRadioPlayer');
 
@@ -1297,7 +1298,16 @@
                     'iv_load_policy': 3
                 },
                 events: {
-                    'onReady': () => { ytReady = true; },
+                    'onReady': () => {
+                        ytReady = true;
+                        if (pendingTrackToPlay && ytPlayer && ytPlayer.loadVideoById) {
+                            ytPlayer.loadVideoById({ videoId: pendingTrackToPlay });
+                            pendingTrackToPlay = null;
+                            isPlaying = true;
+                            isUserPaused = false;
+                            updatePlayButtons();
+                        }
+                    },
                     'onStateChange': onPlayerStateChange,
                     'onError': (e) => {
                         console.error('YT Player Error:', e);
@@ -1511,6 +1521,11 @@
                 ytPlayer.loadVideoById({
                     videoId: t.id
                 });
+                isPlaying = true;
+                isUserPaused = false;
+                updatePlayButtons();
+            } else {
+                pendingTrackToPlay = t.id;
                 isPlaying = true;
                 isUserPaused = false;
                 updatePlayButtons();

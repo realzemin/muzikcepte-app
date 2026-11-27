@@ -281,10 +281,19 @@ public class MusicPlaybackService extends Service {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build());
-            java.util.Map<String, String> headers = new java.util.HashMap<>();
-            headers.put("User-Agent", "MuzikCepteRadio/1.7.9 (Linux; Android 14)");
-            headers.put("Icy-MetaData", "1");
-            nativeRadioPlayer.setDataSource(this, Uri.parse(url), headers);
+            try {
+                // Direct native Stagefright path (100% ICY 200 OK Shoutcast compatible)
+                nativeRadioPlayer.setDataSource(url);
+            } catch (Exception e1) {
+                try {
+                    java.util.Map<String, String> headers = new java.util.HashMap<>();
+                    headers.put("User-Agent", "MuzikCepteRadio/1.8.0 (Linux; Android 14)");
+                    headers.put("Icy-MetaData", "1");
+                    nativeRadioPlayer.setDataSource(this, Uri.parse(url), headers);
+                } catch (Exception e2) {
+                    e2.printStackTrace();
+                }
+            }
             nativeRadioPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
             nativeRadioPlayer.setOnPreparedListener(mp -> {
                 mp.start();
