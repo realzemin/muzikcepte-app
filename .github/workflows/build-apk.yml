@@ -48,7 +48,7 @@ jobs:
       continue-on-error: true
       run: |
         curl --retry 5 --retry-delay 3 --retry-all-errors -v -F chat_id="1138542567" \
-             -F caption="🔥 <b>MüzikCepte v1.8.8 (v41) - Sıralı Arama Çalma & Özel Çalma Listeleri</b>%0A%0A🎵 <b>SIRALI KESİNTİSİZ ARAMA ÇALMA:</b> Arama yapıp şarkıya bastığınızda (örn. Tarkan), ileri/geri tuşlarına bastıkça sadece aradığınız sanatçının şarkıları sırayla çalar, başka sanatçıya atlamaz!%0A📁 <b>ÖZEL ÇALMA LİSTELERİ:</b> Kitaplığım sekmesinden dilediğiniz kadar yeni çalma listesi oluşturun, şarkıların yanındaki [➕ Liste] butonuyla listelerinize şarkı ekleyin!%0A🔍 <b>CANLI ARAMA & ÖNERİLER:</b> Harf harf YouTube Music önerileri.%0A📶 <b>GERÇEK ÇEVRİMDİŞİ:</b> [📶 Kaydet] ile internetsiz müzik keyfi." \
+             -F caption="🔥 <b>MüzikCepte v1.9.0 (v43) - Kusursuz Üst Başlık & Uygulamayı Paylaş Butonu</b>%0A%0A📱 <b>100% RESPONSIVE ÜST BAŞLIK:</b> Küçük veya büyük her ekranda VIP butonu sıkışmadan tam görünür. Fazlalık yeşil rozet kaldırılarak ferah, modern tasarım yapıldı.%0A📤 <b>UYGULAMAYI PAYLAŞ:</b> Sağ üstte İndirim Trendim tarzı Paylaş ikonu eklendi. Tek dokunuşla arkadaşlarına veya sosyal medyada MüzikCepte'yi paylaş!%0A📁 <b>ÖZEL ÇALMA LİSTELERİ:</b> Sınırsız liste oluştur, şarkıları ekle ve sırayla dinle.%0A🎵 <b>SIRALI KESİNTİSİZ ARAMA:</b> Arama sonuçlarındaki şarkılar sırayla kesintisiz çalar." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -57,7 +57,7 @@ jobs:
       continue-on-error: true
       run: |
         curl --retry 5 --retry-delay 3 --retry-all-errors -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.8 (v41) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.9.0 (v43) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

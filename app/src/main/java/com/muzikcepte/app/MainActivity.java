@@ -1311,6 +1311,22 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void shareApp() {
+                try {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    String shareText = "🎵 MüzikCepte - Kesintisiz Müzik & Canlı Radyo!\n\nMilyonlarca şarkıyı dinle, çevrimdışı kaydet ve canlı radyoların tadını çıkar:\nhttps://play.google.com/store/apps/details?id=com.muzikcepte.app";
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                    sendIntent.setType("text/plain");
+                    Intent shareIntent = Intent.createChooser(sendIntent, "MüzikCepte'yi Paylaş");
+                    shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(shareIntent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @JavascriptInterface
             public void fetchLyrics(String artist, String title) {
                 new Thread(() -> {
                     try {

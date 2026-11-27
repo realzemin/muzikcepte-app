@@ -41,19 +41,22 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 18px 12px;
-            background: linear-gradient(180deg, rgba(11, 15, 25, 0.98) 0%, rgba(11, 15, 25, 0.85) 100%);
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(11, 15, 25, 0.98) 0%, rgba(11, 15, 25, 0.88) 100%);
             backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
             z-index: 50;
             border-bottom: 1px solid var(--border-glass);
+            gap: 8px;
         }
 
         .logo-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
+            flex: 1;
         }
 
         .logo-icon {
@@ -66,39 +69,86 @@
             justify-content: center;
             font-size: 19px;
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            flex-shrink: 0;
+        }
+
+        .logo-text-block {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .logo-text {
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 800;
             letter-spacing: -0.5px;
             background: linear-gradient(135deg, #FFF 60%, #DDD 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+            white-space: nowrap;
         }
 
-        .logo-badge {
-            font-size: 10px;
-            font-weight: 700;
-            color: #10B981;
-            background: rgba(16, 185, 129, 0.15);
-            padding: 2px 7px;
-            border-radius: 6px;
-            margin-left: 4px;
+        .logo-subtitle {
+            font-size: 10.5px;
+            color: var(--text-sub);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .header-share-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #E2E8F0;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            padding: 0;
+        }
+        .header-share-btn:active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: #8B5CF6;
+            color: #FFF;
+            transform: scale(0.94);
         }
 
         .vip-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-glass);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.22));
+            border: 1px solid rgba(245, 158, 11, 0.5);
             border-radius: 20px;
-            padding: 6px 14px;
+            padding: 6px 12px;
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 800;
             color: #FBBF24;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+            transition: all 0.2s;
+        }
+        .vip-btn:active {
+            transform: scale(0.96);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.35));
         }
 
         /* Content Area */
@@ -1029,16 +1079,24 @@
     <!-- Top Header -->
     <header class="app-header">
         <div class="logo-wrap">
-            <div style="display:flex; align-items:center; gap:6px;">
-                <div class="logo-icon">🎵</div>
+            <div class="logo-icon">🎵</div>
+            <div class="logo-text-block">
                 <div class="logo-text">MüzikCepte</div>
-                <span class="logo-badge" style="background: rgba(16, 185, 129, 0.18); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 10px; font-weight: 800;">KESİNTİSİZ MÜZİK</span>
-            </div>
-            <div style="font-size: 11px; color: var(--text-sub); margin-top: 2px; font-weight: 500;">
-                Müzik & Canlı Radyo • Her An Yanında
+                <div class="logo-subtitle">Müzik & Canlı Radyo • Kesintisiz</div>
             </div>
         </div>
-        <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
+        <div class="header-actions">
+            <button class="header-share-btn" onclick="shareApp()" title="Uygulamayı Paylaş">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+            </button>
+            <button class="vip-btn" onclick="openVipModal()">👑 VIP PRO</button>
+        </div>
     </header>
 
     <!-- Content Pages -->
@@ -2796,6 +2854,20 @@
             console.log("Download started for:", ytId);
         };
 
+
+        function shareApp() {
+            if (window.AndroidBridge && window.AndroidBridge.shareApp) {
+                window.AndroidBridge.shareApp();
+            } else if (navigator.share) {
+                navigator.share({
+                    title: 'MüzikCepte',
+                    text: '🎵 MüzikCepte - Kesintisiz Müzik & Canlı Radyo!\n\nMilyonlarca şarkıyı dinle, çevrimdışı kaydet ve canlı radyoların tadını çıkar:',
+                    url: 'https://play.google.com/store/apps/details?id=com.muzikcepte.app'
+                }).catch(() => {});
+            } else {
+                alert("MüzikCepte Google Play: https://play.google.com/store/apps/details?id=com.muzikcepte.app");
+            }
+        }
 
         // Safe Initial Renders on Startup
         try {
