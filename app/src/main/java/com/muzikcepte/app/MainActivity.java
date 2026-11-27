@@ -461,13 +461,13 @@ public class MainActivity extends AppCompatActivity {
             if (mRewardedAd != null) {
                 mRewardedAd.show(this, rewardItem -> {
                     // 30 Minutes ad-free reward unlocked!
-                    rewardedAdFreeUntil = System.currentTimeMillis() + (30 * 60 * 1000L);
+                    rewardedAdFreeUntil = System.currentTimeMillis() + (15 * 60 * 1000L);
                     prefs.edit().putLong("rewarded_until", rewardedAdFreeUntil).apply();
 
                     if (adViewContainer != null) adViewContainer.setVisibility(View.GONE);
-                    Toast.makeText(MainActivity.this, "🎉 Harika! 30 Dakika Boyunca Sıfır Reklamla Kesintisiz Müzik Başladı!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "🎉 Harika! 15 Dakika Boyunca Sıfır Reklamla Kesintisiz Müzik Başladı!", Toast.LENGTH_LONG).show();
 
-                    webView.evaluateJavascript("if(window.onRewardedUnlocked) window.onRewardedUnlocked(1800);", null);
+                    webView.evaluateJavascript("if(window.onRewardedUnlocked) window.onRewardedUnlocked(900);", null);
                 });
             } else {
                 Toast.makeText(MainActivity.this, "Ödüllü video hazırlanıyor, lütfen 5 saniye sonra tekrar deneyin.", Toast.LENGTH_SHORT).show();
