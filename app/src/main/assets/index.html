@@ -843,35 +843,46 @@
             padding: 15px 0;
         }
 
-        /* Viewport Audio Engine (Zero visual leak, completely invisible, pure audio) */
+        /* High-Priority Viewport Audio Engine (Zero occlusion, maximum decode thread priority) */
         #audioEngineContainer {
             position: fixed;
             bottom: 0;
-            left: 0;
-            width: 320px;
-            height: 180px;
-            opacity: 0.99;
+            right: 0;
+            width: 48px;
+            height: 48px;
+            opacity: 0.01;
             pointer-events: none;
-            z-index: -1;
+            z-index: 9999;
             overflow: hidden;
             transform: translateZ(0);
             will-change: transform;
         }
     
         
+        .track-btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+        }
+
         .offline-badge-btn {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.45));
-            border: 1px solid rgba(139, 92, 246, 0.5);
-            color: #C4B5FD;
-            font-size: 11px;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            border: 1px solid rgba(196, 181, 253, 0.45);
+            color: #FFFFFF;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 5px 10px;
-            border-radius: 8px;
             cursor: pointer;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
+            line-height: 1.2;
+            white-space: nowrap;
         }
         .offline-badge-btn:active {
             transform: scale(0.92);
@@ -881,16 +892,18 @@
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.45));
             border: 1px solid #10B981;
             color: #10B981;
-            padding: 6px 12px;
-            border-radius: 18px;
-            font-size: 11px;
-            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+            transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
-            transition: all 0.2s ease;
+            gap: 3px;
+            line-height: 1.2;
+            white-space: nowrap;
         }
         .download-badge-btn:hover {
             background: #10B981;
@@ -1374,7 +1387,10 @@
                     </div>
                     <div class="track-right">
                         <span class="track-duration">${t.duration || 'Full'}</span>
-                        <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${i}, false)"><span>📥</span><span>İndir</span></button>
+                        <div class="track-btn-stack">
+                            <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${i}, false)"><span>📶</span><span>Kaydet</span></button>
+                            <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${i}, false)"><span>📥</span><span>İndir</span></button>
+                        </div>
                         <div class="play-btn-circle">${!isRadioMode && i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
                 </div>
@@ -1405,9 +1421,13 @@
             `).join('');
         }
 
-        // Play Radio Station Live
+        // Play Radio Station Live (Native C++ Android MediaPlayer)
         function playRadio(idx) {
             if (idx < 0 || idx >= RADIOS.length) return;
+            if (isRadioMode && currentRadioIndex === idx) {
+                togglePlay();
+                return;
+            }
             isRadioMode = true;
             currentRadioIndex = idx;
             const r = RADIOS[idx];
@@ -1420,24 +1440,24 @@
             isPlaying = true;
             isUserPaused = false;
 
-            // Stream live radio via high-performance HTML5 Audio (Supports AAC+, MP3, Icecast & Shoutcast)
-            try {
-                radioAudio.pause();
-                radioAudio.src = r.url;
-                radioAudio.load();
-                const p = radioAudio.play();
-                if (p !== undefined) {
-                    p.catch(err => {
-                        console.warn("HTML5 audio fallback to AndroidBridge:", err);
-                        if (window.AndroidBridge && window.AndroidBridge.playNativeRadio) {
-                            window.AndroidBridge.playNativeRadio(r.url, r.name, r.genre, r.logo);
-                        }
-                    });
+            // Stream live radio directly via native Android C++ MediaPlayer for 100% stutter-free playback
+            if (window.AndroidBridge && window.AndroidBridge.playNativeRadio) {
+                try {
+                    radioAudio.pause();
+                    radioAudio.removeAttribute('src');
+                    radioAudio.load();
+                } catch(e){}
+                window.AndroidBridge.playNativeRadio(r.url, r.name, r.genre, r.logo);
+            } else {
+                try {
+                    radioAudio.pause();
+                    radioAudio.src = r.url;
+                    radioAudio.load();
+                    radioAudio.play().catch(err => console.warn(err));
+                } catch (err) {
+                    console.error("Radio play error:", err);
                 }
-            } catch (err) {
-                console.error("Radio play error:", err);
             }
-            notifyAndroidBackground(true);
 
             // Update UI elements for Radio
             document.getElementById('miniTitle').innerText = r.name;
@@ -1745,7 +1765,10 @@
                         </div>
                         <div class="track-right">
                             <span class="track-duration">${t.duration || 'Full'}</span>
-                            <button class="icon-circle-btn" title="İndir" onclick="event.stopPropagation(); triggerDownload(${actualIdx}, true)">⬇</button>
+                            <div class="track-btn-stack">
+                                <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${actualIdx}, true)"><span>📶</span><span>Kaydet</span></button>
+                                <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${actualIdx}, true)"><span>📥</span><span>İndir</span></button>
+                            </div>
                             <div class="play-btn-circle">▶</div>
                         </div>
                     </div>
@@ -2085,9 +2108,10 @@
         }
 
         // ==========================================
-        // Kusursuz İleri/Geri Sarma (Sıfır Donma & Kesintisiz Oynatma)
+        // Kusursuz İleri/Geri Sarma (Sıfır Donma, Çift Tetik Engelleyici & Kesintisiz Oynatma)
         // ==========================================
         let seekLockTimer = null;
+        let lastSeekTimestamp = 0;
 
         function onSeekInput(val) {
             isSeeking = true;
@@ -2100,11 +2124,21 @@
         }
 
         function onSeekComplete(val) {
+            const now = Date.now();
+            if (now - lastSeekTimestamp < 250) {
+                return; // Ignore duplicate touchend + change events
+            }
+            lastSeekTimestamp = now;
+
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
                 try {
                     const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
                     const targetSec = (parseFloat(val) / 100) * dur;
+                    isSeeking = true;
                     ytPlayer.seekTo(targetSec, true);
+                    if (!isUserPaused && ytPlayer.playVideo) {
+                        ytPlayer.playVideo();
+                    }
                 } catch (e) {
                     console.error("Seek error:", e);
                 }
@@ -2113,11 +2147,12 @@
             seekLockTimer = setTimeout(() => {
                 isSeeking = false;
                 if (!isUserPaused && ytPlayer && ytPlayer.getPlayerState) {
-                    if (ytPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
+                    const st = ytPlayer.getPlayerState();
+                    if (st === YT.PlayerState.PAUSED || st === YT.PlayerState.BUFFERING) {
                         ytPlayer.playVideo();
                     }
                 }
-            }, 500);
+            }, 700);
         }
 
         function skipBackward(sec = 10) {
@@ -2127,8 +2162,13 @@
                 const target = Math.max(cur - sec, 0);
                 isSeeking = true;
                 ytPlayer.seekTo(target, true);
+                if (!isUserPaused && ytPlayer.playVideo) {
+                    ytPlayer.playVideo();
+                }
+                const curTimeEl = document.getElementById('currentTime');
+                if (curTimeEl) curTimeEl.innerText = formatTime(target);
                 if (seekLockTimer) clearTimeout(seekLockTimer);
-                seekLockTimer = setTimeout(() => { isSeeking = false; }, 500);
+                seekLockTimer = setTimeout(() => { isSeeking = false; }, 700);
             }
         }
 
@@ -2140,8 +2180,13 @@
                 const target = Math.min(cur + sec, dur - 1);
                 isSeeking = true;
                 ytPlayer.seekTo(target, true);
+                if (!isUserPaused && ytPlayer.playVideo) {
+                    ytPlayer.playVideo();
+                }
+                const curTimeEl = document.getElementById('currentTime');
+                if (curTimeEl) curTimeEl.innerText = formatTime(target);
                 if (seekLockTimer) clearTimeout(seekLockTimer);
-                seekLockTimer = setTimeout(() => { isSeeking = false; }, 500);
+                seekLockTimer = setTimeout(() => { isSeeking = false; }, 700);
             }
         }
 
@@ -2173,11 +2218,32 @@
         }
 
         
+        function showToast(msg) {
+            if (window.AndroidBridge && window.AndroidBridge.showToast) {
+                window.AndroidBridge.showToast(msg);
+                return;
+            }
+            let toast = document.getElementById('appToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'appToast';
+                toast.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(30,27,75,0.95); border:1px solid #8B5CF6; color:#fff; padding:10px 18px; border-radius:20px; font-size:12px; font-weight:600; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.5); pointer-events:none; transition:opacity 0.3s ease; opacity:0; text-align:center; max-width:85%;';
+                document.body.appendChild(toast);
+            }
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            if (window._toastTimer) clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2500);
+        }
+
         function quickSaveOffline(index, isFromSearch) {
             const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
             if (!track) return;
             saveCurrentOfflineDirect(track);
-            alert("✅ '" + track.title + "' şarkısı çevrimdışı kütüphanenize kaydedildi! İnternetiniz yokken de Kütüphane sekmesinden dinleyebilirsiniz.");
+            updateOfflineBadges();
+            showToast("✅ '" + track.title + "' çevrimdışı kütüphanenize kaydedildi!");
         }
 
         function confirmOfflineFromModal() {

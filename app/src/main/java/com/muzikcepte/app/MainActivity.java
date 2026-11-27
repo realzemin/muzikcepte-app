@@ -764,6 +764,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void showToast(String message) {
+                if (message != null && !message.isEmpty()) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show());
+                }
+            }
+
+            @JavascriptInterface
             public void requestAudioFocus() {
                 try {
                     AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
