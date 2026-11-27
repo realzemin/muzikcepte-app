@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.8.3 (v36) - Liste & Çalma Hatası Düzeltildi, Kesintisiz Müzik</b>%0A%0A✅ <b>LİSTE DÜZELTİLDİ:</b> Başlangıçta ana sayfa şarkı listesinin boş görünmesine yol açan sözdizimi hatası giderildi, şarkı listesi ve kategoriler anında yükleniyor.%0A🚀 <b>HAFİF AKIŞ & KESİNTİSİZ OYNATMA:</b> 144p minimum veri tüketimiyle sıfır takılma.%0A📻 <b>28 CANLI RADYO:</b> Arka planda ve kilit ekranında sorunsuz.%0A📥 <b>MP3 İNDİRME:</b> loader.to ile temiz indirme." \
+             -F caption="🎵 <b>MüzikCepte v1.8.4 (v37) - Kesintisiz Oynatma & Akıcı Müzik Deneyimi</b>%0A%0A✅ <b>ENGELSİZ OYNATMA:</b> YouTube güvenliğini tetikleyen origin kısıtı ve zorlama kalite döngüsü temizlendi, şarkılar tıklandığı an başlıyor.%0A🚀 <b>SIFIR TAKILMA:</b> Tampon dolmadan çalan erken başlatma döngüsü kaldırılarak akıcı ve kesintisiz ses sağlandı.%0A📻 <b>28 CANLI RADYO:</b> Kesintisiz devam ediyor.%0A📥 <b>MP3 İNDİRME:</b> Hızlı ve temiz." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.3 (v36) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.8.4 (v37) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

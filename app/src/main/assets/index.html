@@ -1295,18 +1295,13 @@
                     'rel': 0,
                     'playsinline': 1,
                     'enablejsapi': 1,
-                    'iv_load_policy': 3,
-                    'origin': window.location.origin
+                    'iv_load_policy': 3
                 },
                 events: {
                     'onReady': () => {
                         ytReady = true;
-                        try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
                         if (pendingTrackToPlay && ytPlayer && ytPlayer.loadVideoById) {
-                            ytPlayer.loadVideoById({
-                                videoId: pendingTrackToPlay,
-                                suggestedQuality: 'small'
-                            });
+                            ytPlayer.loadVideoById({ videoId: pendingTrackToPlay });
                             pendingTrackToPlay = null;
                             isPlaying = true;
                             isUserPaused = false;
@@ -1328,26 +1323,17 @@
                 isPlaying = true;
                 isUserPaused = false;
                 isSeeking = false;
-                try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
                 updatePlayButtons();
                 startProgress();
                 notifyAndroidBackground(true);
             } else if (event.data === YT.PlayerState.BUFFERING) {
-                try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
+                // Let YouTube buffer smoothly without premature forced interruption
             } else if (event.data === YT.PlayerState.PAUSED) {
                 if (isUserPaused) {
                     isPlaying = false;
                     updatePlayButtons();
                     stopProgress();
                     notifyAndroidBackground(false);
-                } else if (!isSeeking) {
-                    setTimeout(() => {
-                        if (!isUserPaused && !isSeeking && ytPlayer && ytPlayer.playVideo) {
-                            ytPlayer.playVideo();
-                            isPlaying = true;
-                            updatePlayButtons();
-                        }
-                    }, 300);
                 }
             } else if (event.data === YT.PlayerState.ENDED) {
                 nextTrack();
@@ -1526,11 +1512,10 @@
             isUserPaused = false;
             updatePlayButtons();
 
-            // Lightweight, instant playback with 144p/small video footprint (Zero lag & zero stutter)
+            // Audio Play via YouTube IFrame (Full-length studio recordings)
             if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
                 ytPlayer.loadVideoById({
-                    videoId: t.id,
-                    suggestedQuality: 'small'
+                    videoId: t.id
                 });
             } else {
                 pendingTrackToPlay = t.id;
