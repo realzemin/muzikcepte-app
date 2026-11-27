@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🎵 <b>MüzikCepte v1.8.2 (v35) - Saf Ses (Audio-Only) C++ Yerel Motor, Doğrudan Telefona İndirme & Sıfır Takılma</b>%0A%0A🚀 <b>SAF SES (AUDIO-ONLY) C++ MOTORU:</b> Ağır video oynatıcı devreden çıkarıldı; şarkılar doğrudan 128kbps saf ses akışı olarak Android C++ MediaPlayer ile sıfır takılma ve sıfır gecikmeyle çalıyor.%0A📥 <b>GERÇEK TELEFONA İNDİRME:</b> Şarkılar Android DownloadManager ile doğrudan telefonun İndirilenler klasörüne gerçek .m4a/.mp3 ses dosyası olarak iniyor.%0A⚡ <b>ANINDA SARMA & SIFIR DONMA:</b> Donanımsal MediaPlayer ile ileri/geri sarma milisaniyede gerçekleşiyor, buffer beklemesi ve takılma sıfırlandı.%0A📻 <b>28 CANLI RADYO:</b> Kesintisiz arka plan ve kilit ekranı desteğiyle yayında." \
+             -F caption="🎵 <b>MüzikCepte v1.8.3 (v36) - Liste & Çalma Hatası Düzeltildi, Kesintisiz Müzik</b>%0A%0A✅ <b>LİSTE DÜZELTİLDİ:</b> Başlangıçta ana sayfa şarkı listesinin boş görünmesine yol açan sözdizimi hatası giderildi, şarkı listesi ve kategoriler anında yükleniyor.%0A🚀 <b>HAFİF AKIŞ & KESİNTİSİZ OYNATMA:</b> 144p minimum veri tüketimiyle sıfır takılma.%0A📻 <b>28 CANLI RADYO:</b> Arka planda ve kilit ekranında sorunsuz.%0A📥 <b>MP3 İNDİRME:</b> loader.to ile temiz indirme." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.2 (v35) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 ve Billing 8.2.1 resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.8.3 (v36) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
