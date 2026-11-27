@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isVip = false;
     private long rewardedAdFreeUntil = 0;
     private SharedPreferences prefs;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
     protected void onPause() {
@@ -976,7 +977,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-                public static String resolveDirectAudioStream(String ytId) {
+                public String resolveDirectAudioStream(String ytId) {
         if (ytId == null || ytId.trim().isEmpty()) return null;
         try {
             String apiUrl = "https://www.youtube.com/youtubei/v1/player?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
