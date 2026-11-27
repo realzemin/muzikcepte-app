@@ -443,9 +443,10 @@
 
         /* Search Box */
         .search-box-wrap {
+            position: relative;
             display: flex;
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .search-input-box {
@@ -456,6 +457,11 @@
             display: flex;
             align-items: center;
             padding: 0 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input-box:focus-within {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
         }
 
         .search-input {
@@ -468,11 +474,111 @@
             padding: 12px 0;
         }
 
+        .search-clear-btn {
+            color: var(--text-sub);
+            font-size: 15px;
+            cursor: pointer;
+            padding: 4px;
+            display: none;
+            line-height: 1;
+        }
+        .search-clear-btn:active {
+            color: #FFF;
+        }
+
         .search-submit-btn {
             background: var(--gradient-accent);
             border: none;
             border-radius: 14px;
             padding: 0 18px;
+            color: #FFF;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* YouTube Music Style Suggestions Card */
+        .search-suggestions-box {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            background: #181926;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            overflow: hidden;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.15s;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:active {
+            background: rgba(139, 92, 246, 0.2);
+        }
+        .suggestion-icon {
+            font-size: 14px;
+            color: var(--text-sub);
+            opacity: 0.8;
+        }
+        .suggestion-text {
+            flex: 1;
+            font-size: 14px;
+            color: #E2E8F0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .suggestion-text b {
+            color: #FFF;
+            font-weight: 700;
+        }
+        .suggestion-arrow {
+            font-size: 17px;
+            color: var(--text-sub);
+            padding: 4px 6px;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .suggestion-arrow:active {
+            color: #A78BFA;
+        }
+
+        /* Trending Tags / Chips */
+        .trending-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .trend-chip {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #CBD5E1;
+            font-size: 12.5px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .trend-chip:active {
+            background: var(--gradient-accent);
+            color: #FFF;
+            transform: scale(0.96);
+        }
             color: #FFF;
             font-weight: 700;
             font-size: 13px;
@@ -971,9 +1077,31 @@
             <div class="search-box-wrap">
                 <div class="search-input-box">
                     <span style="margin-right:8px; font-size:16px;">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Şarkı veya sanatçı adı yazın..." onkeydown="if(event.key==='Enter') executeSearch()">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Şarkı veya sanatçı adı yazın..." autocomplete="off" oninput="onSearchInputChanged()" onkeydown="if(event.key==='Enter') executeSearch()">
+                    <span id="searchClearBtn" class="search-clear-btn" onclick="clearSearchInput()">✕</span>
                 </div>
                 <button class="search-submit-btn" onclick="executeSearch()">Ara</button>
+
+                <!-- YouTube Music Style Suggestions Floating Overlay -->
+                <div id="searchSuggestionsBox" class="search-suggestions-box" style="display:none;"></div>
+            </div>
+
+            <!-- Trending & Popular Search Tags -->
+            <div id="searchTrendingSection" style="margin-bottom:14px;">
+                <div style="font-size:11.5px; font-weight:700; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <span>🔥</span> POPÜLER ARAMALAR
+                </div>
+                <div class="trending-chips-wrap">
+                    <span class="trend-chip" onclick="applySearchTag('Ferdi Tayfur')">Ferdi Tayfur</span>
+                    <span class="trend-chip" onclick="applySearchTag('Ferdi Özbeğen')">Ferdi Özbeğen</span>
+                    <span class="trend-chip" onclick="applySearchTag('Mert Demir')">Mert Demir</span>
+                    <span class="trend-chip" onclick="applySearchTag('Semicenk')">Semicenk</span>
+                    <span class="trend-chip" onclick="applySearchTag('Müslüm Gürses')">Müslüm Gürses</span>
+                    <span class="trend-chip" onclick="applySearchTag('Simge')">Simge</span>
+                    <span class="trend-chip" onclick="applySearchTag('Blok3')">Blok3</span>
+                    <span class="trend-chip" onclick="applySearchTag('Dedublüman')">Dedublüman</span>
+                    <span class="trend-chip" onclick="applySearchTag('Sezen Aksu')">Sezen Aksu</span>
+                </div>
             </div>
 
             <div class="section-header">
@@ -1720,8 +1848,139 @@
             });
         });
 
+        // ==========================================
+        // YouTube Music Tarzı Akıllı Arama & Canlı Öneriler
+        // ==========================================
+        let suggestDebounce = null;
+
+        function onSearchInputChanged() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            const box = document.getElementById('searchSuggestionsBox');
+            const val = input ? input.value : '';
+
+            if (val.trim().length > 0) {
+                if (clearBtn) clearBtn.style.display = 'block';
+            } else {
+                if (clearBtn) clearBtn.style.display = 'none';
+                if (box) box.style.display = 'none';
+                return;
+            }
+
+            if (suggestDebounce) clearTimeout(suggestDebounce);
+            suggestDebounce = setTimeout(() => {
+                fetchSuggestions(val.trim());
+            }, 180);
+        }
+
+        function clearSearchInput() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            const box = document.getElementById('searchSuggestionsBox');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (box) box.style.display = 'none';
+        }
+
+        function fetchSuggestions(query) {
+            if (!query) return;
+            if (window.AndroidBridge && window.AndroidBridge.getSearchSuggestions) {
+                window.AndroidBridge.getSearchSuggestions(query);
+            } else {
+                fetch('https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=' + encodeURIComponent(query))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data[1]) renderSuggestions(data[1], query);
+                    })
+                    .catch(() => {});
+            }
+        }
+
+        window.onSearchSuggestions = function(list) {
+            const input = document.getElementById('searchInput');
+            const currentVal = input ? input.value.trim() : '';
+            renderSuggestions(list, currentVal);
+        };
+
+        function renderSuggestions(list, query) {
+            const box = document.getElementById('searchSuggestionsBox');
+            if (!box) return;
+            if (!list || list.length === 0) {
+                box.style.display = 'none';
+                return;
+            }
+            const qLower = (query || '').toLowerCase();
+            const html = list.slice(0, 8).map(item => {
+                let text = escapeHtml(item);
+                let highlighted = text;
+                if (qLower && text.toLowerCase().includes(qLower)) {
+                    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+                    highlighted = text.replace(regex, '<b>$1</b>');
+                }
+                const safeItem = escapeHtml(item).replace(/'/g, "\\'");
+                return `
+                    <div class="suggestion-item" onclick="selectSuggestion('${safeItem}')">
+                        <span class="suggestion-icon">🔍</span>
+                        <span class="suggestion-text">${highlighted}</span>
+                        <span class="suggestion-arrow" onclick="event.stopPropagation(); fillSuggestion('${safeItem}')">↗</span>
+                    </div>
+                `;
+            }).join('');
+
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+
+        function selectSuggestion(text) {
+            const input = document.getElementById('searchInput');
+            const box = document.getElementById('searchSuggestionsBox');
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (input) input.value = text;
+            if (box) box.style.display = 'none';
+            if (clearBtn) clearBtn.style.display = 'block';
+            executeSearch();
+        }
+
+        function fillSuggestion(text) {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (input) {
+                input.value = text;
+                input.focus();
+            }
+            if (clearBtn) clearBtn.style.display = 'block';
+            fetchSuggestions(text);
+        }
+
+        function applySearchTag(tag) {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('searchClearBtn');
+            const box = document.getElementById('searchSuggestionsBox');
+            if (input) input.value = tag;
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (box) box.style.display = 'none';
+            executeSearch();
+        }
+
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.search-box-wrap');
+            if (wrap && !wrap.contains(e.target)) {
+                const box = document.getElementById('searchSuggestionsBox');
+                if (box) box.style.display = 'none';
+            }
+        });
+
         // Search Handlers
         function executeSearch() {
+            const box = document.getElementById('searchSuggestionsBox');
+            if (box) box.style.display = 'none';
             const query = document.getElementById('searchInput').value.trim();
             if (!query) return;
             currentSearchQuery = query;
@@ -2156,28 +2415,6 @@
             if (!list || !list[index]) return;
             CURRENT_PLAYLIST = [...list];
             loadTrack(index, true);
-        }
-
-        function saveCurrentOffline() {
-            if (isRadioMode) {
-                alert("Canlı radyo yayını çevrimdışı kaydedilemez.");
-                return;
-            }
-            const track = CURRENT_PLAYLIST[currentIndex];
-            if (!track) return;
-            if (!OFFLINE_TRACKS.some(t => t.id === track.id)) {
-                OFFLINE_TRACKS.unshift({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.artist,
-                    duration: track.duration || "03:30",
-                    art: track.art || track.thumb || ('https://i.ytimg.com/vi/' + track.id + '/hqdefault.jpg')
-                });
-                saveOfflineToStorage();
-                alert(`📶 "${track.title}" çevrimdışı kitaplığınıza kaydedildi! İnternetiniz olmadığında da dinleyebilirsiniz.`);
-            } else {
-                alert(`"${track.title}" zaten çevrimdışı listenizde mevcut.`);
-            }
         }
 
         // ==========================================

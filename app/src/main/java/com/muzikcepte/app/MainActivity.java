@@ -873,6 +873,40 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @JavascriptInterface
+            public void getSearchSuggestions(String query) {
+                if (query == null || query.trim().isEmpty()) return;
+                executor.execute(() -> {
+                    try {
+                        String encoded = URLEncoder.encode(query.trim(), "UTF-8");
+                        String urlStr = "https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" + encoded;
+                        HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
+                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36");
+                        conn.setConnectTimeout(4000);
+                        conn.setReadTimeout(4000);
+                        if (conn.getResponseCode() == 200) {
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) sb.append(line);
+                            reader.close();
+                            JSONArray arr = new JSONArray(sb.toString());
+                            if (arr.length() > 1) {
+                                JSONArray suggestions = arr.getJSONArray(1);
+                                runOnUiThread(() -> {
+                                    if (webView != null) {
+                                        webView.evaluateJavascript("if(window.onSearchSuggestions) window.onSearchSuggestions(" + suggestions.toString() + ");", null);
+                                    }
+                                });
+                            }
+                        }
+                        conn.disconnect();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
             public void seekTo(long seconds) {
                 runOnUiThread(() -> {
                     try {
