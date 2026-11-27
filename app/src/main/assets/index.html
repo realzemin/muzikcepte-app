@@ -1295,13 +1295,18 @@
                     'rel': 0,
                     'playsinline': 1,
                     'enablejsapi': 1,
-                    'iv_load_policy': 3
+                    'iv_load_policy': 3,
+                    'origin': window.location.origin
                 },
                 events: {
                     'onReady': () => {
                         ytReady = true;
+                        try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
                         if (pendingTrackToPlay && ytPlayer && ytPlayer.loadVideoById) {
-                            ytPlayer.loadVideoById({ videoId: pendingTrackToPlay });
+                            ytPlayer.loadVideoById({
+                                videoId: pendingTrackToPlay,
+                                suggestedQuality: 'small'
+                            });
                             pendingTrackToPlay = null;
                             isPlaying = true;
                             isUserPaused = false;
@@ -1322,11 +1327,13 @@
             if (event.data === YT.PlayerState.PLAYING) {
                 isPlaying = true;
                 isUserPaused = false;
+                isSeeking = false;
+                try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
                 updatePlayButtons();
                 startProgress();
                 notifyAndroidBackground(true);
             } else if (event.data === YT.PlayerState.BUFFERING) {
-                // Buffer audio smoothly
+                try { ytPlayer.setPlaybackQuality('small'); } catch(e){}
             } else if (event.data === YT.PlayerState.PAUSED) {
                 if (isUserPaused) {
                     isPlaying = false;
@@ -1334,7 +1341,6 @@
                     stopProgress();
                     notifyAndroidBackground(false);
                 } else if (!isSeeking) {
-                    // Safe Auto-Resume: Only resume if user didn't pause and seeking is settled
                     setTimeout(() => {
                         if (!isUserPaused && !isSeeking && ytPlayer && ytPlayer.playVideo) {
                             ytPlayer.playVideo();
@@ -1346,6 +1352,7 @@
             } else if (event.data === YT.PlayerState.ENDED) {
                 nextTrack();
             }
+        }
         }
 
         // Android Foreground Service Notification Dispatcher
@@ -1504,12 +1511,12 @@
             // Restore song UI
             document.getElementById('miniTitle').innerText = t.title;
             document.getElementById('miniArtist').innerText = t.artist;
-            document.getElementById('miniThumb').src = t.art || t.thumb;
+            document.getElementById('miniThumb').src = t.art || t.thumb || ('https://i.ytimg.com/vi/' + t.id + '/hqdefault.jpg');
             document.getElementById('miniDownloadBtn').style.display = 'block';
 
             document.getElementById('fullTitle').innerText = t.title;
             document.getElementById('fullArtist').innerText = t.artist;
-            document.getElementById('fullArt').src = t.art || t.thumb;
+            document.getElementById('fullArt').src = t.art || t.thumb || ('https://i.ytimg.com/vi/' + t.id + '/hqdefault.jpg');
             document.getElementById('totalDuration').innerText = t.duration || '03:45';
             document.getElementById('fullHeaderMode').innerText = "MÜZİK OYNATILIYOR";
             document.getElementById('seekbarContainer').style.display = 'block';
@@ -1520,13 +1527,17 @@
             isUserPaused = false;
             updatePlayButtons();
 
-            // Direct Native Pure Audio Streaming (Hardware C++ MediaPlayer)
-            if (window.AndroidBridge && window.AndroidBridge.playTrackNative) {
-                window.AndroidBridge.playTrackNative(t.id, t.title, t.artist, t.art || t.thumb || '');
-            } else if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
-                ytPlayer.loadVideoById({ videoId: t.id });
+            // Lightweight, instant playback with 144p/small video footprint (Zero lag & zero stutter)
+            if (ytPlayer && ytReady && ytPlayer.loadVideoById) {
+                ytPlayer.loadVideoById({
+                    videoId: t.id,
+                    suggestedQuality: 'small'
+                });
+            } else {
+                pendingTrackToPlay = t.id;
             }
 
+            notifyAndroidBackground(true);
             renderTracks(CURRENT_PLAYLIST);
             updateFavBadges();
             updateOfflineBadges();
@@ -2115,42 +2126,19 @@
         }
 
         // ==========================================
-        // Kusursuz İleri/Geri Sarma (Doğrudan Yerel Android MediaPlayer)
+        // Kusursuz İleri/Geri Sarma (Sıfır Donma, Çift Tetik Korumalı)
         // ==========================================
         let seekLockTimer = null;
         let lastSeekTimestamp = 0;
-        let currentTrackDurationSec = 210;
-
-        window.onNativeProgress = function(currentSec, totalSec) {
-            if (isRadioMode || isSeeking) return;
-            const curEl = document.getElementById('currentTime');
-            const totEl = document.getElementById('totalDuration');
-            const seeker = document.getElementById('songSeeker');
-            if (curEl) curEl.innerText = formatTime(currentSec);
-            if (totalSec > 0) {
-                currentTrackDurationSec = totalSec;
-                if (totEl) totEl.innerText = formatTime(totalSec);
-                if (seeker) seeker.value = (currentSec / totalSec) * 100;
-            }
-        };
-
-        window.onNativeTrackState = function(playingState, durationMs) {
-            isPlaying = playingState;
-            updatePlayButtons();
-            if (durationMs > 0) {
-                currentTrackDurationSec = Math.floor(durationMs / 1000);
-                const totEl = document.getElementById('totalDuration');
-                if (totEl) totEl.innerText = formatTime(currentTrackDurationSec);
-            }
-            renderTracks(CURRENT_PLAYLIST);
-        };
 
         function onSeekInput(val) {
             isSeeking = true;
-            const dur = currentTrackDurationSec || 210;
-            const targetSec = (parseFloat(val) / 100) * dur;
-            const curTimeEl = document.getElementById('currentTime');
-            if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
+            if (!isRadioMode && ytPlayer && ytReady) {
+                const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
+                const targetSec = (parseFloat(val) / 100) * dur;
+                const curTimeEl = document.getElementById('currentTime');
+                if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
+            }
         }
 
         function onSeekComplete(val) {
@@ -2158,131 +2146,63 @@
             if (now - lastSeekTimestamp < 250) return;
             lastSeekTimestamp = now;
 
-            const dur = currentTrackDurationSec || 210;
-            const targetSec = (parseFloat(val) / 100) * dur;
-            const curTimeEl = document.getElementById('currentTime');
-            if (curTimeEl) curTimeEl.innerText = formatTime(targetSec);
-
-            if (window.AndroidBridge && window.AndroidBridge.seekTo) {
-                window.AndroidBridge.seekTo(Math.floor(targetSec));
-            } else if (ytPlayer && ytReady && ytPlayer.seekTo) {
-                ytPlayer.seekTo(targetSec, true);
+            if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
+                try {
+                    const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
+                    const targetSec = (parseFloat(val) / 100) * dur;
+                    isSeeking = true;
+                    ytPlayer.seekTo(targetSec, true);
+                    if (!isUserPaused && ytPlayer.playVideo) {
+                        ytPlayer.playVideo();
+                    }
+                } catch (e) {
+                    console.error("Seek error:", e);
+                }
             }
-
             if (seekLockTimer) clearTimeout(seekLockTimer);
-            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
+            seekLockTimer = setTimeout(() => {
+                isSeeking = false;
+                if (!isUserPaused && ytPlayer && ytPlayer.getPlayerState) {
+                    const st = ytPlayer.getPlayerState();
+                    if (st === YT.PlayerState.PAUSED) {
+                        ytPlayer.playVideo();
+                    }
+                }
+            }, 600);
         }
 
         function skipBackward(sec = 10) {
             if (isRadioMode) return;
-            isSeeking = true;
-            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
-                window.AndroidBridge.skipSeconds(-sec);
-            } else if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
+            if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
-                ytPlayer.seekTo(Math.max(cur - sec, 0), true);
+                const target = Math.max(cur - sec, 0);
+                isSeeking = true;
+                ytPlayer.seekTo(target, true);
+                if (!isUserPaused && ytPlayer.playVideo) {
+                    ytPlayer.playVideo();
+                }
+                const curTimeEl = document.getElementById('currentTime');
+                if (curTimeEl) curTimeEl.innerText = formatTime(target);
+                if (seekLockTimer) clearTimeout(seekLockTimer);
+                seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
             }
-            if (seekLockTimer) clearTimeout(seekLockTimer);
-            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
         }
 
         function skipForward(sec = 10) {
             if (isRadioMode) return;
-            isSeeking = true;
-            if (window.AndroidBridge && window.AndroidBridge.skipSeconds) {
-                window.AndroidBridge.skipSeconds(sec);
-            } else if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
+            if (ytPlayer && ytReady && ytPlayer.getCurrentTime && ytPlayer.seekTo) {
                 const cur = ytPlayer.getCurrentTime() || 0;
                 const dur = (ytPlayer.getDuration && ytPlayer.getDuration() > 0) ? ytPlayer.getDuration() : 210;
-                ytPlayer.seekTo(Math.min(cur + sec, dur - 1), true);
-            }
-            if (seekLockTimer) clearTimeout(seekLockTimer);
-            seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
-        }
-
-        // ==========================================
-        // İndirme & Ödüllü Video Kurgusu
-        // ==========================================
-        let pendingDownloadTrack = null;
-
-        function requestDownloadPrompt(index, isFromSearch) {
-            const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
-            if (!track) return;
-            pendingDownloadTrack = track;
-
-            document.getElementById('dlModalTitle').innerText = track.title;
-            document.getElementById('dlModalDesc').innerText = `"${track.title}" şarkısını doğrudan telefonunuza indirip internetsiz dinleyebilirsiniz.`;
-            document.getElementById('downloadModal').style.display = 'flex';
-        }
-
-        function downloadCurrentSong() {
-            if (isRadioMode) {
-                alert("Canlı radyo yayınları indirilemez.");
-                return;
-            }
-            requestDownloadPrompt(currentIndex, false);
-        }
-
-        function closeDownloadModal() {
-            document.getElementById('downloadModal').style.display = 'none';
-        }
-
-        
-        function showToast(msg) {
-            if (window.AndroidBridge && window.AndroidBridge.showToast) {
-                window.AndroidBridge.showToast(msg);
-                return;
-            }
-            let toast = document.getElementById('appToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'appToast';
-                toast.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(30,27,75,0.95); border:1px solid #8B5CF6; color:#fff; padding:10px 18px; border-radius:20px; font-size:12px; font-weight:600; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.5); pointer-events:none; transition:opacity 0.3s ease; opacity:0; text-align:center; max-width:85%;';
-                document.body.appendChild(toast);
-            }
-            toast.innerText = msg;
-            toast.style.opacity = '1';
-            if (window._toastTimer) clearTimeout(window._toastTimer);
-            window._toastTimer = setTimeout(() => {
-                toast.style.opacity = '0';
-            }, 2500);
-        }
-
-        function quickSaveOffline(index, isFromSearch) {
-            const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
-            if (!track) return;
-            saveCurrentOfflineDirect(track);
-            updateOfflineBadges();
-            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
-                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
-            }
-            showToast("✅ '" + track.title + "' hem kütüphanenize eklendi hem de telefonunuza indiriliyor!");
-        }
-
-        function confirmOfflineFromModal() {
-            if (!pendingDownloadTrack) return;
-            saveCurrentOfflineDirect(pendingDownloadTrack);
-            closeDownloadModal();
-            alert("✅ '" + pendingDownloadTrack.title + "' çevrimdışı kütüphanenize kaydedildi! İnternetiniz yokken de dinleyebilirsiniz.");
-        }
-
-        function confirmDownloadWithReward() {
-            if (!pendingDownloadTrack) return;
-            closeDownloadModal();
-            saveCurrentOfflineDirect(pendingDownloadTrack);
-
-            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
-                window.AndroidBridge.downloadMusicFileDirect(
-                    pendingDownloadTrack.id,
-                    pendingDownloadTrack.title,
-                    pendingDownloadTrack.artist
-                );
-            } else if (window.AndroidBridge && window.AndroidBridge.requestDownloadWithReward) {
-                window.AndroidBridge.requestDownloadWithReward(
-                    pendingDownloadTrack.id,
-                    pendingDownloadTrack.title,
-                    pendingDownloadTrack.artist
-                );
+                const target = Math.min(cur + sec, dur - 1);
+                isSeeking = true;
+                ytPlayer.seekTo(target, true);
+                if (!isUserPaused && ytPlayer.playVideo) {
+                    ytPlayer.playVideo();
+                }
+                const curTimeEl = document.getElementById('currentTime');
+                if (curTimeEl) curTimeEl.innerText = formatTime(target);
+                if (seekLockTimer) clearTimeout(seekLockTimer);
+                seekLockTimer = setTimeout(() => { isSeeking = false; }, 600);
             }
         }
 

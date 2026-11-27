@@ -460,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             try {
                 String songTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Müzik";
-                String converterUrl = "https://onlymp3.to/tr/?url=https://www.youtube.com/watch?v=" + ytId;
+                String converterUrl = "https://loader.to/api/button/?url=https://www.youtube.com/watch?v=" + ytId + "&f=mp3";
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(converterUrl));
                 browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(browserIntent);

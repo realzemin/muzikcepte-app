@@ -31,6 +31,12 @@ public class BackgroundAudioWebView extends WebView {
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        // Intercept window focus changes so Chromium never throttles media timers
+        super.onWindowFocusChanged(true);
+    }
+
+    @Override
     public void onPause() {
         // Prevent default pause that halts media threads
     }
