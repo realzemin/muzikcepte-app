@@ -785,13 +785,23 @@ public class MainActivity extends AppCompatActivity {
             public void playTrackNative(String ytId, String title, String artist, String artUrl) {
                 executor.execute(() -> {
                     try {
-                        String streamUrl = resolveDirectAudioStream(ytId);
+                        String streamUrl = null;
+                        if (ytId != null && !ytId.trim().isEmpty()) {
+                            File localFile = new File(getFilesDir(), "offline_" + ytId.trim() + ".mp3");
+                            if (localFile.exists() && localFile.length() > 50000) {
+                                streamUrl = localFile.getAbsolutePath();
+                            }
+                        }
+                        if (streamUrl == null) {
+                            streamUrl = resolveDirectAudioStream(ytId);
+                        }
                         if (streamUrl != null && !streamUrl.isEmpty()) {
+                            final String finalStreamUrl = streamUrl;
                             runOnUiThread(() -> {
                                 try {
                                     Intent serviceIntent = new Intent(MainActivity.this, MusicPlaybackService.class);
                                     serviceIntent.setAction(MusicPlaybackService.ACTION_PLAY_TRACK);
-                                    serviceIntent.putExtra("stream_url", streamUrl);
+                                    serviceIntent.putExtra("stream_url", finalStreamUrl);
                                     serviceIntent.putExtra(MusicPlaybackService.EXTRA_TITLE, title);
                                     serviceIntent.putExtra(MusicPlaybackService.EXTRA_ARTIST, artist);
                                     serviceIntent.putExtra(MusicPlaybackService.EXTRA_ART_URL, artUrl);
@@ -806,12 +816,58 @@ public class MainActivity extends AppCompatActivity {
                             });
                         } else {
                             runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.this, "Ses akışı alınamadı, parça atlanıyor...", Toast.LENGTH_SHORT).show();
-                                playNextTrack();
+                                Toast.makeText(MainActivity.this, "Ses akışı alınamadı, internet bağlantınızı kontrol edin.", Toast.LENGTH_SHORT).show();
                             });
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void saveTrackOffline(String ytId, String title, String artist) {
+                if (ytId == null || ytId.trim().isEmpty()) return;
+                executor.execute(() -> {
+                    try {
+                        String cleanId = ytId.trim();
+                        File dest = new File(getFilesDir(), "offline_" + cleanId + ".mp3");
+                        if (dest.exists() && dest.length() > 50000) {
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "✅ '" + title + "' zaten çevrimdışı kitaplığınızda kayıtlı!", Toast.LENGTH_SHORT).show());
+                            return;
+                        }
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "📶 '" + title + "' çevrimdışı dinleme için kaydediliyor...", Toast.LENGTH_SHORT).show());
+                        String streamUrl = resolveDirectAudioStream(cleanId);
+                        if (streamUrl != null && !streamUrl.isEmpty()) {
+                            HttpURLConnection conn = (HttpURLConnection) new URL(streamUrl).openConnection();
+                            conn.setRequestProperty("User-Agent", "MuzikCepte/1.8.6");
+                            conn.setConnectTimeout(10000);
+                            conn.setReadTimeout(15000);
+                            conn.connect();
+                            int code = conn.getResponseCode();
+                            if (code == 200 || code == 206) {
+                                try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(dest)) {
+                                    byte[] buf = new byte[8192];
+                                    int len;
+                                    while ((len = in.read(buf)) != -1) {
+                                        out.write(buf, 0, len);
+                                    }
+                                    out.flush();
+                                }
+                                runOnUiThread(() -> {
+                                    Toast.makeText(MainActivity.this, "✅ '" + title + "' başarıyla çevrimdışı kaydedildi! Artık internetsiz dinleyebilirsiniz.", Toast.LENGTH_LONG).show();
+                                    if (webView != null) {
+                                        webView.evaluateJavascript("if(window.updateOfflineBadges) window.updateOfflineBadges();", null);
+                                    }
+                                });
+                            }
+                            conn.disconnect();
+                        } else {
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Şarkı akışı alınamadı, lütfen internetinizi kontrol edin.", Toast.LENGTH_SHORT).show());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "Kaydedilemedi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     }
                 });
             }

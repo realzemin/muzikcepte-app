@@ -1836,10 +1836,11 @@
             if (!track) return;
             saveCurrentOfflineDirect(track);
             updateOfflineBadges();
-            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
-                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
+            if (window.AndroidBridge && window.AndroidBridge.saveTrackOffline) {
+                window.AndroidBridge.saveTrackOffline(track.id, track.title, track.artist);
+            } else {
+                showToast("📶 '" + track.title + "' çevrimdışı kitaplığınıza kaydedildi!");
             }
-            showToast("📶 '" + track.title + "' çevrimdışı kitaplığınıza kaydedildi!");
         }
 
         function requestDownloadPrompt(index, isFromSearch) {
@@ -1876,8 +1877,15 @@
                 alert("Canlı radyo yayını çevrimdışı kaydedilemez.");
                 return;
             }
-            const t = CURRENT_PLAYLIST[currentIndex];
-            alert(`"${t.title}" çevrimdışı kitaplığınıza kaydedildi!`);
+            const track = CURRENT_PLAYLIST[currentIndex];
+            if (!track) return;
+            saveCurrentOfflineDirect(track);
+            updateOfflineBadges();
+            if (window.AndroidBridge && window.AndroidBridge.saveTrackOffline) {
+                window.AndroidBridge.saveTrackOffline(track.id, track.title, track.artist);
+            } else {
+                alert(`"${track.title}" çevrimdışı kitaplığınıza kaydedildi!`);
+            }
         }
 
         // Tabs

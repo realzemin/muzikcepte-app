@@ -47,7 +47,7 @@ jobs:
     - name: Send APK to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="🚀 <b>MüzikCepte v1.8.5 (v38) - %100 SAF MP3 C++ MOTORU DEVREDE! (SIFIR YOUTUBE VİDEOSU)</b>%0A%0A🔥 <b>SAF SES ÇAĞI BAŞLADI:</b> YouTube video iframe oynatıcısı tamamen tarihe gömüldü! Şarkılar artık RapidAPI üzerinden 128kbps saf MP3 olarak Android donanımsal C++ MediaPlayer ile akıyor.%0A⚡ <b>ANINDA OYNATMA & SIFIR TAKILMA:</b> 400 milisaniyede başlayan saf ses; sıfır video yükü, sıfır donma.%0A📥 <b>GERÇEK MP3 İNDİRME:</b> İndirilen şarkılar telefona doğrudan gerçek .mp3 ses dosyası olarak iniyor.%0A📻 <b>28 CANLI RADYO:</b> Kesintisiz arka plan ve kilit ekranı desteğiyle tam gaz yayında." \
+             -F caption="🔥 <b>MüzikCepte v1.8.6 (v39) - Gerçek Çevrimdışı (İnternetsiz) Oynatma & Kesintisiz Radyo Motoru</b>%0A%0A📶 <b>GERÇEK ÇEVRİMDİŞİ (SIFIR İNTERNET):</b> [📶 Kaydet] butonuna bastığınızda şarkı doğrudan telefonun dahili hafızasına kaydedilir. İnternet kapalıyken bile anında yerel dosyadan sıfır internetle çalar.%0A📻 <b>RADYO AKICI ÇALMA:</b> Shoutcast ICY metadata ayrıştırıcı hatası giderildi, canlı radyolar artık sıfır takılma ve pürüzsüz akışla çalıyor.%0A⚡ <b>RAPIDAPI SAF MP3:</b> Online şarkılar donanımsal C++ MediaPlayer ile akmaya devam ediyor.%0A📥 <b>MP3 İNDİRME:</b> İndirilenler klasörüne gerçek .mp3 olarak iniyor." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
@@ -55,7 +55,7 @@ jobs:
     - name: Send AAB to Telegram
       run: |
         curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.5 (v38) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 saf ses resmi sürüm paketi." \
+             -F caption="📦 <b>MüzikCepte v1.8.6 (v39) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

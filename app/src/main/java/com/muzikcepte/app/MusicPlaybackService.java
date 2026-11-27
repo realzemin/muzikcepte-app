@@ -344,16 +344,25 @@ public class MusicPlaybackService extends Service {
                     .build());
 
             if (isRadio) {
+                java.util.Map<String, String> headers = new java.util.HashMap<>();
+                headers.put("User-Agent", "VLC/3.0.18 (Linux; Android 14)");
+                headers.put("Icy-MetaData", "0");
+                headers.put("Accept", "*/*");
                 try {
-                    nativePlayer.setDataSource(url);
-                } catch (Exception e1) {
-                    java.util.Map<String, String> headers = new java.util.HashMap<>();
-                    headers.put("User-Agent", "MuzikCepteRadio/1.8.1 (Linux; Android 14)");
-                    headers.put("Icy-MetaData", "1");
                     nativePlayer.setDataSource(this, Uri.parse(url), headers);
+                } catch (Exception e1) {
+                    try {
+                        nativePlayer.setDataSource(url);
+                    } catch (Exception e2) {
+                        e2.printStackTrace();
+                    }
                 }
             } else {
-                nativePlayer.setDataSource(url);
+                if (url.startsWith("/")) {
+                    nativePlayer.setDataSource(url);
+                } else {
+                    nativePlayer.setDataSource(this, Uri.parse(url));
+                }
             }
 
             nativePlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
