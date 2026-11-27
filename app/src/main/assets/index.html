@@ -1150,15 +1150,15 @@
                     <div class="lib-title">Çevrimdışı Şarkılar</div>
                     <div class="lib-count" id="offline-count">0 Parça</div>
                 </div>
-                <div class="lib-card" onclick="alert('Yeni çalma listesi oluşturuldu!')">
+                <div class="lib-card" onclick="showCustomPlaylistsList()">
+                    <div class="lib-icon">📁</div>
+                    <div class="lib-title">Çalma Listelerim</div>
+                    <div class="lib-count" id="playlist-count">0 Liste</div>
+                </div>
+                <div class="lib-card" onclick="promptCreatePlaylist()">
                     <div class="lib-icon">➕</div>
                     <div class="lib-title">Yeni Liste</div>
                     <div class="lib-count">Oluştur</div>
-                </div>
-                <div class="lib-card" onclick="alert('Zil sesleri klasörüne eklendi!')">
-                    <div class="lib-icon">🔔</div>
-                    <div class="lib-title">Zil Sesleri</div>
-                    <div class="lib-count">Hazır</div>
                 </div>
             </div>
 
@@ -1251,12 +1251,15 @@
             <button class="ctrl-btn" onclick="skipForward(10)" title="10s İleri" style="font-size:12px; font-weight:800; color:#38BDF8;">10 ⏩</button>
         </div>
 
-        <div class="modal-actions-row" id="modalActionsRow">
-            <button class="action-button-main" id="modalDownloadBtn" onclick="downloadCurrentSong()">
-                <span>⬇ Telefona İndir</span>
+        <div class="modal-actions-row" id="modalActionsRow" style="display:flex; gap:8px;">
+            <button class="action-button-main" id="modalDownloadBtn" onclick="downloadCurrentSong()" style="flex:1;">
+                <span>⬇ İndir</span>
             </button>
-            <button class="action-button-secondary" onclick="saveCurrentOffline()">
-                <span>📶 Çevrimdışı Kaydet</span>
+            <button class="action-button-secondary" onclick="saveCurrentOffline()" style="flex:1;">
+                <span>📶 Kaydet</span>
+            </button>
+            <button class="action-button-secondary" onclick="openAddToPlaylistModal()" style="flex:1; border-color:#38BDF8; color:#38BDF8;">
+                <span>➕ Liste</span>
             </button>
         </div>
     </div>
@@ -1548,6 +1551,7 @@
                         <div class="track-btn-stack">
                             <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${i}, false)"><span>📶</span><span>Kaydet</span></button>
                             <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${i}, false)"><span>📥</span><span>İndir</span></button>
+                            <button class="offline-badge-btn" style="background:rgba(56,189,248,0.18); border-color:rgba(56,189,248,0.5); color:#38BDF8;" onclick="event.stopPropagation(); openAddToPlaylistModal(CURRENT_PLAYLIST[${i}])"><span>➕</span><span>Liste</span></button>
                         </div>
                         <div class="play-btn-circle">${!isRadioMode && i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
                     </div>
@@ -1691,15 +1695,16 @@
         }
 
         function playOnlineTrack(idx) {
-            const item = SEARCH_RESULTS[idx];
-            CURRENT_PLAYLIST.unshift({
+            if (!SEARCH_RESULTS || SEARCH_RESULTS.length === 0 || !SEARCH_RESULTS[idx]) return;
+            // Arama sonuçlarındaki TÜM şarkıları sırayla çalma listesi yap (başka sanatçıya geçmez!)
+            CURRENT_PLAYLIST = SEARCH_RESULTS.map(item => ({
                 id: item.id,
                 title: item.title,
                 artist: item.artist,
                 duration: item.duration || "03:30",
-                art: item.art || item.thumb || 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'
-            });
-            loadTrack(0, true);
+                art: item.art || item.thumb || ('https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg')
+            }));
+            loadTrack(idx, true);
         }
 
         function togglePlay() {
@@ -2051,6 +2056,7 @@
                             <div class="track-btn-stack">
                                 <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${actualIdx}, true)"><span>📶</span><span>Kaydet</span></button>
                                 <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${actualIdx}, true)"><span>📥</span><span>İndir</span></button>
+                                <button class="offline-badge-btn" style="background:rgba(56,189,248,0.18); border-color:rgba(56,189,248,0.5); color:#38BDF8;" onclick="event.stopPropagation(); openAddToPlaylistModal(SEARCH_RESULTS[${actualIdx}])"><span>➕</span><span>Liste</span></button>
                             </div>
                             <div class="play-btn-circle">▶</div>
                         </div>
@@ -2418,6 +2424,269 @@
         }
 
         // ==========================================
+        // Özel Çalma Listeleri Yönetimi (LocalStorage)
+        // ==========================================
+        let CUSTOM_PLAYLISTS = [];
+        try {
+            CUSTOM_PLAYLISTS = JSON.parse(localStorage.getItem('mc_custom_playlists') || '[]');
+        } catch(e) {
+            CUSTOM_PLAYLISTS = [];
+        }
+
+        function saveCustomPlaylistsToStorage() {
+            try {
+                localStorage.setItem('mc_custom_playlists', JSON.stringify(CUSTOM_PLAYLISTS));
+                updatePlaylistCounts();
+            } catch(e) {}
+        }
+
+        function updatePlaylistCounts() {
+            const countEl = document.getElementById('playlist-count');
+            if (countEl) countEl.innerText = `${CUSTOM_PLAYLISTS.length} Liste`;
+        }
+
+        function promptCreatePlaylist() {
+            const name = prompt("Yeni Çalma Listesi Adı Girin:\n(Örn: Tarkan Hitleri, Spor, Yol Şarkıları)");
+            if (!name || !name.trim()) return;
+            createCustomPlaylist(name.trim());
+        }
+
+        function createCustomPlaylist(name) {
+            const trimmed = name.trim();
+            if (CUSTOM_PLAYLISTS.some(p => p.name.toLowerCase() === trimmed.toLowerCase())) {
+                alert(`"${trimmed}" adında bir çalma listeniz zaten var.`);
+                return;
+            }
+            const newPl = {
+                id: 'pl_' + Date.now(),
+                name: trimmed,
+                tracks: []
+            };
+            CUSTOM_PLAYLISTS.unshift(newPl);
+            saveCustomPlaylistsToStorage();
+            showToast(`✅ "${trimmed}" çalma listesi oluşturuldu!`);
+            showCustomPlaylistsList();
+        }
+
+        function showCustomPlaylistsList() {
+            document.getElementById('library-section-title').innerText = `📁 Çalma Listelerim (${CUSTOM_PLAYLISTS.length})`;
+            const container = document.getElementById('library-tracks-container');
+            if (!container) return;
+
+            let headerHtml = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 4px;">
+                    <span style="font-size:12.5px; color:var(--text-sub);">Oluşturduğunuz müzik listeleri</span>
+                    <button class="action-button-main" onclick="promptCreatePlaylist()" style="padding:7px 14px; font-size:12px; background:linear-gradient(135deg, #8B5CF6, #6366F1);">
+                        <span>➕ Yeni Liste</span>
+                    </button>
+                </div>
+            `;
+
+            if (!CUSTOM_PLAYLISTS || CUSTOM_PLAYLISTS.length === 0) {
+                container.innerHTML = headerHtml + `
+                    <div style="text-align:center; padding:35px 20px; color:var(--text-sub); font-size:13px; line-height:1.6;">
+                        Henüz oluşturduğunuz bir çalma listesi yok.<br>
+                        Yukarıdaki <b>➕ Yeni Liste</b> butonuna dokunarak kendi listenizi oluşturabilirsiniz!
+                    </div>
+                `;
+                return;
+            }
+
+            const listsHtml = CUSTOM_PLAYLISTS.map((pl, idx) => `
+                <div class="track-card" style="align-items:center;" onclick="openPlaylistDetails(${idx})">
+                    <div class="track-left">
+                        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, #8B5CF6, #EC4899); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">
+                            📁
+                        </div>
+                        <div class="track-info">
+                            <div class="track-name" style="font-size:15px; font-weight:700;">${escapeHtml(pl.name)}</div>
+                            <div class="track-artist" style="color:#A78BFA;">${pl.tracks ? pl.tracks.length : 0} Şarkı</div>
+                        </div>
+                    </div>
+                    <div class="track-right" style="gap:8px;">
+                        <button class="offline-badge-btn" style="background:rgba(139,92,246,0.25); border-color:#8B5CF6; color:#A78BFA;" onclick="event.stopPropagation(); playPlaylistAll(${idx})">
+                            <span>▶ Çal</span>
+                        </button>
+                        <button class="offline-badge-btn" style="background:rgba(239,68,68,0.15); border-color:#EF4444; color:#EF4444;" onclick="event.stopPropagation(); deletePlaylist(${idx})">
+                            <span>🗑️ Sil</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = headerHtml + listsHtml;
+        }
+
+        function playPlaylistAll(plIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl || !pl.tracks || pl.tracks.length === 0) {
+                alert(`"${pl.name}" listesinde henüz şarkı yok. Şarkıların yanındaki [➕ Liste] butonuna basarak şarkı ekleyebilirsiniz.`);
+                return;
+            }
+            CURRENT_PLAYLIST = [...pl.tracks];
+            loadTrack(0, true);
+            showToast(`▶ "${pl.name}" çalma listesi başlatıldı (${pl.tracks.length} şarkı)`);
+        }
+
+        function openPlaylistDetails(plIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl) return;
+            document.getElementById('library-section-title').innerText = `📁 ${pl.name} (${pl.tracks ? pl.tracks.length : 0} Şarkı)`;
+            const container = document.getElementById('library-tracks-container');
+            if (!container) return;
+
+            let headerHtml = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 4px;">
+                    <button class="offline-badge-btn" onclick="showCustomPlaylistsList()" style="padding:6px 12px; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); color:#fff;">
+                        <span>⬅ Çalma Listelerim</span>
+                    </button>
+                    ${pl.tracks && pl.tracks.length > 0 ? `
+                        <button class="action-button-main" onclick="playPlaylistAll(${plIdx})" style="padding:6px 14px; font-size:12px;">
+                            <span>▶ Tümünü Çal</span>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            if (!pl.tracks || pl.tracks.length === 0) {
+                container.innerHTML = headerHtml + `
+                    <div style="text-align:center; padding:35px 20px; color:var(--text-sub); font-size:13px; line-height:1.6;">
+                        Bu listede henüz şarkı yok.<br>
+                        Şarkıların yanındaki <b>➕ Liste</b> butonuna veya tam ekran oynatıcıdaki <b>➕ Liste</b> butonuna dokunarak buraya şarkı ekleyebilirsiniz!
+                    </div>
+                `;
+                return;
+            }
+
+            const tracksHtml = pl.tracks.map((t, i) => `
+                <div class="track-card" onclick="playPlaylistTrack(${plIdx}, ${i})">
+                    <div class="track-left">
+                        <img src="${t.art || t.thumb || 'https://i.ytimg.com/vi/' + t.id + '/hqdefault.jpg'}" class="track-thumb" alt="art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
+                        <div class="track-info">
+                            <div class="track-name">${escapeHtml(t.title)}</div>
+                            <div class="track-artist">${escapeHtml(t.artist)}</div>
+                        </div>
+                    </div>
+                    <div class="track-right" style="gap:8px;">
+                        <button class="offline-badge-btn" style="background:rgba(239,68,68,0.15); border-color:#EF4444; color:#EF4444;" onclick="event.stopPropagation(); removeTrackFromPlaylist(${plIdx}, ${i})">
+                            <span>✕ Kaldır</span>
+                        </button>
+                        <div class="play-btn-circle">▶</div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = headerHtml + tracksHtml;
+        }
+
+        function playPlaylistTrack(plIdx, trackIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl || !pl.tracks || !pl.tracks[trackIdx]) return;
+            CURRENT_PLAYLIST = [...pl.tracks];
+            loadTrack(trackIdx, true);
+        }
+
+        function removeTrackFromPlaylist(plIdx, trackIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl || !pl.tracks) return;
+            const removed = pl.tracks.splice(trackIdx, 1);
+            saveCustomPlaylistsToStorage();
+            showToast(`"${removed[0].title}" listeden kaldırıldı.`);
+            openPlaylistDetails(plIdx);
+        }
+
+        function deletePlaylist(plIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl) return;
+            if (confirm(`"${pl.name}" çalma listesini silmek istediğinizden emin misiniz?`)) {
+                CUSTOM_PLAYLISTS.splice(plIdx, 1);
+                saveCustomPlaylistsToStorage();
+                showToast(`🗑️ "${pl.name}" listesi silindi.`);
+                showCustomPlaylistsList();
+            }
+        }
+
+        let trackToAdd = null;
+
+        function openAddToPlaylistModal(track = null) {
+            trackToAdd = track || CURRENT_PLAYLIST[currentIndex];
+            if (!trackToAdd) return;
+
+            let modal = document.getElementById('addToPlaylistModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'addToPlaylistModal';
+                modal.className = 'download-modal';
+                modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+                document.body.appendChild(modal);
+            }
+
+            const playlistsHtml = CUSTOM_PLAYLISTS.map((pl, i) => `
+                <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="addTrackToSpecificPlaylist(${i})">
+                    <div>
+                        <div style="font-weight:700; font-size:14px; color:#fff;">📁 ${escapeHtml(pl.name)}</div>
+                        <div style="font-size:11.5px; color:var(--text-sub);">${pl.tracks ? pl.tracks.length : 0} Şarkı</div>
+                    </div>
+                    <span style="font-size:18px; color:#10B981;">➕</span>
+                </div>
+            `).join('');
+
+            modal.innerHTML = `
+                <div style="background:#181926; border:1px solid rgba(139,92,246,0.35); border-radius:20px; padding:22px; max-width:380px; width:100%; max-height:80vh; overflow-y:auto; box-shadow:0 16px 40px rgba(0,0,0,0.8);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-weight:800; font-size:16px; color:#fff;">📁 Çalma Listesine Ekle</span>
+                        <span style="cursor:pointer; font-size:18px; color:var(--text-sub);" onclick="closeAddToPlaylistModal()">✕</span>
+                    </div>
+                    <div style="font-size:12.5px; color:#CBD5E1; margin-bottom:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <b>Şarkı:</b> ${escapeHtml(trackToAdd.title)}
+                    </div>
+                    <button class="action-button-main" onclick="promptCreatePlaylistFromModal()" style="width:100%; padding:10px; font-size:12.5px; margin-bottom:14px; background:linear-gradient(135deg, #8B5CF6, #6366F1);">
+                        ➕ Yeni Çalma Listesi Oluştur
+                    </button>
+                    <div style="max-height:220px; overflow-y:auto;">
+                        ${CUSTOM_PLAYLISTS.length > 0 ? playlistsHtml : '<div style="text-align:center; padding:15px; color:var(--text-sub); font-size:12px;">Henüz liste yok. Yeni liste oluşturun!</div>'}
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function closeAddToPlaylistModal() {
+            const modal = document.getElementById('addToPlaylistModal');
+            if (modal) modal.style.display = 'none';
+            trackToAdd = null;
+        }
+
+        function addTrackToSpecificPlaylist(plIdx) {
+            const pl = CUSTOM_PLAYLISTS[plIdx];
+            if (!pl || !trackToAdd) return;
+            if (!pl.tracks) pl.tracks = [];
+            if (pl.tracks.some(t => t.id === trackToAdd.id)) {
+                showToast(`ℹ️ Bu şarkı zaten "${pl.name}" listesinde var!`);
+            } else {
+                pl.tracks.push({
+                    id: trackToAdd.id,
+                    title: trackToAdd.title,
+                    artist: trackToAdd.artist,
+                    duration: trackToAdd.duration || "03:30",
+                    art: trackToAdd.art || trackToAdd.thumb || ('https://i.ytimg.com/vi/' + trackToAdd.id + '/hqdefault.jpg')
+                });
+                saveCustomPlaylistsToStorage();
+                showToast(`✅ "${trackToAdd.title}" -> "${pl.name}" listesine eklendi!`);
+            }
+            closeAddToPlaylistModal();
+        }
+
+        function promptCreatePlaylistFromModal() {
+            const name = prompt("Yeni Çalma Listesi Adı:\n(Örn: Tarkan Hitleri, Spor, Yol Şarkıları)");
+            if (!name || !name.trim()) return;
+            createCustomPlaylist(name.trim());
+            if (trackToAdd && CUSTOM_PLAYLISTS.length > 0) {
+                addTrackToSpecificPlaylist(0);
+            }
+        }
+
+        // ==========================================
         // Kusursuz İleri/Geri Sarma (Sıfır Donma, Çift Tetik Korumalı)
         // ==========================================
         let seekLockTimer = null;
@@ -2526,6 +2795,7 @@
             renderRadios();
             updateFavBadges();
             updateOfflineBadges();
+            updatePlaylistCounts();
             showOfflineList();
         } catch (e) {
             console.error("Init render error:", e);

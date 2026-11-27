@@ -45,17 +45,19 @@ jobs:
         path: app/build/outputs/bundle/release/app-release.aab
 
     - name: Send APK to Telegram
+      continue-on-error: true
       run: |
-        curl -v -F chat_id="1138542567" \
-             -F caption="🔥 <b>MüzikCepte v1.8.7 (v40) - YouTube Music Tarzı Akıllı Arama & Tam Çevrimdışı Deneyimi</b>%0A%0A🔍 <b>YOUTUBE MUSIC TARZI CANLI ARAMA:</b> Arama kutusuna yazarken anında harf harf YouTube Music önerileri (🔍 ve ↗️) listelenir. Trend aramalar etiketleri eklendi.%0A📶 <b>GERÇEK ÇEVRİMDİŞİ ÇALMA:</b> [📶 Kaydet] butonu şarkıyı uygulamanın içine kaydeder, sıfır internetle kesintisiz çalar. Telefonda dosya kalabalığı yapmaz.%0A📻 <b>KESİNTİSİZ RADYO:</b> Canlı yayınlar pürüzsüz C++ donanımsal akışla donmadan çalar.%0A⚡ <b>RAPIDAPI MP3 GÜCÜ:</b> Tüm şarkılar doğrudan saf MP3 motoruyla çalıyor." \
+        curl --retry 5 --retry-delay 3 --retry-all-errors -v -F chat_id="1138542567" \
+             -F caption="🔥 <b>MüzikCepte v1.8.8 (v41) - Sıralı Arama Çalma & Özel Çalma Listeleri</b>%0A%0A🎵 <b>SIRALI KESİNTİSİZ ARAMA ÇALMA:</b> Arama yapıp şarkıya bastığınızda (örn. Tarkan), ileri/geri tuşlarına bastıkça sadece aradığınız sanatçının şarkıları sırayla çalar, başka sanatçıya atlamaz!%0A📁 <b>ÖZEL ÇALMA LİSTELERİ:</b> Kitaplığım sekmesinden dilediğiniz kadar yeni çalma listesi oluşturun, şarkıların yanındaki [➕ Liste] butonuyla listelerinize şarkı ekleyin!%0A🔍 <b>CANLI ARAMA & ÖNERİLER:</b> Harf harf YouTube Music önerileri.%0A📶 <b>GERÇEK ÇEVRİMDİŞİ:</b> [📶 Kaydet] ile internetsiz müzik keyfi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/apk/release/app-release.apk \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument
 
     - name: Send AAB to Telegram
+      continue-on-error: true
       run: |
-        curl -v -F chat_id="1138542567" \
-             -F caption="📦 <b>MüzikCepte v1.8.7 (v40) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
+        curl --retry 5 --retry-delay 3 --retry-all-errors -v -F chat_id="1138542567" \
+             -F caption="📦 <b>MüzikCepte v1.8.8 (v41) Google Play AAB Paketi</b>%0A%0AGoogle Play Console Target SDK 36 resmi sürüm paketi." \
              -F parse_mode="HTML" \
              -F document=@app/build/outputs/bundle/release/app-release.aab \
              https://api.telegram.org/bot6997346023:AAGjQMOIso_j8ZGY5xDUpLip5_r2K0JTbYo/sendDocument

@@ -1,0 +1,58 @@
+================================================================================
+MÜZİKCEPTE - GOOGLE PLAY STORE RESMİ MAĞAZA GİRİŞİ (ASO OPTİMİZE METİNLER)
+================================================================================
+
+1. UYGULAMA ADI (Title) - [Maks. 30 Karakter]:
+--------------------------------------------------------------------------------
+MüzikCepte: Şarkı & Radyo Dinle
+(Karakter sayısı: 30 / 30 - Tam sınır, en yüksek arama hacimli "Şarkı", "Radyo", "Dinle" anahtar kelimelerini barındırır)
+
+Alternatif Seçenek:
+MüzikCepte - İnternetsiz Müzik
+(Karakter sayısı: 30 / 30)
+
+
+2. KISA AÇIKLAMA (Short Description) - [Maks. 80 Karakter]:
+--------------------------------------------------------------------------------
+Trend şarkılar, çevrimdışı internetsiz müzik ve kesintisiz canlı radyolar cebinde!
+(Karakter sayısı: 80 / 80 - Google Play arama algoritmasında en kritik 2. alan)
+
+
+3. TAM AÇIKLAMA (Full Description) - [Maks. 4000 Karakter]:
+--------------------------------------------------------------------------------
+MüzikCepte ile müziğin, trend şarkıların ve canlı radyonun ritmine kapılın! 🎵📻
+
+En sevdiğiniz sanatçıları, hit şarkıları, popüler çalma listelerini ve Türkiye'nin en sevilen canlı radyo istasyonlarını tek bir modern müzik çalar uygulamasında bir araya getirdik. İster online dinleyin, ister çevrimdışı kitaplığınıza kaydederek internetsiz müzik keyfini her yerde yaşayın!
+
+✨ ÖNE ÇIKAN ÖZELLİKLER:
+
+📶 Çevrimdışı Müzik Keyfi (İnternetsiz Dinle):
+• Sevdiğiniz şarkıları çevrimdışı kütüphanenize tek dokunuşla kaydedin.
+• İnternetiniz veya mobil veriniz bittiğinde bile kesintisiz müzik dinleyin.
+• Metroda, uçakta, yolda; sıfır internetle sınırsız şarkı deneyimi!
+
+🔍 Akıllı & Hızlı Arama (Canlı Öneriler):
+• Siz arama kutusuna yazarken anında canlı şarkı ve sanatçı önerileri (Autocomplete).
+• Tek dokunuşla popüler ve trend sanatçıları (Ferdi Tayfur, Mert Demir, Semicenk, Müslüm Gürses vb.) keşfedin.
+• Milyonlarca şarkı arasında saniyeler içinde dilediğiniz müziği bulun.
+
+📻 Kesintisiz Canlı Radyo İstasyonları:
+• Türkiye'nin en popüler ulusal ve yerel 28+ canlı radyosu (Kral Pop, PowerTürk, SlowTürk, Metro FM, DamarTürk, JoyTürk ve daha fazlası).
+• Takılmayan, donmayan, kristal netliğinde pürüzsüz C++ donanımsal radyo akışı.
+• Arabeskten Türk Pop'a, Yabancı Hit'ten Nostaljiye her zevke uygun canlı yayın.
+
+🎧 Arka Planda Müzik Çalma (Kilit Ekranı):
+• Ekran kapalıyken veya diğer uygulamalarda gezinirken müzik asla durmaz.
+• Bildirim çubuğu ve kilit ekranı üzerinden kolay kontrol (Oynat, Duraklat, İleri/Geri).
+
+🎤 Senkronize Şarkı Sözleri (Lyrics):
+• Dinlediğiniz şarkıların sözlerini ekranda anlık takip edin.
+• Sevdiğiniz parçalara tek tıkla eşlik edin!
+
+💎 Modern, Hızlı ve Pil Dostu Arayüz:
+• Göz yormayan şık karanlık tema (Dark Mode).
+• Telefonunuzu kasmayan, şarjınızı tüketmeyen hafif ve akıcı altyapı.
+• Reklamsız deneyim arayanlar için VIP üyelik ayrıcalığı.
+
+MüzikCepte'yi hemen ücretsiz indirin; milyonlarca şarkı ve canlı radyolarla müzik keyfini cebinizde taşıyın!
+================================================================================
