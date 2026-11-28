@@ -524,7 +524,17 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onBillingServiceDisconnected() {}
+            public void onBillingServiceDisconnected() {
+                // Auto-retry connection if disconnected
+                executor.execute(() -> {
+                    try {
+                        Thread.sleep(2000);
+                        if (billingClient != null && !billingClient.isReady()) {
+                            billingClient.startConnection(this);
+                        }
+                    } catch (Exception ignored) {}
+                });
+            }
         });
     }
 
@@ -652,6 +662,12 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if (billingClient == null || !billingClient.isReady()) {
+                Toast.makeText(MainActivity.this, "Google Play bağlantısı yenileniyor, lütfen birkaç saniye sonra tekrar deneyin.", Toast.LENGTH_SHORT).show();
+                setupBillingClient();
+                return;
+            }
+
             String targetProductId;
             if ("monthly".equalsIgnoreCase(plan)) {
                 targetProductId = PRODUCT_ID_MONTHLY;
@@ -685,7 +701,7 @@ public class MainActivity extends AppCompatActivity {
 
                 billingClient.launchBillingFlow(MainActivity.this, billingFlowParams);
             } else {
-                Toast.makeText(MainActivity.this, "Google Play Mağaza bağlantısı kuruluyor, lütfen tekrar deneyin.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Google Play ürün listesi senkronize ediliyor, lütfen tekrar deneyin.", Toast.LENGTH_SHORT).show();
                 queryAllVipProducts();
             }
         });
@@ -936,6 +952,15 @@ public class MainActivity extends AppCompatActivity {
 
             @JavascriptInterface
             public void downloadMusicFileDirect(String ytId, String title, String artist) {
+                // Strict Gate: Never download unless user is VIP or has active rewarded ad session
+                if (!isVip && !isRewardedActive()) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Şarkı indirmek için 1 video izleyin veya VIP üye olun.", Toast.LENGTH_LONG).show();
+                        showRewardedAd();
+                    });
+                    return;
+                }
+
                 executor.execute(() -> {
                     try {
                         String streamUrl = resolveDirectAudioStream(ytId);

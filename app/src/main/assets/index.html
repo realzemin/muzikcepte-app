@@ -2193,25 +2193,80 @@
             }
         }
 
+        let pendingDownloadTrack = null;
+
         function requestDownloadPrompt(index, isFromSearch) {
             const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
+            if (!track) return;
+
+            const isVip = (window.AndroidBridge && window.AndroidBridge.isVipUser && window.AndroidBridge.isVipUser());
+            const rewardedLeft = (window.AndroidBridge && window.AndroidBridge.getRewardedRemainingSeconds) ? window.AndroidBridge.getRewardedRemainingSeconds() : 0;
+
+            // VIP ise veya ödüllü video izlenmişse doğrudan indir
+            if (isVip || rewardedLeft > 0) {
+                triggerDirectDownload(track);
+                return;
+            }
+
+            // VIP ve video yoksa ASLA indirme, modalı aç!
+            pendingDownloadTrack = track;
+            openDownloadModal(track);
+        }
+
+        function openDownloadModal(track) {
+            const modal = document.getElementById('downloadModal');
+            if (!modal) return;
+            const titleEl = document.getElementById('dlModalTitle');
+            const descEl = document.getElementById('dlModalDesc');
+            if (track) {
+                if (titleEl) titleEl.innerText = "📥 Şarkıyı İndir";
+                if (descEl) descEl.innerHTML = `<b style="color:#F59E0B;">${track.title || 'Şarkı'}</b> parçasını telefonunuza MP3 olarak indirmek için lütfen <b>1 kısa video izleyin</b> veya <b>VIP üye olun</b>.`;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeDownloadModal() {
+            const modal = document.getElementById('downloadModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmDownloadWithReward() {
+            closeDownloadModal();
+            if (!pendingDownloadTrack) return;
+            window._pendingDownloadAfterReward = pendingDownloadTrack;
+            if (window.AndroidBridge && window.AndroidBridge.showRewardedAd) {
+                window.AndroidBridge.showRewardedAd();
+            } else {
+                triggerDirectDownload(pendingDownloadTrack);
+            }
+        }
+
+        function confirmOfflineFromModal() {
+            closeDownloadModal();
+            if (!pendingDownloadTrack) return;
+            saveCurrentOfflineDirect(pendingDownloadTrack);
+            updateOfflineBadges();
+            if (window.AndroidBridge && window.AndroidBridge.saveTrackOffline) {
+                window.AndroidBridge.saveTrackOffline(pendingDownloadTrack.id, pendingDownloadTrack.title, pendingDownloadTrack.artist);
+            } else {
+                showToast("📶 '" + pendingDownloadTrack.title + "' çevrimdışı kütüphanenize kaydedildi!");
+            }
+        }
+
+        function triggerDirectDownload(track) {
             if (!track) return;
             if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
                 window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
             } else if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
                 window.AndroidBridge.downloadMusicFile(track.id, track.title, track.artist);
+            } else {
+                showToast("📥 İndirme başlatılıyor: " + track.title);
             }
         }
 
         // Downloads
         function triggerDownload(index, isFromSearch) {
-            const track = isFromSearch ? SEARCH_RESULTS[index] : CURRENT_PLAYLIST[index];
-            if (!track) return;
-            if (window.AndroidBridge && window.AndroidBridge.downloadMusicFileDirect) {
-                window.AndroidBridge.downloadMusicFileDirect(track.id, track.title, track.artist);
-            } else if (window.AndroidBridge && window.AndroidBridge.downloadMusicFile) {
-                window.AndroidBridge.downloadMusicFile(track.id, track.title, track.artist);
-            }
+            requestDownloadPrompt(index, isFromSearch);
         }
 
         function downloadCurrentSong() {
@@ -2219,7 +2274,7 @@
                 alert("Canlı radyo yayınları indirilemez.");
                 return;
             }
-            triggerDownload(currentIndex, false);
+            requestDownloadPrompt(currentIndex, false);
         }
 
         function saveCurrentOffline() {
@@ -2333,6 +2388,23 @@
             }
             closeVipModal();
         }
+
+        window.onRewardedUnlocked = function(remainingSeconds) {
+            if (window._pendingDownloadAfterReward) {
+                const dlTrack = window._pendingDownloadAfterReward;
+                window._pendingDownloadAfterReward = null;
+                triggerDirectDownload(dlTrack);
+                showToast("🎉 Video izlendi! İndirme başladı: " + (dlTrack.title || 'Şarkı'));
+            } else {
+                showToast("🎉 15 Dakika Kesintisiz Reklamsız Müzik Aktif Edildi!");
+            }
+        };
+
+        window.onVipActivated = function() {
+            showToast("👑 VIP Üyeliğiniz Aktif! Sınırsız Müzik & İndirme Hazır!");
+            closeVipModal();
+            closeDownloadModal();
+        };
 
         window.seekToSeconds = function(sec) {
             if (!isRadioMode && ytPlayer && ytReady && ytPlayer.seekTo) {
