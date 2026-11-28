@@ -666,7 +666,7 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
             padding: 8px 14px;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: space-between;
             z-index: 100;
@@ -1230,8 +1230,8 @@
 
     </main>
 
-    <!-- Sticky Mini Player (Tap expands full player) -->
-    <div class="mini-player" id="miniPlayer" onclick="openFullPlayer()">
+    <!-- Sticky Mini Player (Hidden on launch until user starts a track or radio) -->
+    <div class="mini-player" id="miniPlayer" style="display:none;" onclick="openFullPlayer()">
         <div class="mini-left">
             <img src="https://i.ytimg.com/vi/U66ixhdbxEI/hqdefault.jpg" id="miniThumb" class="mini-vinyl" alt="Art" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300'">
             <div class="mini-info">
@@ -1478,6 +1478,7 @@
             const totEl = document.getElementById('totalDuration');
             const fillEl = document.getElementById('progressFill');
             const dotEl = document.getElementById('progressDot');
+            const seekerEl = document.getElementById('songSeeker');
             const inputEl = document.getElementById('progressBar');
             if (curEl) curEl.innerText = formatTime(cur);
             if (totEl && dur > 0) totEl.innerText = formatTime(dur);
@@ -1485,6 +1486,7 @@
                 const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
                 if (fillEl) fillEl.style.width = pct + '%';
                 if (dotEl) dotEl.style.left = pct + '%';
+                if (seekerEl) seekerEl.value = pct;
                 if (inputEl) inputEl.value = pct;
             }
         };
@@ -1607,9 +1609,8 @@
                     <div class="track-right">
                         <span class="track-duration">${t.duration || 'Full'}</span>
                         <div class="track-btn-stack">
-                            <button class="offline-badge-btn" style="background:rgba(239,68,68,0.18); border-color:rgba(239,68,68,0.5); color:#EF4444;" onclick="event.stopPropagation(); quickToggleFavorite(${i})"><span>${FAVORITES.some(f => f.id === t.id) ? '❤️' : '🤍'}</span><span>Favori</span></button>
-                            <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${i}, false)"><span>📶</span><span>Kaydet</span></button>
                             <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${i}, false)"><span>📥</span><span>İndir</span></button>
+                            <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${i}, false)"><span>📶</span><span>Kaydet</span></button>
                             <button class="offline-badge-btn" style="background:rgba(56,189,248,0.18); border-color:rgba(56,189,248,0.5); color:#38BDF8;" onclick="event.stopPropagation(); openAddToPlaylistModal(CURRENT_PLAYLIST[${i}])"><span>➕</span><span>Liste</span></button>
                         </div>
                         <div class="play-btn-circle">${!isRadioMode && i === currentIndex && isPlaying ? '⏸' : '▶'}</div>
@@ -1680,6 +1681,10 @@
                 }
             }
 
+            // Show mini-player once radio is selected
+            const miniPl = document.getElementById('miniPlayer');
+            if (miniPl) miniPl.style.display = 'flex';
+
             // Update UI elements for Radio
             document.getElementById('miniTitle').innerText = r.name;
             document.getElementById('miniArtist').innerText = "🔴 Canlı • " + r.genre;
@@ -1698,12 +1703,29 @@
             renderRadios();
         }
 
-        // Play Song in place (without full-screen jump)
+        // Play Song
         function loadTrack(index, autoPlay = true) {
             isRadioMode = false;
             currentIndex = index;
             const t = CURRENT_PLAYLIST[index];
             if (!t) return;
+
+            // Show mini-player once a song is selected
+            const miniPl = document.getElementById('miniPlayer');
+            if (miniPl) miniPl.style.display = 'flex';
+
+            // Reset seekbar / progress display immediately to 0 for a clean start on every track change
+            isSeeking = false;
+            const seeker = document.getElementById('songSeeker');
+            if (seeker) seeker.value = 0;
+            const inputEl = document.getElementById('progressBar');
+            if (inputEl) inputEl.value = 0;
+            const curTime = document.getElementById('currentTime');
+            if (curTime) curTime.innerText = '00:00';
+            const fillEl = document.getElementById('progressFill');
+            if (fillEl) fillEl.style.width = '0%';
+            const dotEl = document.getElementById('progressDot');
+            if (dotEl) dotEl.style.left = '0%';
 
             // Stop radio if playing
             if (radioAudio && !radioAudio.paused) {
@@ -1726,6 +1748,9 @@
             document.getElementById('seekbarContainer').style.display = 'block';
             document.getElementById('radioLiveBar').style.display = 'none';
             document.getElementById('modalActionsRow').style.display = 'flex';
+
+            // Şarkı çalmaya başlayınca doğrudan büyük player açılsın
+            openFullPlayer();
 
             isPlaying = true;
             isUserPaused = false;
@@ -2114,8 +2139,8 @@
                         <div class="track-right">
                             <span class="track-duration">${t.duration || 'Full'}</span>
                             <div class="track-btn-stack">
-                                <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${actualIdx}, true)"><span>📶</span><span>Kaydet</span></button>
                                 <button class="download-badge-btn" onclick="event.stopPropagation(); requestDownloadPrompt(${actualIdx}, true)"><span>📥</span><span>İndir</span></button>
+                                <button class="offline-badge-btn" onclick="event.stopPropagation(); quickSaveOffline(${actualIdx}, true)"><span>📶</span><span>Kaydet</span></button>
                                 <button class="offline-badge-btn" style="background:rgba(56,189,248,0.18); border-color:rgba(56,189,248,0.5); color:#38BDF8;" onclick="event.stopPropagation(); openAddToPlaylistModal(SEARCH_RESULTS[${actualIdx}])"><span>➕</span><span>Liste</span></button>
                             </div>
                             <div class="play-btn-circle">▶</div>
